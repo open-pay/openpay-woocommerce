@@ -1,0 +1,158 @@
+
+body {
+	margin: 0;
+	font-family: Helvetica, Arial, sans-serif;
+	color: #414042;
+}
+h1 {
+	font-size: 20px;
+	font-weight: lighter;
+	margin: 8px 0 0 0;
+}
+h2 {
+	color: #f78c1f;
+	font-size: 80px;
+	font-weight: bold;
+	margin: 0 0 15px 0;
+}
+h2 span {
+	font-size: 60px;
+}
+h2 small {
+	font-size: 30px;
+}
+h3 {
+	font-size: 20px;
+	font-weight: lighter;
+	color: #435f82;
+	margin: 8px 0;
+}
+p {
+	font-size: 18px;
+	font-weight: lighter;
+	line-height: 28px;
+}
+.margen {
+	margin: 20px auto 15px auto;
+	border:1px solid #EDEDED;
+	width: 650px;
+}
+.Yellow1 {
+	float: left;
+	width: 25px;
+	height:70px;
+}
+.Logo-Top {
+	width:250px;
+	float: left;
+	height: 60px;
+	display: block;
+}
+.Logo-Top img {
+	width: 180px;
+	margin: 13px 25px;
+}
+.Yellow2 {
+	font-size: 25px;
+	font-weight: bold;
+	color:#FFF;
+	padding-right: 30px;
+	float: right;
+	width: 345px;
+	height: 70px;
+	text-align: right;
+}
+.Yellow2 span {
+	display: block;
+	margin-top: 24px;
+}
+.Data-container {
+	margin:30px 0 0 0;
+	clear:both;
+	float: left;
+}
+.Data1 {
+	float: left;
+	width: 400px;
+	margin: 0 0 0 50px;
+}
+.Spei-stuff {
+	float: left;
+	width: 200px;
+}
+.Spei-stuff img {
+	width:130px;
+	margin-top: 40px;
+	margin-left: 20px;
+}
+
+.Data_bank {
+	clear: both;
+	width: 600px;
+	margin: 20px 0 20px 50px;
+	float: left;
+}
+.Data_bank div {
+	padding: 10px 30px;
+	width: 490px;
+}
+.div1 {
+	background-color: #f7f7f7;
+}
+.div2 {
+	background-color: #f1f1f1;
+}
+.cont-text {
+	float: left;
+	margin: 0 50px 0 50px;
+	width: 550px;
+	clear: both;
+}
+.cont-text span {
+	color: #33669a;
+	font-size:35px;
+	font-weight: bold;
+	line-height: 45px;
+}
+.cont-text a {
+	text-decoration: none;
+}
+.buttons {
+	width: 100%;
+	clear: both;
+	padding: 30px 0 30px 80px;
+}
+.buttons a {
+	display: block;
+	width: 220px;
+	text-align: center;
+	color: #FFFFFF;
+	padding: 13px 0;
+	background-color: #39b54a;
+	font-size: 22px;
+	text-decoration: none;
+	border-radius: 7px;
+	float: left;
+	margin-right: 40px;
+}
+.buttons a:hover {
+	background-color: #32a842;
+}
+.Yellow3 {
+	width: 100%;
+	height: 18px;
+	display: block;
+	clear: both;
+	margin: 80px 0 0 0;
+}
+.powered {
+	text-align: center;
+	width: 650px;
+	margin: 0 auto 15px auto;
+}
+.powered img {
+	width: 180px;
+}
+.Yellow1, .Yellow2, .Yellow3 {
+	background-color: #fab317;
+}

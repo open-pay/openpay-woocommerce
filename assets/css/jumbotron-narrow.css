@@ -1,0 +1,232 @@
+/* Space out content a bit */
+body {
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+
+/* Everything but the jumbotron gets side spacing for mobile first views */
+.header,
+.marketing,
+.footer {
+  padding-right: 15px;
+  padding-left: 15px;
+}
+
+/* Custom page header */
+.header {
+  background-color: #51afa5;
+}
+/* Make the masthead heading the same height as the navigation */
+.header h3 {
+  padding-bottom: 19px;
+  margin-top: 0;
+  margin-bottom: 0;
+  line-height: 40px;
+}
+
+/* Custom page footer */
+.footer {
+  padding-top: 19px;
+  color: #777;
+  border-top: 20px solid #51afa5;
+}
+
+/* Customize container */
+@media (min-width: 768px) {
+  .container {
+    max-width: 730px;
+  }
+}
+.container-narrow > hr {
+  margin: 30px 0;
+}
+
+/* Main marketing message and sign up button */
+.jumbotron {
+  text-align: center;
+  border-bottom: 1px solid #e5e5e5;
+}
+.jumbotron .btn {
+  padding: 14px 24px;
+  font-size: 21px;
+}
+
+/* Supporting marketing content */
+.marketing {
+  margin: 20px 0;
+}
+/*.marketing p + h4 {
+  margin-top: 28px;
+}*/
+
+/* Responsive: Portrait tablets and up */
+@media screen and (min-width: 768px) {
+  /* Remove the padding we set earlier */
+  .header,
+  .marketing,
+  .footer {
+    padding-right: 0;
+    padding-left: 0;
+  }
+  /* Space out the masthead */
+  .header {
+    margin-bottom: 10px;
+  }
+  /* Remove the bottom border on the jumbotron for visual effect */
+  .jumbotron {
+    border-bottom: 0;
+  }  
+}
+
+.Yellow2 {
+font-size: 25px;
+font-weight: bold;
+color: #FFF;
+/*padding-right: 30px;*/
+/*float: right;*/
+/*width: 345px;
+height: 70px;*/
+text-align: center;
+}
+
+p.Yellow2 {
+display: block;
+margin-top: 24px;
+}
+
+.amount{
+color: #51afa5;
+font-size: 80px;
+font-weight: bold;
+margin: 0 0 15px 0;
+}
+
+.amount small {
+font-size: 30px;
+color: #51afa5;
+font-weight: bold;
+}
+
+h1 {
+font-size: 20px;
+font-weight: lighter;
+margin: 8px 0 0 0;
+}
+.container{border: 1px solid #EDEDED;}
+
+@media screen and (max-width: 480px) {
+	.amount {
+		font-size: 40px;
+	}
+	h1{
+		font-size:16px;
+	}
+	.spei{
+		margin-top:30px;
+	}
+}
+
+.footer img {
+width: 180px;
+}
+
+.datos{ background-color: #f7f7f7;}
+
+.marketing h4 {
+color: #33669a;
+font-size: 35px;
+font-weight: bold;
+line-height: 45px;
+margin-top: 0px; 
+}
+
+img.Logo_paynet  {
+width: 130px;
+float: left;
+}
+
+.Logo_paynet {
+font-size: 20px;
+font-weight: lighter;
+display: block;
+float: left;
+margin: 10px 12px 0 0;
+}
+
+.Big_Bullet {
+width: 20px;
+float: left;
+margin-right: 15px;
+
+}
+
+.Big_Bullet span {
+width: 100%;
+height: 55px;
+display: block;
+}
+
+.Big_Bullet span, .col2 {
+background-color: #51afa5;
+}
+
+.data{ margin-top:20px;}
+
+.data_amount{
+background-color: #51afa5;
+color:#fff;
+float: right;
+padding: 10px 0 10px 10px;
+}
+.datos_tiendas {
+background-color: #f7f7f7;
+width: 400px;
+margin-left: 20px;
+}
+.datos_pago {
+background-color: #f7f7f7;
+width: 400px;
+margin-left: 0px;
+margin-top:10px;
+}
+.datos_pago p{ width:300px; font-size: 12px;}
+ ol {
+font-size: 12px;
+width: 290px;
+padding-left: 20px;
+margin-top:10px;
+}
+
+li {
+padding: 5px 0;
+line-height: 16px;
+}
+
+.marketing img{ margin-right:10px;}
+
+.data_amount h1 {
+margin: 0;
+padding: 0;
+font-size: 60px;
+}
+
+.data_amount h2{ font-size:18px;}
+
+.data_amount .amount {
+color: #fff;
+font-size: 40px;
+font-weight: bold;
+margin: 0 0 15px 0;
+}
+
+.data_amount  .amount small {
+font-size: 30px;
+color: #fff;
+font-weight: bold;
+}
+
+.link_tiendas{
+display: inline-block;position: relative;width: 173px;font-size: 11px;
+}
+
+
