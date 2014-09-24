@@ -117,13 +117,13 @@ Author URI: http://www.redcore.com.mx
 									'description' => __( 'This is the URL which needs to be configured into the Merchant Administration Console - Response URL', 'woocommerce' ),
 									'default' => __(home_url() . "/?wc-api=wc_openpay" , 'woocommerce')
 								),
-					'gatewayurl' => array
-								(
-									'title' => __( 'Gateway URL', 'woocommerce' ),
-									'type' => 'url',
-									'description' => __( 'This is obtained through the Merchant Administration Console - Gateway URL', 'woocommerce' ),
-									'default' => ''
-								),
+					// 'gatewayurl' => array
+					// 			(
+					// 				'title' => __( 'Gateway URL', 'woocommerce' ),
+					// 				'type' => 'url',
+					// 				'description' => __( 'This is obtained through the Merchant Administration Console - Gateway URL', 'woocommerce' ),
+					// 				'default' => ''
+					// 			),
 					'openpay_id' => array
 								(
 									'title' => __( 'OpenPay ID', 'woocommerce' ),
@@ -793,8 +793,15 @@ Author URI: http://www.redcore.com.mx
 
 				//Charge with customer
 				//$charge = $openpay->charges->create($chargeData);
-				$charge = $customer->charges->create($chargeData);
-
+				setcookie("OpenpayError", false, time()+3600);
+				try{
+					$charge = $customer->charges->create($chargeData);
+				}catch (exception $e) {
+					setcookie("OpenpayError", true, time()+3600); 
+					$location = $_SERVER['HTTP_REFERER'];
+					wp_redirect( $location, 302 ); exit;
+				}
+				setcookie("OpenpayError", false, time()+3600);
 				echo "se cobró con tarjeta de crédito";
 			}
 			

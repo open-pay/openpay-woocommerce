@@ -27,7 +27,14 @@
     padding-left: 35px;
     margin-bottom: 25px;
   }
+
+  #error{text-align: center; display: none;}
 </style>
+
+<div class="alert alert-danger alert-dismissible" role="alert" id="error">
+  <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+  There was an error with your previous attempt to make the payment. Please try again and we apologise for any inconvenience
+</div>
 
 <select id="select-payment" class="form-control">
   <option value="card">Credit/Debit Card</option>
@@ -93,10 +100,13 @@
 
 
 <script src="//cdnjs.cloudflare.com/ajax/libs/card/0.0.2/js/card.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.2.0/js/bootstrap.min.js"></script>
+
 <script type="text/javascript">$(".active form").card({ container: $(".card-wrapper") });</script>
 
 <script type="text/javascript">
-    var paymentSelection, cardForm, storeForm, bankForm, acceptedCards, store, banks;
+    var paymentSelection, cardForm, storeForm, bankForm, acceptedCards, store, banks, errorMessage;
     paymentSelection  = $('#select-payment');
     cardForm          = $('#card-form');
     storeForm         = $('#store-form');
@@ -104,6 +114,7 @@
     acceptedCards     = $('#accepted-cards');
     store             = $('#stores');
     bank              = $('#bank');
+    errorMessage      = $('#error');
 
     /*$( "#cvc" ).on('input' ,function(){ $('.cvc').delay(1000).text('***'); });*/
 	$( "#cvc" ).on('change',function () {
@@ -114,7 +125,9 @@
 		$('.cvc').delay(1000).text('***');
 	});
 		
-
+    if($.cookie('OpenpayError') == true){
+      errorMessage.fadeIn();
+    }
     if(paymentSelection.val() === 'card'){
       bank.fadeOut();
       store.fadeOut();
