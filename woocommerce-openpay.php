@@ -735,7 +735,7 @@ Author URI: http://www.redcore.com.mx
 				}else{
 					//not exist Customer
 					$customerData = array(
-						 'external_id' => $order->user_id,
+						 'external_id' => $order->user_id == null ? null : $order->user_id,
 						 'name' => $order->billing_first_name,
 						 'last_name' => $order->billing_last_name,
 						 'email' => $order->billing_email,
