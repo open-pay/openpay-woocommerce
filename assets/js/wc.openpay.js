@@ -1,12 +1,12 @@
 $(function(){
-	
-	console.log($("#id_openpay").val());
-	
-	OpenPay.setId($("#id_openpay").val());
-	OpenPay.setApiKey($("#api_key_openpay").val());
-	OpenPay.setSandboxMode(true);
-	var deviceSessionId = OpenPay.deviceData.setup("payment-form", "deviceIdHiddenFieldName");
-	
+	if ($("#id_openpay")) {
+		console.log($("#id_openpay").val());
+		
+		OpenPay.setId($("#id_openpay").val());
+		OpenPay.setApiKey($("#api_key_openpay").val());
+		OpenPay.setSandboxMode(true);
+		var deviceSessionId = OpenPay.deviceData.setup("payment-form", "deviceIdHiddenFieldName");
+	}
 	$('#pay-button').on('click', function(event) {
 	   var cardnumber, expiry, cardnumberOpenpay, expiryMonthOpenpay, expiryYearOpenpay;
        event.preventDefault();
