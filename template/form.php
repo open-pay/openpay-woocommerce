@@ -44,15 +44,15 @@
 
 <div id="acceptance">
   <ul id="accepted-cards">
-    <li><img src="http://www.openpay.mx/img/costos/costo_tarjeta.gif"></li>
-    <li><img src="http://www.openpay.mx/img/costos/costoamex.gif"></li>
+    <li><img src="https://openpay.s3.amazonaws.com/images/costo_tarjeta.gif"></li>
+    <li><img src="https://openpay.s3.amazonaws.com/images/costoamex.gif"></li>
   </ul>
   <ul id="stores">
-    <li><img src="http://www.openpay.mx/img/costos/costotienda.gif"></li>
+    <li><img src="https://openpay.s3.amazonaws.com/images/costotienda.gif"></li>
     <li><a target="_blank" href="http://www.openpay.mx/tiendas-de-conveniencia.html">ver tiendas afiliadas</a></li>
   </ul>
   <ul id="bank">
-    <li><img src="http://www.openpay.mx/img/costos/costo_bancos.gif"></li>
+    <li><img src="https://openpay.s3.amazonaws.com/images/costo_bancos.gif"></li>
   </ul>
 </div>
 
