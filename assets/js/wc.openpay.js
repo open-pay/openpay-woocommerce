@@ -1,5 +1,5 @@
-$(function(){
-	if ($("#id_openpay")) {
+$(function($){ //Agregado $ como parametro para que exista en la funcion.
+	if ($("#id_openpay").length) { //En jQuery, se comprueba un selector al ver su tamaño
 		console.log($("#id_openpay").val());
 		
 		OpenPay.setId($("#id_openpay").val());
