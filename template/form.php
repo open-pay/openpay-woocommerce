@@ -32,14 +32,14 @@
 </style>
 
 <div class="alert alert-danger alert-dismissible" role="alert" id="error">
-  <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-  There was an error with your previous attempt to make the payment. Please try again and we apologise for any inconvenience
+  <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Cerrar</span></button>
+  Ocurrió un error al procesar el pago, revise que la información es correcta e intente de nuevo.
 </div>
 
 <select id="select-payment" class="form-control">
-  <option value="card">Credit/Debit Card</option>
-  <option value="store">Convenience store payment</option>
-  <option value="bank">Bank wire/transfer</option>
+  <option value="card">Tarjeta Débito/Crédito</option>
+  <option value="store">Tiendas de conveniencia</option>
+  <option value="bank">Transferencia Interbancaria</option>
 </select>
 
 <div id="acceptance">
@@ -66,8 +66,8 @@
       <div class="card-wrapper"></div>
 
        <fieldset>
-          <input placeholder="Card number" type="text" name="number" id="cardplaceholder">
-          <input placeholder="Full name" type="text" name="name" data-openpay-card="holder_name">
+          <input placeholder="Número de tarjeta" type="text" name="number" id="cardplaceholder">
+          <input placeholder="Nombre" type="text" name="name" data-openpay-card="holder_name">
           <input placeholder="MM/YY" type="text" name="expiry" id="expiry">
           <input placeholder="CVC" type="password" name="cvc" data-openpay-card="cvv2" id="cvc">
        </fieldset>
@@ -76,7 +76,7 @@
           <input placeholder="" type="hidden" data-openpay-card="expiration_month" id="expiryMonthOpenpay">
           <input placeholder="" type="hidden" data-openpay-card="expiration_year" id="expiryYearOpenpay">
 
-    <button type="submit" id="pay-button" class="btn btn-default pull-right">Checkout</button>
+    <button type="submit" id="pay-button" class="btn btn-default pull-right">Pagar</button>
   </form>
 </div>
 
@@ -85,7 +85,7 @@
     <input type="hidden" name="action" value="openpay_pay_store" />
     <input type="hidden" name="order-id" value="<?php echo $_POST['order_id']; ?>" />
 
-    <button type="submit" id="tiendas" class="btn btn-default pull-right">Generate Barcode</button>
+    <button type="submit" id="tiendas" class="btn btn-default pull-right">Generar recibo de pago</button>
   </form>
 </div>
 
@@ -94,7 +94,7 @@
     <input type="hidden" name="action" value="openpay_pay_transfer" />
     <input type="hidden" name="order-id" value="<?php echo $_POST['order_id']; ?>" />
 
-    <button type="submit" id="transferencia" class="btn btn-default pull-right">Bank wire</button>
+    <button type="submit" id="transferencia" class="btn btn-default pull-right">Generar recibo de pago</button>
   </form>
 </div>
 

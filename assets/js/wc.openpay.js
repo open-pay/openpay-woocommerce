@@ -4,7 +4,7 @@ $(function($){ //Agregado $ como parametro para que exista en la funcion.
 		
 		OpenPay.setId($("#id_openpay").val());
 		OpenPay.setApiKey($("#api_key_openpay").val());
-		OpenPay.setSandboxMode(true);
+		OpenPay.setSandboxMode($("#api_sandbox_mode").val());
 		var deviceSessionId = OpenPay.deviceData.setup("payment-form", "deviceIdHiddenFieldName");
 	}
 	$('#pay-button').on('click', function(event) {
@@ -37,7 +37,17 @@ $(function($){ //Agregado $ como parametro para que exista en la funcion.
 	var error_callbak = function(response) {
      var desc = response.data.description != undefined ? 
         response.data.description : response.message;
-     alert("ERROR [" + response.status + "] " + desc);
+     
+     if (response.data.error_code == 2005){
+    	 desc = "La fecha de expiración es incorrecta";
+     } else if (response.data.error_code == 2004) {
+    	 desc = "Número de tarjeta inválido";
+     } else if (response.data.error_code == 2006) {
+    	 desc = "Codigo de seguridad inválido";
+     } else if (response.data.error_code == 1000) {
+    	 desc = "Ocurrió un error al realizar el pago intenta más tarde";
+     }
+     alert(desc);
      $("#pay-button").prop("disabled", false);
 	};
 	

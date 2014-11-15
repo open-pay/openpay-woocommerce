@@ -49,7 +49,7 @@ Author URI: http://www.redcore.com.mx
 				$this->openpay_private_key		= $this->get_option("openpay_private_key");
 				$this->openpay_public_key		= $this->get_option("openpay_public_key");
 				$this->openpay_id				= $this->get_option("openpay_id");
-				$this->openpay_sandbox			= $this->get_option("openpay_sandbox");
+				$this->openpay_sandbox			= $this->get_option("openpay_sandbox") == 'no' ? false : true;
 				
 				//must be lowercase
 				//you MUST use the  NAME OF YOUR CLASS
@@ -72,6 +72,7 @@ Author URI: http://www.redcore.com.mx
 			function init_form_fields()
 			{
 				global $woocommerce;
+				error_log("init_form_fields order id" . $order_id);
 				$order = new WC_Order( $order_id );
 				$this->form_fields = array(
 					'enabled' => array
@@ -283,7 +284,7 @@ Author URI: http://www.redcore.com.mx
 
 			function receipt_page( $order )
 			{
-				echo '<p>'.__('Thank you for your order, click on submit to process Techprocess payment.', 'woocommerce').'</p>';
+				echo '<p>'.__('Selecciona en el medio por el cual deseas realizar el pago:', 'woocommerce').'</p>';
 				echo $this->generate_openpay_form( $order );
 			}
 			
@@ -314,7 +315,10 @@ Author URI: http://www.redcore.com.mx
 				$formTemplate = file_get_contents(PLUGIN_DIR.'template/form.php', false, $context);	
 				
 				/*Load API KEY of openpay*/
-				$formTemplate = '<input type="hidden" name="id_openpay" id="id_openpay" value="'.$this->openpay_id.'">'.'<input type="hidden" id="api_key_openpay" name="api_key_openpay" value="'.$this->openpay_public_key.'">'.$formTemplate;		
+				$formTemplate = '<input type="hidden" name="id_openpay" id="id_openpay" value="'.$this->openpay_id.'">'
+						. '<input type="hidden" id="api_key_openpay" name="api_key_openpay" value="'.$this->openpay_public_key.'">'
+						. '<input type="hidden" id="api_sandbox_mode" name="api_sandbox_mode" value="'.$this->openpay_sandbox.'">'
+						.$formTemplate;		
 				
 				return $formTemplate;
 			}
@@ -725,6 +729,7 @@ Author URI: http://www.redcore.com.mx
 				$order = new WC_Order( $_POST["order-id"] );
 				
 				$openpay = Openpay::getInstance($this->openpay_id, $this->openpay_private_key);
+				Openpay::setSandboxMode($this->openpay_sandbox);
 				
 				//Custumer exist?
 				$customers_table = $wpdb->prefix . 'woocommerce_openpay_customers';
@@ -797,10 +802,12 @@ Author URI: http://www.redcore.com.mx
 				try{
 					$charge = $customer->charges->create($chargeData);
 				}catch (exception $e) {
-					setcookie("OpenpayError", true, time()+3600); 
+// 					setcookie("OpenpayError", true, time()+3600); 
 					$location = $_SERVER['HTTP_REFERER'];
+					wc_add_notice( __('', 'woothemes') . 'La tarjeta fue declinada, por favor verifique la información o intente con otra tarjeta', 'error' );
 					wp_redirect( $location, 302 ); exit;
 				}
+				
 				setcookie("OpenpayError", false, time()+3600);
 				echo "se cobró con tarjeta de crédito";
 			}
@@ -811,7 +818,8 @@ Author URI: http://www.redcore.com.mx
 				$order = new WC_Order( $_POST["order-id"] );
 				
 				$openpay = Openpay::getInstance($this->openpay_id, $this->openpay_private_key);
-
+				Openpay::setSandboxMode($this->openpay_sandbox);
+				
 				$chargeData = array(
 					'method' => 'store',
 					'amount' => (float)$order->get_total(),
@@ -821,7 +829,7 @@ Author URI: http://www.redcore.com.mx
 				$charge = $openpay->charges->create($chargeData);
 				
 				/*Date manager*/
-				str_replace("T","",$charge->operation_date);
+				$date = str_replace("T","",$charge->operation_date);
 				$date = substr($date, 0, -6);
 				$date = new DateTime($date);
 				$date = date_format($date, 'd F Y, g:i A');
@@ -950,7 +958,8 @@ Author URI: http://www.redcore.com.mx
 				$order = new WC_Order( $_POST["order-id"] );
 				
 				$openpay = Openpay::getInstance($this->openpay_id, $this->openpay_private_key);
-
+				Openpay::setSandboxMode($this->openpay_sandbox);
+				
 				$chargeData = array(
 					'method' => 'bank_account',
 					'amount' => (float)$order->get_total(),
@@ -960,7 +969,7 @@ Author URI: http://www.redcore.com.mx
 				$charge = $openpay->charges->create($chargeData);
 				
 				/*Date manager*/
-				str_replace("T","",$charge->operation_date);
+				$date = str_replace("T","",$charge->operation_date);
 				$date = substr($date, 0, -6);
 				$date = new DateTime($date);
 				$date = date_format($date, 'd F Y, g:i A');
@@ -1083,6 +1092,7 @@ Author URI: http://www.redcore.com.mx
 		$wc = new WC_OpenPay();
 				
 		$openpay = Openpay::getInstance($wc->openpay_id, $wc->openpay_private_key);
+		Openpay::setSandboxMode($this->openpay_sandbox);
 		
 		$order = new WC_Order( $order_id );
 		
