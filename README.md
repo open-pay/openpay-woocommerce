@@ -16,7 +16,7 @@ Installation
 * Install and configure Woocommerce Currency  to  Mexican Peso($) and save "save changes".
 ![Woocommerce Currency](https://raw.githubusercontent.com/open-pay/openpay-wordpress/master/install_images/WooCommerceSettings.png)
 
-  * Download  [woocommerce-openpay.zip](https://github.com/open-pay/openpay-wordpress/blob/master/bin/woocommerce-openpay.zip?raw=true)  plugin.
+  * Download  the latest version of the plugin from the bin directory [bin](https://github.com/open-pay/openpay-wordpress/blob/master/bin).
   * Install the plugin.
   * On Wordpress -> Plugins -> Add New -> Upload and choose the woocommerce-openpay.zip downloaded in before step, and click on Install Now button.
 ![Add New ](https://raw.githubusercontent.com/open-pay/openpay-wordpress/master/install_images/PluginsAddNew.png)
@@ -43,7 +43,6 @@ Configure a Webhook
 ![Add webhook](https://raw.githubusercontent.com/open-pay/openpay-wordpress/master/install_images/OpenPayWHAdd.png)
 
 * Enter the "Response URL",  "Response URL" is in Woocommerce Openpay settings.
-* Activatee the webhook, in Woocomerce-> checkout-> Openpay settings, copy the "Código de verificación",  on Openpay dashboard clicking the green button “verificar” and paste the "Código de verificación".
+* Activate the webhook, in Woocomerce-> checkout-> Openpay settings, copy the "Código de verificación",  on Openpay dashboard clicking the green button “verificar” and paste the "Código de verificación".
 ![Activate webhook](https://raw.githubusercontent.com/open-pay/openpay-wordpress/master/install_images/OpenPayWHActivate.png)
-
 
