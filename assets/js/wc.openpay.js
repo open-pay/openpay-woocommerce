@@ -4,7 +4,7 @@ $(function($){ //Agregado $ como parametro para que exista en la funcion.
 		
 		OpenPay.setId($("#id_openpay").val());
 		OpenPay.setApiKey($("#api_key_openpay").val());
-		OpenPay.setSandboxMode($("#api_sandbox_mode").val());
+		OpenPay.setSandboxMode($("#api_sandbox_mode").val() == 'true');
 		var deviceSessionId = OpenPay.deviceData.setup("payment-form", "deviceIdHiddenFieldName");
 	}
 	$('#pay-button').on('click', function(event) {
@@ -59,3 +59,4 @@ $(function($){ //Agregado $ como parametro para que exista en la funcion.
 		//alert("Información para transferencia");
 	});
 });
+

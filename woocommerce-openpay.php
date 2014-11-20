@@ -315,9 +315,12 @@ Author URI: http://www.redcore.com.mx
 				$formTemplate = file_get_contents(PLUGIN_DIR.'template/form.php', false, $context);	
 				
 				/*Load API KEY of openpay*/
+
+				$sandbox_mode_string = $this->openpay_sandbox ? "true" : "false";
+
 				$formTemplate = '<input type="hidden" name="id_openpay" id="id_openpay" value="'.$this->openpay_id.'">'
 						. '<input type="hidden" id="api_key_openpay" name="api_key_openpay" value="'.$this->openpay_public_key.'">'
-						. '<input type="hidden" id="api_sandbox_mode" name="api_sandbox_mode" value="'.$this->openpay_sandbox.'">'
+						. '<input type="hidden" id="api_sandbox_mode" name="api_sandbox_mode" value="'. $sandbox_mode_string . '">'
 						.$formTemplate;		
 				
 				return $formTemplate;
