@@ -1,7 +1,7 @@
 Openpay WordPress plugin
 ===========
 
-WordPress Plugin for Openpay API services (version 1.0.0)
+WordPress Plugin for Openpay API services (version 1.0.1)
 
 This is a plugin implementing the payment services for Openpay at openpay.mx
 
