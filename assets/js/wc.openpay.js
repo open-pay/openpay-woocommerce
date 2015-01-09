@@ -1,4 +1,4 @@
-$(function($){ //Agregado $ como parametro para que exista en la funcion.
+jQuery(document).ready(function($) { //Agregado $ como parametro para que exista en la funcion.
 	if ($("#id_openpay").length) { //En jQuery, se comprueba un selector al ver su tamaño
 		console.log($("#id_openpay").val());
 		

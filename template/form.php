@@ -103,29 +103,29 @@
 <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.2.0/js/bootstrap.min.js"></script>
 
-<script type="text/javascript">$(".active form").card({ container: $(".card-wrapper") });</script>
+<script type="text/javascript">jQuery(".active form").card({ container: jQuery(".card-wrapper") });</script>
 
 <script type="text/javascript">
     var paymentSelection, cardForm, storeForm, bankForm, acceptedCards, store, banks, errorMessage;
-    paymentSelection  = $('#select-payment');
-    cardForm          = $('#card-form');
-    storeForm         = $('#store-form');
-    bankForm          = $('#bankwire-form');
-    acceptedCards     = $('#accepted-cards');
-    store             = $('#stores');
-    bank              = $('#bank');
-    errorMessage      = $('#error');
+    paymentSelection  = jQuery('#select-payment');
+    cardForm          = jQuery('#card-form');
+    storeForm         = jQuery('#store-form');
+    bankForm          = jQuery('#bankwire-form');
+    acceptedCards     = jQuery('#accepted-cards');
+    store             = jQuery('#stores');
+    bank              = jQuery('#bank');
+    errorMessage      = jQuery('#error');
 
     /*$( "#cvc" ).on('input' ,function(){ $('.cvc').delay(1000).text('***'); });*/
-	$( "#cvc" ).on('change',function () {
-		$('.cvc').text('***');
+	jQuery( "#cvc" ).on('change',function () {
+		jQuery('.cvc').text('***');
 	});
   
-	$( "#cvc" ).keypress(function( event ) {
-		$('.cvc').delay(1000).text('***');
+	jQuery( "#cvc" ).keypress(function( event ) {
+		jQuery('.cvc').delay(1000).text('***');
 	});
 		
-    if($.cookie('OpenpayError') == true){
+    if(jQuery.cookie('OpenpayError') == true){
       errorMessage.fadeIn();
     }
     if(paymentSelection.val() === 'card'){
@@ -137,21 +137,21 @@
       acceptedCards.fadeIn();
     }
     paymentSelection.change(function(){
-      if($(this).val() === 'card'){
+      if(jQuery(this).val() === 'card'){
         bank.fadeOut();
         store.fadeOut();
         storeForm.fadeOut();
         bankForm.fadeOut();
         cardForm.fadeIn();;
         acceptedCards.fadeIn();
-      }else if($(this).val() === 'store'){
+      }else if(jQuery(this).val() === 'store'){
         acceptedCards.fadeOut();
         cardForm.fadeOut();
         bankForm.fadeOut();
         bank.fadeOut();
         store.fadeIn();
         storeForm.fadeIn();
-      }else if($(this).val() === 'bank'){
+      }else if(jQuery(this).val() === 'bank'){
         acceptedCards.fadeOut();
         cardForm.fadeOut();
         storeForm.fadeOut();
