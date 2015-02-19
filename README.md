@@ -1,9 +1,15 @@
 Openpay WordPress plugin
 ===========
 
-WordPress Plugin for Openpay API services (version 1.0.1)
-
+WordPress Plugin for Openpay API services 
 This is a plugin implementing the payment services for Openpay at openpay.mx
+
+Change log
+------------
+Version 1.0.3
+------------
+* Se agrega soporte para que los pedidos a pagar en tiendas de conveniencia o bancos tengan fecha de vencimiento.
+* Se corrige problema que no permitía que se redujera el inventario cuando un pedido se pagaba
 
 
 Requirements

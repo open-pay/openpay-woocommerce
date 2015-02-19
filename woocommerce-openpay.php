@@ -4,7 +4,7 @@ Plugin Name: OpenPay WooCommerce Plugin
 Plugin URI: http://www.openpay.com.mx
 Description: Plugin that allows you to enable Open Pay as a Payment Gateway in your site
 Author: Red Core Technologies
-Version: 1.0
+Version: 1.0.3
 Author URI: http://www.redcore.com.mx
 */
 	
@@ -50,6 +50,7 @@ Author URI: http://www.redcore.com.mx
 				$this->openpay_public_key		= $this->get_option("openpay_public_key");
 				$this->openpay_id				= $this->get_option("openpay_id");
 				$this->openpay_sandbox			= $this->get_option("openpay_sandbox") == 'no' ? false : true;
+				$this->openpay_hours_before_cancel	= $this->get_option("openpay_hours");
 				
 				//must be lowercase
 				//you MUST use the  NAME OF YOUR CLASS
@@ -72,7 +73,6 @@ Author URI: http://www.redcore.com.mx
 			function init_form_fields()
 			{
 				global $woocommerce;
-				error_log("init_form_fields order id" . $order_id);
 				$order = new WC_Order( $order_id );
 				$this->form_fields = array(
 					'enabled' => array
@@ -129,7 +129,7 @@ Author URI: http://www.redcore.com.mx
 								(
 									'title' => __( 'OpenPay ID', 'woocommerce' ),
 									'type' => 'text',
-									'description' => __( 'OpenPay user ID' ),
+									'description' => __( 'OpenPay Merchant ID' ),
 									'default' => ''
 								),
 					'openpay_public_key' => array
@@ -143,9 +143,16 @@ Author URI: http://www.redcore.com.mx
 								(
 									'title' => __( 'OpenPay Private Key', 'woocommerce' ),
 									'type' => 'text',
-									'description' => __( 'OpenPay user Private Key' ),
+									'description' => __( 'OpenPay  Private Key' ),
 									'default' => ''
-								)	   
+								),
+						'openpay_hours' => array
+						(
+								'title' => __( 'Tiempo para pagar (hrs) ', 'woocommerce' ),
+								'type' => 'text',
+								'description' => __( 'Tiempo que tiene el cliente para pagar una orden de pago en tienda de conveniencia o banco' ),
+								'default' => ''
+						)
 					);
 			}
 			
@@ -404,25 +411,18 @@ Author URI: http://www.redcore.com.mx
 						
 						switch ($data->type) {
 							case "charge.succeeded":
-								$flag = 1;
-								$status = "processing";
-								$note = "Payment received and stock has been reduced- the order is awaiting fulfilment";
-								break;
-							case "charge.created":
-								$flag = 1;
-								$status = "on-hold";
-								$note = "Awaiting payment – stock is reduced, but you need to confirm payment";
+
+								$order->add_order_note("Pago recibido por " . $data->transaction->amount . " id de transacción Openpay ".  $data->transaction->id,false);
+								$order->payment_complete();
+								break;				
+							case "charge.cancelled":
+								$order->cancel_order("La orden se cancelo por falta de pago, id Openpay  ".  $data->transaction->id);
 								break;
 							case "charge.refunded":
-								$flag = 1;
-								$status = "refunded";
-								$note = "Refunded by an admin - no further action required";
+								$order->add_order_note("El pago se devolcio en Openpay, favor de marcar la orden como cancelada", false);
+								//No se hace nada ya que se tiene que registrar el refund en woocomerce de forma manual						
 								break;
-							case "spei.received":
-								$flag = 1;
-								$status = "processing";
-								$note = "Payment received and stock has been reduced- the order is awaiting fulfilment";
-								break;
+							
 						}
 						
 						$pays_table = $wpdb->prefix . 'woocommerce_openpay_pays';
@@ -445,11 +445,6 @@ Author URI: http://www.redcore.com.mx
 							) 
 						);
 						
-						if($flag==1){
-							//$order = new WC_Order( $data->transaction->order_id );
-							$order->update_status($status, 'order_note');
-							send_notification($order->id,$status);
-						}
 						
 						wp_die( "Openpay IPN Request Failure", "Openpay IPN", array( 'response' => 200 ) );
 					}
@@ -815,6 +810,12 @@ Author URI: http://www.redcore.com.mx
 				echo "se cobró con tarjeta de crédito";
 			}
 			
+			protected function _addHoursToTime($time, $hours){
+				$seconds = $hours * 60 * 60;
+				$newTime = $time + $seconds;
+				return $newTime;
+			}
+			
 			function openpay_pay_store(){
 				global $woocommerce;
 				require_once 'lib/Openpay.php'; 
@@ -823,19 +824,29 @@ Author URI: http://www.redcore.com.mx
 				$openpay = Openpay::getInstance($this->openpay_id, $this->openpay_private_key);
 				Openpay::setSandboxMode($this->openpay_sandbox);
 				
+				
+			
+				
 				$chargeData = array(
 					'method' => 'store',
 					'amount' => (float)$order->get_total(),
 					'order_id' => $_POST["order-id"],
 					'description' => "Compra con Open Pay: " .$order->id );
-
+				
+				if($this->openpay_hours_before_cancel && is_numeric($this->openpay_hours_before_cancel)){
+					$chargeData['due_date'] = date('c', $this->_addHoursToTime(time(), $this->openpay_hours_before_cancel));
+				}
+				
 				$charge = $openpay->charges->create($chargeData);
 				
 				/*Date manager*/
-				$date = str_replace("T","",$charge->operation_date);
-				$date = substr($date, 0, -6);
-				$date = new DateTime($date);
-				$date = date_format($date, 'd F Y, g:i A');
+				$date = $this->getDateasString($charge->operation_date);
+				$dueDate = '';
+				
+				if ($charge->due_date) {
+					$dueDate = '<p><strong>Fecha límite de pago: </strong>'. $this->getDateasString($charge->due_date) .'</p>';
+				}
+				
 				
 				echo '<meta charset="UTF-8">';
 				echo '<link href="'.$woocommerce->plugin_url() . '-openpay/assets/css/bootstrap.min.css" rel="stylesheet" type="text/css">';
@@ -890,6 +901,7 @@ Author URI: http://www.redcore.com.mx
 			<div class="col-lg-12 datos_tiendas">
 			  <p><strong>Orden: </strong> '. $charge->order_id.'</p>
 			  <p><strong>Fecha y hora: </strong>'. $date.'</p>
+			' . $dueDate. '
 			  <p><strong>Correo electrónico: </strong>'.$order->billing_email.'</p>
 			</div>			
         </div>
@@ -955,6 +967,17 @@ Author URI: http://www.redcore.com.mx
 
 			}
 			
+			
+			function getDateasString($openpayDate){
+				setlocale(LC_ALL, "es_ES");
+				
+				$date = str_replace("T","",$openpayDate);
+// 				$date = substr($date, 0, -6);
+// 				$date = new DateTime($date);
+				$date = strftime('%d %B  %Y, %I:%M %p', strtotime(substr($date, 0, -6)));
+				return $date;
+			}
+			
 			function openpay_pay_transfer(){
 				global $woocommerce;
 				require_once 'lib/Openpay.php'; 
@@ -963,20 +986,30 @@ Author URI: http://www.redcore.com.mx
 				$openpay = Openpay::getInstance($this->openpay_id, $this->openpay_private_key);
 				Openpay::setSandboxMode($this->openpay_sandbox);
 				
+				//agregar due date
 				$chargeData = array(
 					'method' => 'bank_account',
 					'amount' => (float)$order->get_total(),
 					'description' => "Compra con Open Pay: " .$order->id,
 					'order_id' =>	$_POST["order-id"]	);
 
+				if($this->openpay_hours_before_cancel && is_numeric($this->openpay_hours_before_cancel)){				
+					$chargeData['due_date'] = date('c', $this->_addHoursToTime(time(), $this->openpay_hours_before_cancel));
+				}
+				
 				$charge = $openpay->charges->create($chargeData);
 				
 				/*Date manager*/
-				$date = str_replace("T","",$charge->operation_date);
-				$date = substr($date, 0, -6);
-				$date = new DateTime($date);
-				$date = date_format($date, 'd F Y, g:i A');
+				$date = $this->getDateasString($charge->operation_date); 
+				$dueDate = '';
+				//str_replace("T","",$charge->operation_date);
+				//$date = substr($date, 0, -6);
+				//$date = new DateTime($date);
+				//$date = date_format($date, 'd F Y, g:i A');
 				
+				if ($charge->due_date) {
+					$dueDate = '<strong>Fecha límite de pago: </strong> '. $this->getDateasString($charge->due_date);
+				}
 				echo '<meta charset="UTF-8">';
 				echo '<link href="'.$woocommerce->plugin_url() . '-openpay/assets/css/bootstrap.min.css" rel="stylesheet" type="text/css">';
 				echo '<link href="'.$woocommerce->plugin_url() . '-openpay/assets/css/bootstrap-theme.min.css" rel="stylesheet" type="text/css">';
@@ -999,8 +1032,9 @@ Author URI: http://www.redcore.com.mx
 				<h1><strong>Cantidad a pagar</strong></h1>
 				<h2 class="amount">$'. (float)$charge->amount.'<small> MXN</small></h2>
 				<h1><strong>Fecha:</strong></h1>
-				<h1>'. $date.'</h1>
-			</div>
+				<h1>'. $date.'</h1>'
+				. $dueDate .		
+			'</div>
 			<div class="col-xs-3 col-sm-4 col-md-4 col-lg-4">
 				<a href="http://www.openpay.mx/bancos.html" target="_blank"><img class="img-responsive spei" src="'.$woocommerce->plugin_url() . '-openpay/assets/images/spei.gif"  alt="SPEI"></a>
 			</div>
