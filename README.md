@@ -1,5 +1,4 @@
-Openpay WordPress plugin
-===========
+![Openpay Woocommerce](http://www.openpay.mx/img/github/woo-commerce.jpg)
 
 WordPress Plugin for Openpay API services 
 This is a plugin implementing the payment services for Openpay at openpay.mx
