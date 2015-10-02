@@ -214,12 +214,12 @@ class Openpay_Stores extends WC_Payment_Gateway
 
     public function getOpenpayCustomer()
     {
-
+        $customer_id = null;
         if (is_user_logged_in()) {
-            $customer_id = is_user_logged_in() ? get_user_meta(get_current_user_id(), '_openpay_customer_id', true) : null;
+            $customer_id = get_user_meta(get_current_user_id(), '_openpay_customer_id', true);
         }
-
-        if ($customer_id === null) {
+        
+        if (isNullOrEmptyString($customer_id)) {
             return $this->createOpenpayCustomer();
         } else {
             $openpay = Openpay::getInstance($this->merchant_id, $this->private_key);

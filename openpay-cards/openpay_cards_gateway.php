@@ -212,7 +212,6 @@ class Openpay_Cards extends WC_Payment_Gateway
         error_log('openpay_token:' . $openpay_token);
         $this->order = new WC_Order($order_id);
         if ($this->processOpenpayCharge($device_session_id, $openpay_token)) {
-            error_log('completeOrder');
             $this->completeOrder();
             return array(
                 'result' => 'success',
@@ -272,12 +271,12 @@ class Openpay_Cards extends WC_Payment_Gateway
 
     public function getOpenpayCustomer()
     {
-
+        $customer_id = null;
         if (is_user_logged_in()) {
-            $customer_id = is_user_logged_in() ? get_user_meta(get_current_user_id(), '_openpay_customer_id', true) : null;
+            $customer_id = get_user_meta(get_current_user_id(), '_openpay_customer_id', true);
         }
-
-        if ($customer_id === null) {
+        
+        if (isNullOrEmptyString($customer_id)) {
             return $this->createOpenpayCustomer();
         } else {
             $openpay = Openpay::getInstance($this->merchant_id, $this->private_key);
@@ -391,6 +390,10 @@ function openpay_cards_add_creditcard_gateway($methods)
 {
     array_push($methods, 'openpay_cards');
     return $methods;
+}
+
+function isNullOrEmptyString($string){
+    return (!isset($string) || trim($string)==='');
 }
 
 add_filter('woocommerce_payment_gateways', 'openpay_cards_add_creditcard_gateway');
