@@ -176,6 +176,9 @@ class Openpay_Cards extends WC_Payment_Gateway
 
     protected function processOpenpayCharge($device_session_id, $openpay_token)
     {
+        
+        WC()->session->__unset('pdf_url');
+        
         // Get the credit card details submitted by the form
         $charge_request = array(
             "method" => "card",

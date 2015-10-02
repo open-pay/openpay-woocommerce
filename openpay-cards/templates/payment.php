@@ -25,7 +25,7 @@
 	<?php endif; ?>
 	<p class="form-row form-row-wide">
 		<label for="openpay-holder-name">Nombre del tarjetahabiente <span class="required">*</span></label>
-		<input id="openpay-holder-name" style="font-size: 1.5em; padding: 8px;" class="input-text" type="text" autocomplete="off" placeholder="Nombre" data-openpay-card="holder_name" />
+		<input id="openpay-holder-name" style="font-size: 1.5em; padding: 8px;" class="input-text" type="text" autocomplete="off" placeholder="Nombre del tarjetahabiente" data-openpay-card="holder_name" />
 	</p>	
 	<p class="form-row form-row-wide">
 		<label for="openpay-card-number">Número de tarjeta <span class="required">*</span></label>

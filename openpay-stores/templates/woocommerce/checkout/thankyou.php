@@ -55,19 +55,20 @@ if ( $order ) : ?>
 			</li>
 			<?php endif; ?>
 		</ul>
-		<div class="clear"></div>
-                <br>
                 
-                <p><strong>Imprime tu recibo, llévalo a tu tienda de conveniencia más cercana y realiza el pago .</strong></p>
-                <iframe id="pdf" src="<?php echo WC()->session->get( 'pdf_url' ) ?>" style="width:100%; height:950px;" frameborder="0"></iframe>
+                <?php if(WC()->session->__isset('pdf_url')): ?>
+                    <div class="clear"></div>
+                    <br>
+                    <p><strong>Imprime tu recibo, llévalo a tu tienda de conveniencia más cercana y realiza el pago .</strong></p>
+                    <iframe id="pdf" src="<?php echo WC()->session->get( 'pdf_url' ) ?>" style="width:100%; height:950px;" frameborder="0"></iframe>
+                <?php endif; ?>    
                 
+                <div class="clear"></div>
 
 	<?php endif; ?>
                 
-                
-	<?php //do_action( 'woocommerce_thankyou_' . $order->payment_method, $order->id ); ?>
-	<?php //do_action( 'woocommerce_thankyou', $order->id ); ?>
-                
+        <?php do_action( 'woocommerce_thankyou_' . $order->payment_method, $order->id ); ?>
+	<?php do_action( 'woocommerce_thankyou', $order->id ); ?>
 
 <?php else : ?>
 

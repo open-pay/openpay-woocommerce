@@ -391,19 +391,19 @@ function openpay_stores_template($template, $template_name, $template_path)
     return $template;
 }
 
-function attach_terms_conditions_pdf_to_email ( $attachments, $status , $order ) {
-
-    $allowed_statuses = array('on-hold');
-
-    if( isset( $status ) && in_array ( $status, $allowed_statuses ) ) {
-         //$your_pdf_path = get_template_directory() . '/media/test1.pdf'; 
-         $attachments[] = $pdf_dir = WP_PLUGIN_URL . "/" . plugin_basename(dirname(__FILE__)) . '/assets/file.pdf';; 
-    } 
-    
-    return $attachments; 
-}
+//function attach_terms_conditions_pdf_to_email ( $attachments, $status , $order ) {
+//
+//    $allowed_statuses = array('on-hold');
+//
+//    if( isset( $status ) && in_array ( $status, $allowed_statuses ) ) {
+//         //$your_pdf_path = get_template_directory() . '/media/test1.pdf'; 
+//         $attachments[] = $pdf_dir = WP_PLUGIN_URL . "/" . plugin_basename(dirname(__FILE__)) . '/assets/file.pdf';; 
+//    } 
+//    
+//    return $attachments; 
+//}
 
 add_filter('woocommerce_payment_gateways', 'openpay_stores_add_creditcard_gateway');
 add_filter( 'woocommerce_locate_template', 'openpay_stores_template', 1, 3 );
-add_filter( 'woocommerce_email_attachments', 'attach_terms_conditions_pdf_to_email', 1, 3); 
+//add_filter( 'woocommerce_email_attachments', 'attach_terms_conditions_pdf_to_email', 1, 3); 
 //add_action('woocommerce_order_status_processing_to_completed', 'openpay_stores_order_status_completed');
