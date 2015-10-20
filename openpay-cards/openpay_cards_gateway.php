@@ -20,6 +20,7 @@ class Openpay_Cards extends WC_Payment_Gateway
     protected $order = null;
     protected $transaction_id = null;
     protected $transactionErrorMessage = null;
+    protected $currencies = array('MXN', 'USD');
 
     public function __construct()
     {
@@ -53,6 +54,11 @@ class Openpay_Cards extends WC_Payment_Gateway
         add_action('wp_enqueue_scripts', array($this, 'payment_scripts'));
         add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
         add_action('admin_notices', array(&$this, 'perform_ssl_check'));
+        
+        if (!$this->validateCurrency()){
+            $this->enabled = false;
+        }
+        
     }
 
     public function perform_ssl_check()
@@ -386,8 +392,20 @@ class Openpay_Cards extends WC_Payment_Gateway
             $woocommerce->add_error(__('Payment error:', 'woothemes') . $error);
         }
     }
-
+    
+    /**
+     * Checks if woocommerce has enabled available currencies for plugin
+     *
+     * @access public
+     * @return bool
+     */
+    public function validateCurrency() {
+        return in_array(get_woocommerce_currency(), $this->currencies);
+    }
+    
 }
+
+
 
 function openpay_cards_add_creditcard_gateway($methods)
 {
