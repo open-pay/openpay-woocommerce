@@ -225,7 +225,7 @@ class Openpay_Stores extends WC_Payment_Gateway
             $customer_id = get_user_meta(get_current_user_id(), '_openpay_customer_id', true);
         }
         
-        if (isNullOrEmptyString($customer_id)) {
+        if ($this->isNullOrEmptyString($customer_id)) {
             return $this->createOpenpayCustomer();
         } else {
             $openpay = Openpay::getInstance($this->merchant_id, $this->private_key);
@@ -341,6 +341,10 @@ class Openpay_Stores extends WC_Payment_Gateway
      */
     public function validateCurrency() {
         return in_array(get_woocommerce_currency(), $this->currencies);
+    }
+    
+    public function isNullOrEmptyString($string){
+        return (!isset($string) || trim($string)==='');
     }
 
 }

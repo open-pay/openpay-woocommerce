@@ -285,7 +285,7 @@ class Openpay_Cards extends WC_Payment_Gateway
             $customer_id = get_user_meta(get_current_user_id(), '_openpay_customer_id', true);
         }
         
-        if (isNullOrEmptyString($customer_id)) {
+        if ($this->isNullOrEmptyString($customer_id)) {
             return $this->createOpenpayCustomer();
         } else {
             $openpay = Openpay::getInstance($this->merchant_id, $this->private_key);
@@ -403,18 +403,16 @@ class Openpay_Cards extends WC_Payment_Gateway
         return in_array(get_woocommerce_currency(), $this->currencies);
     }
     
+    public function isNullOrEmptyString($string){
+        return (!isset($string) || trim($string)==='');
+    }
+    
 }
-
-
 
 function openpay_cards_add_creditcard_gateway($methods)
 {
     array_push($methods, 'openpay_cards');
     return $methods;
-}
-
-function isNullOrEmptyString($string){
-    return (!isset($string) || trim($string)==='');
 }
 
 add_filter('woocommerce_payment_gateways', 'openpay_cards_add_creditcard_gateway');
