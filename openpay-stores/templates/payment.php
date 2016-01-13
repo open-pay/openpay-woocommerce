@@ -10,7 +10,7 @@
 <div class="row">
     <div class="col-md-12">
         <img src="<?php echo $this->images_dir ?>stores.png" style="width: 100%;">
-        <small><a href="#">Consulta las tiendas afiliadas</a></small>
+        <small><a href="http://www.openpay.mx/tiendas-de-conveniencia.html" target="_blank">Consulta las tiendas afiliadas</a></small>
     </div>
 </div>
 <div class="row">

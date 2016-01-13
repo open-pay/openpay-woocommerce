@@ -199,7 +199,7 @@ class Openpay_Stores extends WC_Payment_Gateway
     protected function markAsFailedPayment() {
         $this->order->add_order_note(
                 sprintf(
-                        "%s Credit Card Payment Failed with message: '%s'", $this->GATEWAY_NAME, $this->transactionErrorMessage
+                        "%s Store Payment Failed with message: '%s'", $this->GATEWAY_NAME, $this->transactionErrorMessage
                 )
         );
     }
@@ -253,23 +253,24 @@ class Openpay_Stores extends WC_Payment_Gateway
 
     public function createOpenpayCustomer() {
 
-        $customerData = array(
-            //'external_id' => $this->order->user_id == null ? null : $this->order->user_id,
+        $customerData = array(            
             'name' => $this->order->billing_first_name,
             'last_name' => $this->order->billing_last_name,
             'email' => $this->order->billing_email,
             'requires_account' => false,
-            'phone_number' => $this->order->billing_phone,
-            'address' => array(
+            'phone_number' => $this->order->billing_phone
+        );
+        
+        if ($this->order->billing_address_1 && $this->order->billing_state && $this->order->billing_city && $this->order->billing_postcode && $this->order->billing_country) {
+            $customerData['address'] = array(
                 'line1' => $this->order->billing_address_1,
                 'line2' => $this->order->billing_address_2,
-                'line3' => '',
                 'state' => $this->order->billing_state,
                 'city' => $this->order->billing_city,
                 'postal_code' => $this->order->billing_postcode,
                 'country_code' => $this->order->billing_country
-            )
-        );
+            );
+        }
 
         $openpay = Openpay::getInstance($this->merchant_id, $this->private_key);
         Openpay::setProductionMode($this->is_sandbox ? false : true);

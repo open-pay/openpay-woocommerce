@@ -58,8 +58,7 @@ if ( $order ) : ?>
                 
                 <?php if(WC()->session->__isset('pdf_url')): ?>
                     <div class="clear"></div>
-                    <br>
-                    <p><strong>Imprime tu recibo, llévalo a tu tienda de conveniencia más cercana y realiza el pago .</strong></p>
+                    <br>                    
                     <iframe id="pdf" src="<?php echo WC()->session->get( 'pdf_url' ) ?>" style="width:100%; height:950px;" frameborder="0"></iframe>
                 <?php endif; ?>    
                 
