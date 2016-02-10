@@ -38,6 +38,7 @@ class Openpay_Spei extends WC_Payment_Gateway
         $this->live_merchant_id = $this->settings['live_merchant_id'];
         $this->live_private_key = $this->settings['live_private_key'];
         $this->live_publishable_key = $this->settings['live_publishable_key'];
+        $this->deadline = $this->settings['deadline'];
 
         $this->merchant_id = $this->is_sandbox ? $this->test_merchant_id : $this->live_merchant_id;
         $this->publishable_key = $this->is_sandbox ? $this->test_publishable_key : $this->live_publishable_key;
@@ -51,7 +52,7 @@ class Openpay_Spei extends WC_Payment_Gateway
             $this->enabled = false;
         }
     }
-    
+
     public function process_admin_options() {
 
         $this->validate_settings_fields();
@@ -81,7 +82,6 @@ class Openpay_Spei extends WC_Payment_Gateway
             $order->add_order_note(sprintf("Payment completed."));
         }
     }
-
 
     public function init_form_fields() {
         $this->form_fields = array(
@@ -134,6 +134,13 @@ class Openpay_Spei extends WC_Payment_Gateway
                 'description' => __('Get your Production API keys from your Openpay account ("pk_").', 'woothemes'),
                 'default' => __('', 'woothemes')
             ),
+            'deadline' => array(
+                'type' => 'number',
+                'required' => true,
+                'title' => __('Payment deadline', 'woothemes'),
+                'description' => __('Define how many hours have the customer to make the payment.', 'woothemes'),
+                'default' => '48'
+            ),
         );
     }
 
@@ -147,12 +154,15 @@ class Openpay_Spei extends WC_Payment_Gateway
     }
 
     protected function processOpenpayCharge() {
-        // Get the credit card details submitted by the form
+                
+        $due_date = date('Y-m-d\TH:i:s', strtotime('+ '.$this->deadline.' hours'));
+        
         $charge_request = array(
             "method" => "bank_account",
-            "amount" => (float) $this->order->get_total(),            
+            "amount" => (float) $this->order->get_total(),
             "description" => sprintf("Cargo para %s", $this->order->billing_email),
-            "order_id" => $this->order->id
+            "order_id" => $this->order->id,
+            'due_date' => $due_date
         );
 
         $openpay_customer = $this->getOpenpayCustomer();
@@ -178,13 +188,16 @@ class Openpay_Spei extends WC_Payment_Gateway
 
         $this->order = new WC_Order($order_id);
         if ($this->processOpenpayCharge()) {
-            $this->completeOrder();
+            $this->order->update_status('on-hold', 'En espera de pago');
+            $this->order->reduce_order_stock();
+            $woocommerce->cart->empty_cart();
+            $this->order->add_order_note(sprintf("%s payment completed with Transaction Id of '%s'", $this->GATEWAY_NAME, $this->transaction_id));
             return array(
                 'result' => 'success',
                 'redirect' => $this->get_return_url($this->order)
             );
         } else {
-            $this->markAsFailedPayment();
+            $this->order->add_order_note(sprintf("%s SPEI Payment Failed with message: '%s'", $this->GATEWAY_NAME, $this->transactionErrorMessage));
 
             if (function_exists('wc_add_notice')) {
                 wc_add_notice(__('Error en la transacción: No se pudo completar tu pago.'), $notice_type = 'error');
@@ -192,29 +205,6 @@ class Openpay_Spei extends WC_Payment_Gateway
                 $woocommerce->add_error(__('Error en la transacción: No se pudo completar tu pago.'), 'woothemes');
             }
         }
-    }
-
-    protected function markAsFailedPayment() {
-        $this->order->add_order_note(
-                sprintf(
-                        "%s SPEI Payment Failed with message: '%s'", $this->GATEWAY_NAME, $this->transactionErrorMessage
-                )
-        );
-    }
-
-    protected function completeOrder() {
-        global $woocommerce;
-
-        //$this->order->payment_complete();
-        $this->order->update_status('on-hold', 'En espera de pago');
-        $this->order->reduce_order_stock();
-        $woocommerce->cart->empty_cart();
-
-        $this->order->add_order_note(
-                sprintf(
-                        "%s payment completed with Transaction Id of '%s'", $this->GATEWAY_NAME, $this->transaction_id
-                )
-        );
     }
 
     public function createOpenpayCharge($customer, $charge_request) {
@@ -251,14 +241,14 @@ class Openpay_Spei extends WC_Payment_Gateway
 
     public function createOpenpayCustomer() {
 
-        $customerData = array(            
+        $customerData = array(
             'name' => $this->order->billing_first_name,
             'last_name' => $this->order->billing_last_name,
             'email' => $this->order->billing_email,
             'requires_account' => false,
-            'phone_number' => $this->order->billing_phone            
+            'phone_number' => $this->order->billing_phone
         );
-        
+
         if ($this->order->billing_address_1 && $this->order->billing_state && $this->order->billing_city && $this->order->billing_postcode && $this->order->billing_country) {
             $customerData['address'] = array(
                 'line1' => $this->order->billing_address_1,
@@ -346,7 +336,7 @@ class Openpay_Spei extends WC_Payment_Gateway
                 break;
         }
         $error = $e->getErrorCode().'. '.$msg;
-                
+
         if (function_exists('wc_add_notice')) {
             wc_add_notice($error, 'error');
         } else {
@@ -404,7 +394,6 @@ function openpay_spei_template($template, $template_name, $template_path) {
 
     return $template;
 }
-
 
 add_filter('woocommerce_payment_gateways', 'openpay_spei_add_creditcard_gateway');
 add_filter('woocommerce_locate_template', 'openpay_spei_template', 1, 3);
