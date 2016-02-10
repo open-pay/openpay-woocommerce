@@ -22,8 +22,7 @@ class Openpay_Cards extends WC_Payment_Gateway
     protected $transactionErrorMessage = null;
     protected $currencies = array('MXN', 'USD');
 
-    public function __construct()
-    {
+    public function __construct() {
         $this->id = 'openpay_cards';
         $this->method_title = __('Openpay Cards', 'openpay_cards');
         $this->has_fields = true;
@@ -52,24 +51,21 @@ class Openpay_Cards extends WC_Payment_Gateway
 
         // tell WooCommerce to save options
         add_action('wp_enqueue_scripts', array($this, 'payment_scripts'));
-        add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
+        add_action('woocommerce_update_options_payment_gateways_'.$this->id, array($this, 'process_admin_options'));
         add_action('admin_notices', array(&$this, 'perform_ssl_check'));
-        
-        if (!$this->validateCurrency()){
+
+        if (!$this->validateCurrency()) {
             $this->enabled = false;
         }
-        
     }
 
-    public function perform_ssl_check()
-    {
+    public function perform_ssl_check() {
         if (!$this->is_sandbox && get_option('woocommerce_force_ssl_checkout') == 'no' && $this->enabled == 'yes') :
-            echo '<div class="error"><p>' . sprintf(__('%s sandbox testing is disabled and can performe live transactions but the <a href="%s">force SSL option</a> is disabled; your checkout is not secure! Please enable SSL and ensure your server has a valid SSL certificate.', 'woothemes'), $this->GATEWAY_NAME, admin_url('admin.php?page=settings')) . '</p></div>';
+            echo '<div class="error"><p>'.sprintf(__('%s sandbox testing is disabled and can performe live transactions but the <a href="%s">force SSL option</a> is disabled; your checkout is not secure! Please enable SSL and ensure your server has a valid SSL certificate.', 'woothemes'), $this->GATEWAY_NAME, admin_url('admin.php?page=settings')).'</p></div>';
         endif;
     }
 
-    public function init_form_fields()
-    {
+    public function init_form_fields() {
         $this->form_fields = array(
             'enabled' => array(
                 'type' => 'checkbox',
@@ -123,14 +119,12 @@ class Openpay_Cards extends WC_Payment_Gateway
         );
     }
 
-    public function admin_options()
-    {
+    public function admin_options() {
         include_once('templates/admin.php');
     }
 
-    public function payment_fields()
-    {
-        $this->images_dir = WP_PLUGIN_URL . "/" . plugin_basename(dirname(__FILE__)) . '/assets/images/';
+    public function payment_fields() {
+        $this->images_dir = WP_PLUGIN_URL."/".plugin_basename(dirname(__FILE__)).'/assets/images/';
         include_once('templates/payment.php');
     }
 
@@ -141,16 +135,15 @@ class Openpay_Cards extends WC_Payment_Gateway
      *
      * @access public
      */
-    public function payment_scripts()
-    {
+    public function payment_scripts() {
         if (!is_checkout()) {
             return;
         }
 
         wp_enqueue_script('openpay_js', 'https://openpay.s3.amazonaws.com/openpay.v1.min.js', '', '', true);
         wp_enqueue_script('openpay_fraud_js', 'https://openpay.s3.amazonaws.com/openpay-data.v1.min.js', '', '', true);
-        wp_enqueue_script('payment', WP_PLUGIN_URL . "/" . plugin_basename(dirname(__FILE__)) . '/assets/js/jquery.payment.js', '', '', true);
-        wp_enqueue_script('openpay', WP_PLUGIN_URL . "/" . plugin_basename(dirname(__FILE__)) . '/assets/js/openpay.js', '', '1.0', true);
+        wp_enqueue_script('payment', WP_PLUGIN_URL."/".plugin_basename(dirname(__FILE__)).'/assets/js/jquery.payment.js', '', '', true);
+        wp_enqueue_script('openpay', WP_PLUGIN_URL."/".plugin_basename(dirname(__FILE__)).'/assets/js/openpay.js', '', '1.0', true);
 
 
         $openpay_params = array(
@@ -180,11 +173,10 @@ class Openpay_Cards extends WC_Payment_Gateway
         wp_localize_script('openpay', 'wc_openpay_params', $openpay_params);
     }
 
-    protected function processOpenpayCharge($device_session_id, $openpay_token)
-    {
-        
+    protected function processOpenpayCharge($device_session_id, $openpay_token) {
+
         WC()->session->__unset('pdf_url');
-        
+
         // Get the credit card details submitted by the form
         $charge_request = array(
             "method" => "card",
@@ -193,7 +185,7 @@ class Openpay_Cards extends WC_Payment_Gateway
             "source_id" => $openpay_token,
             "device_session_id" => $device_session_id,
             "description" => sprintf("Charge for %s", $this->order->billing_email),
-            "order_id" => "Woocommerce order " . $this->order->id
+            "order_id" => $this->order->id
         );
 
         $openpay_customer = $this->getOpenpayCustomer();
@@ -213,22 +205,24 @@ class Openpay_Cards extends WC_Payment_Gateway
         }
     }
 
-    public function process_payment($order_id)
-    {
+    public function process_payment($order_id) {
         global $woocommerce;
         $device_session_id = isset($_POST['device_session_id']) ? wc_clean($_POST['device_session_id']) : '';
         $openpay_token = $_POST['openpay_token'];
-        error_log('openpay_token:' . $openpay_token);
+        
         $this->order = new WC_Order($order_id);
         if ($this->processOpenpayCharge($device_session_id, $openpay_token)) {
-            $this->completeOrder();
+            /** WooCommerce will use either Completed or Processing status and handle stock. */
+            $this->order->payment_complete();
+            $woocommerce->cart->empty_cart();
+            $this->order->add_order_note(sprintf("%s payment completed with Transaction Id of '%s'", $this->GATEWAY_NAME, $this->transaction_id));
+            
             return array(
                 'result' => 'success',
                 'redirect' => $this->get_return_url($this->order)
             );
         } else {
-            $this->markAsFailedPayment();
-
+            $this->order->add_order_note(sprintf("%s Credit Card Payment Failed with message: '%s'", $this->GATEWAY_NAME, $this->transactionErrorMessage));
             if (function_exists('wc_add_notice')) {
                 wc_add_notice(__('Error en la transacción: No se pudo completar tu pago.'), $notice_type = 'error');
             } else {
@@ -237,36 +231,7 @@ class Openpay_Cards extends WC_Payment_Gateway
         }
     }
 
-    protected function markAsFailedPayment()
-    {
-        $this->order->add_order_note(
-                sprintf(
-                        "%s Credit Card Payment Failed with message: '%s'", $this->GATEWAY_NAME, $this->transactionErrorMessage
-                )
-        );
-    }
-
-    protected function completeOrder()
-    {
-        global $woocommerce;
-
-        if ($this->order->status == 'completed')
-            return;
-
-        //$this->order->payment_complete();
-        $this->order->update_status('completed');
-        $this->order->reduce_order_stock();
-        $woocommerce->cart->empty_cart();
-
-        $this->order->add_order_note(
-                sprintf(
-                        "%s payment completed with Transaction Id of '%s'", $this->GATEWAY_NAME, $this->transaction_id
-                )
-        );
-    }
-
-    public function createOpenpayCharge($customer, $charge_request)
-    {
+    public function createOpenpayCharge($customer, $charge_request) {
         Openpay::getInstance($this->merchant_id, $this->private_key);
         Openpay::setProductionMode($this->is_sandbox ? false : true);
         try {
@@ -278,13 +243,12 @@ class Openpay_Cards extends WC_Payment_Gateway
         }
     }
 
-    public function getOpenpayCustomer()
-    {
+    public function getOpenpayCustomer() {
         $customer_id = null;
         if (is_user_logged_in()) {
             $customer_id = get_user_meta(get_current_user_id(), '_openpay_customer_id', true);
         }
-        
+
         if ($this->isNullOrEmptyString($customer_id)) {
             return $this->createOpenpayCustomer();
         } else {
@@ -299,8 +263,7 @@ class Openpay_Cards extends WC_Payment_Gateway
         }
     }
 
-    public function createOpenpayCustomer()
-    {
+    public function createOpenpayCustomer() {
 
         $customerData = array(
             //'external_id' => $this->order->user_id == null ? null : $this->order->user_id,
@@ -337,8 +300,7 @@ class Openpay_Cards extends WC_Payment_Gateway
         }
     }
 
-    public function error($e)
-    {
+    public function error($e) {
         global $woocommerce;
 
         /* 6001 el webhook ya existe */
@@ -384,15 +346,15 @@ class Openpay_Cards extends WC_Payment_Gateway
                 $msg = 'La petición no pudo ser procesada.';
                 break;
         }
-        $error = 'ERROR ' . $e->getErrorCode() . '. ' . $msg;
+        $error = 'ERROR '.$e->getErrorCode().'. '.$msg;
 
         if (function_exists('wc_add_notice')) {
             wc_add_notice($error, $notice_type = 'error');
         } else {
-            $woocommerce->add_error(__('Payment error:', 'woothemes') . $error);
+            $woocommerce->add_error(__('Payment error:', 'woothemes').$error);
         }
     }
-    
+
     /**
      * Checks if woocommerce has enabled available currencies for plugin
      *
@@ -402,15 +364,14 @@ class Openpay_Cards extends WC_Payment_Gateway
     public function validateCurrency() {
         return in_array(get_woocommerce_currency(), $this->currencies);
     }
-    
-    public function isNullOrEmptyString($string){
-        return (!isset($string) || trim($string)==='');
+
+    public function isNullOrEmptyString($string) {
+        return (!isset($string) || trim($string) === '');
     }
-    
+
 }
 
-function openpay_cards_add_creditcard_gateway($methods)
-{
+function openpay_cards_add_creditcard_gateway($methods) {
     array_push($methods, 'openpay_cards');
     return $methods;
 }
