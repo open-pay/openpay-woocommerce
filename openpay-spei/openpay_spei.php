@@ -1,7 +1,7 @@
 <?php
 /*
   Plugin Name: Openpay SPEI Plugin
-  Plugin URI: https://github.com/open-pay/openpay-XXX
+  Plugin URI: http://www.openpay.mx/docs/plugins/woocommerce.html
   Description: Provides a cash payment gateway through Openpay for WooCommerce.
   Version: 1.0
   Author: Federico Balderas
