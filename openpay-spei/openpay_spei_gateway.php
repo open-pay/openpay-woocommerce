@@ -251,7 +251,7 @@ class Openpay_Spei extends WC_Payment_Gateway
 
         if ($this->order->billing_address_1 && $this->order->billing_state && $this->order->billing_city && $this->order->billing_postcode && $this->order->billing_country) {
             $customerData['address'] = array(
-                'line1' => substr($this->order->billing_address_1, 0, 50),
+                'line1' => substr($this->order->billing_address_1, 0, 200),
                 'line2' => substr($this->order->billing_address_2, 0, 50),                
                 'state' => $this->order->billing_state,
                 'city' => $this->order->billing_city,

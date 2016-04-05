@@ -274,7 +274,7 @@ class Openpay_Cards extends WC_Payment_Gateway
             'requires_account' => false,
             'phone_number' => $this->order->billing_phone,
             'address' => array(
-                'line1' => substr($this->order->billing_address_1, 0, 50),
+                'line1' => substr($this->order->billing_address_1, 0, 200),
                 'line2' => substr($this->order->billing_address_2, 0, 50),
                 'line3' => '',
                 'state' => $this->order->billing_state,
