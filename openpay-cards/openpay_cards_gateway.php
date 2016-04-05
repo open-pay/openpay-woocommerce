@@ -124,7 +124,8 @@ class Openpay_Cards extends WC_Payment_Gateway
     }
 
     public function payment_fields() {
-        $this->images_dir = WP_PLUGIN_URL."/".plugin_basename(dirname(__FILE__)).'/assets/images/';
+        //$this->images_dir = WP_PLUGIN_URL."/".plugin_basename(dirname(__FILE__)).'/assets/images/';
+        $this->images_dir = plugin_dir_url( __FILE__ ).'/assets/images/';
         include_once('templates/payment.php');
     }
 
@@ -273,8 +274,8 @@ class Openpay_Cards extends WC_Payment_Gateway
             'requires_account' => false,
             'phone_number' => $this->order->billing_phone,
             'address' => array(
-                'line1' => $this->order->billing_address_1,
-                'line2' => $this->order->billing_address_2,
+                'line1' => substr($this->order->billing_address_1, 0, 50),
+                'line2' => substr($this->order->billing_address_2, 0, 50),
                 'line3' => '',
                 'state' => $this->order->billing_state,
                 'city' => $this->order->billing_city,
