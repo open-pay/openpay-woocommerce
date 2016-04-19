@@ -67,11 +67,11 @@ function openpayFormHandler() {
                 card_number: card.replace(/ /g,''),
                 cvv2: cvc,
                 expiration_month: expires['month'] || 0,
-                expiration_year: year || 0,
-                address: {}
+                expiration_year: year || 0                
             };
             
             if (jQuery('#billing_address_1').size() > 0) {
+                data.address = {};
                 data.address.line1 = jQuery('#billing_address_1').val();
                 data.address.line2 = jQuery('#billing_address_2').val();
                 data.address.state = jQuery('#billing_state').val();
@@ -79,6 +79,7 @@ function openpayFormHandler() {
                 data.address.postal_code = jQuery('#billing_postcode').val();
                 data.address.country_code = 'MX';
             } else if (data.address.line1) {
+                data.address = {};
                 data.address.line1 = wc_openpay_params.billing_address_1;
                 data.address.line2 = wc_openpay_params.billing_address_2;
                 data.address.state = wc_openpay_params.billing_state;
