@@ -282,7 +282,7 @@ class Openpay_Stores extends WC_Payment_Gateway
     public function createWebhook() {
 
         $protocol = (get_option('woocommerce_force_ssl_checkout') == 'no') ? 'http://' : 'https://';
-        $url = $protocol.$_SERVER['HTTP_HOST'].'/wc-api/Openpay_Stores';
+        $url = site_url('/', $protocol).'/wc-api/Openpay_Stores';
 
         $webhook_data = array(
             'url' => $url,
