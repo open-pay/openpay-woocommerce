@@ -279,13 +279,14 @@ class Openpay_Stores extends WC_Payment_Gateway
         }
     }
 
-    public function createWebhook() {
+    public function createWebhook($force_host_ssl = false) {
 
         $protocol = (get_option('woocommerce_force_ssl_checkout') == 'no') ? 'http://' : 'https://';
-        $url = site_url('/', $protocol).'/wc-api/Openpay_Stores';
+        $url = site_url('/', $protocol).'wc-api/Openpay_Stores';          
 
         $webhook_data = array(
             'url' => $url,
+            'force_host_ssl' => $force_host_ssl,
             'event_types' => array(
                 'verification',
                 'charge.succeeded',
@@ -301,19 +302,19 @@ class Openpay_Stores extends WC_Payment_Gateway
                 'chargeback.accepted'
             )
         );
+                       
 
         $openpay = Openpay::getInstance($this->merchant_id, $this->private_key);
         Openpay::setProductionMode($this->is_sandbox ? false : true);
-
         try {
-
             $webhook = $openpay->webhooks->add($webhook_data);
             if (is_user_logged_in()) {
                 update_user_meta(get_current_user_id(), '_openpay_webhook_id', $webhook->id);
             }
             return $webhook;
         } catch (Exception $e) {
-            $this->error($e);
+            $force_host_ssl = ($force_host_ssl == false) ? true : false; // Si viene con parámtro FALSE, solicito que se force el host SSL
+            $this->errorWebhook($e, $force_host_ssl);
             return false;
         }
     }
@@ -326,17 +327,41 @@ class Openpay_Stores extends WC_Payment_Gateway
             case '1004':
             case '1005':
                 $msg = 'Servicio no disponible.';
+                break;            
+            default: /* Demás errores 400 */
+                $msg = 'La petición no pudo ser procesada.';
                 break;
+        }
+        
+        $error = $e->getErrorCode().'. '.$msg;
+
+        if (function_exists('wc_add_notice')) {
+            wc_add_notice($error, 'error');
+        } else {
+            $settings = new WC_Admin_Settings();
+            $settings->add_error($error);
+        }
+    }
+    
+    
+    public function errorWebhook($e, $force_host_ssl) {
+
+        switch ($e->getErrorCode()) {            
             case '6001':
                 $msg = 'El webhook ya existe, omite este mensaje.';
                 return;
             case '6002':
-                $msg = 'El webhook no pudo ser creado.';
+            case '6003';    
+                $msg = 'El webhook no pudo ser creado.';                
+                if($force_host_ssl == true){
+                    $this->createWebhook(true);
+                }                                
                 break;
             default: /* Demás errores 400 */
                 $msg = 'La petición no pudo ser procesada.';
                 break;
         }
+        
         $error = $e->getErrorCode().'. '.$msg;
 
         if (function_exists('wc_add_notice')) {
