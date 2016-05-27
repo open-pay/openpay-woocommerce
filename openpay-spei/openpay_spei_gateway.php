@@ -279,7 +279,7 @@ class Openpay_Spei extends WC_Payment_Gateway
 
     public function createWebhook($force_host_ssl = false) {
 
-        $protocol = (get_option('woocommerce_force_ssl_checkout') == 'no') ? 'http://' : 'https://';
+        $protocol = (get_option('woocommerce_force_ssl_checkout') == 'no') ? 'http' : 'https';
         $url = site_url('/', $protocol).'wc-api/Openpay_Spei';          
 
         $webhook_data = array(
