@@ -363,6 +363,14 @@ class Openpay_Stores extends WC_Payment_Gateway
         }
         
         $error = $e->getErrorCode().'. '.$msg;
+        
+        /**
+         * Para solo mostrar un mensaje de error en backoffice y no 2, 
+         * esto debido a que se vuelve a realizar la petición "createWebhook" con el parámetro "force_host_ssl"         
+         **/         
+        if(!$force_host_ssl){
+            return;
+        }
 
         if (function_exists('wc_add_notice')) {
             wc_add_notice($error, 'error');
