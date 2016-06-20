@@ -116,6 +116,55 @@ class Openpay_Cards extends WC_Payment_Gateway
                 'description' => __('Get your Production API keys from your Openpay account ("pk_").', 'woothemes'),
                 'default' => __('', 'woothemes')
             ),
+            'interest_free_3_months' => array(
+                'title'           => __( 'Monthly interest-free', 'woothemes' ),
+                'label'            => __( '3 months', 'woocommerce' ),                    
+                'default'         => 'no',
+                'type'            => 'checkbox',
+                'checkboxgroup'   => 'start',
+                'show_if_checked' => 'option',
+                'autoload'        => false,                
+            ),
+            'interest_free_6_months' => array(
+                'label'            => __( '6 months', 'woothemes' ),                    
+                'default'         => 'no',
+                'type'            => 'checkbox',
+                'checkboxgroup'   => '',
+                'show_if_checked' => 'yes',
+                'autoload'        => false
+            ),
+            'interest_free_9_months' => array(
+                'label'            => __( '9 months', 'woothemes' ),                    
+                'default'         => 'no',
+                'type'            => 'checkbox',
+                'checkboxgroup'   => '',
+                'show_if_checked' => 'yes',
+                'autoload'        => false
+            ),
+            'interest_free_12_months' => array(
+                'label'            => __( '12 months', 'woothemes' ),                    
+                'default'         => 'no',
+                'type'            => 'checkbox',
+                'checkboxgroup'   => 'end',
+                'show_if_checked' => 'yes',
+                'autoload'        => false,                
+            ),               
+            'interest_free_18_months' => array(
+                'label'            => __( '18 months', 'woothemes' ),                    
+                'default'         => 'no',
+                'type'            => 'checkbox',
+                'checkboxgroup'   => 'end',
+                'show_if_checked' => 'yes',
+                'autoload'        => false,
+                'description' => __('If you gonna use months interest-free, please select one or more of the following options.', 'woothemes'),
+            ),   
+            'minimum_amount_interest_free' => array(
+                'type' => 'number',
+                'title' => __('Minimum amount', 'woothemes'),
+                'description' => __('Minimum amount to accept months interest-free (shipping included).', 'woothemes'),
+                'default' => __('', 'woothemes')
+            ),
+            
         );
     }
 
@@ -124,8 +173,24 @@ class Openpay_Cards extends WC_Payment_Gateway
     }
 
     public function payment_fields() {
-        //$this->images_dir = WP_PLUGIN_URL."/".plugin_basename(dirname(__FILE__)).'/assets/images/';
-        $this->images_dir = plugin_dir_url( __FILE__ ).'/assets/images/';
+        //$this->images_dir = WP_PLUGIN_URL."/".plugin_basename(dirname(__FILE__)).'/assets/images/';    
+        global $woocommerce;
+        $this->images_dir = plugin_dir_url( __FILE__ ).'/assets/images/';        
+        $months = array('3' => '3 meses', '6' => '6 meses', '9' => '9 meses', '12' => '12 meses', '18' => '18 meses');
+        
+        foreach ($months as $key => $month){
+            if($this->settings['interest_free_'.$key.'_months'] == 'no'){
+                unset($months[$key]);
+            }
+        }
+                
+        $this->show_months_interest_free = false;
+        if(count($months) > 0 && ($woocommerce->cart->total >= $this->settings['minimum_amount_interest_free'])) {
+            $this->show_months_interest_free = true;
+        }
+        
+        $this->months = $months;
+        
         include_once('templates/payment.php');
     }
 
@@ -140,7 +205,9 @@ class Openpay_Cards extends WC_Payment_Gateway
         if (!is_checkout()) {
             return;
         }
-
+        
+        global $woocommerce;
+                
         wp_enqueue_script('openpay_js', 'https://openpay.s3.amazonaws.com/openpay.v1.min.js', '', '', true);
         wp_enqueue_script('openpay_fraud_js', 'https://openpay.s3.amazonaws.com/openpay-data.v1.min.js', '', '', true);
         wp_enqueue_script('payment', WP_PLUGIN_URL."/".plugin_basename(dirname(__FILE__)).'/assets/js/jquery.payment.js', '', '', true);
@@ -150,7 +217,9 @@ class Openpay_Cards extends WC_Payment_Gateway
         $openpay_params = array(
             'merchant_id' => $this->merchant_id,
             'public_key' => $this->publishable_key,
-            'sandbox_mode' => $this->is_sandbox
+            'sandbox_mode' => $this->is_sandbox,
+            'total' => $woocommerce->cart->total,
+            'currency' => get_woocommerce_currency()
         );
 
         // If we're on the pay page we need to pass openpay.js the address of the order.
@@ -174,7 +243,7 @@ class Openpay_Cards extends WC_Payment_Gateway
         wp_localize_script('openpay', 'wc_openpay_params', $openpay_params);
     }
 
-    protected function processOpenpayCharge($device_session_id, $openpay_token) {
+    protected function processOpenpayCharge($device_session_id, $openpay_token, $interest_free) {
 
         WC()->session->__unset('pdf_url');
 
@@ -188,6 +257,10 @@ class Openpay_Cards extends WC_Payment_Gateway
             "description" => sprintf("Charge for %s", $this->order->billing_email),
             "order_id" => $this->order->id
         );
+        
+        if($interest_free > 1){
+            $charge_request['payment_plan'] = array('payments' => (int)$interest_free);
+        }   
 
         $openpay_customer = $this->getOpenpayCustomer();
 
@@ -210,9 +283,10 @@ class Openpay_Cards extends WC_Payment_Gateway
         global $woocommerce;
         $device_session_id = isset($_POST['device_session_id']) ? wc_clean($_POST['device_session_id']) : '';
         $openpay_token = $_POST['openpay_token'];
+        $interest_free = $_POST['openpay_month_interest_free'];
         
         $this->order = new WC_Order($order_id);
-        if ($this->processOpenpayCharge($device_session_id, $openpay_token)) {
+        if ($this->processOpenpayCharge($device_session_id, $openpay_token, $interest_free)) {
             /** WooCommerce will use either Completed or Processing status and handle stock. */
             $this->order->payment_complete();
             $woocommerce->cart->empty_cart();

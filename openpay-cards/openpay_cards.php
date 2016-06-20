@@ -3,7 +3,7 @@
   Plugin Name: Openpay Cards Plugin
   Plugin URI: http://www.openpay.mx/docs/plugins/woocommerce.html
   Description: Provides a Credit Card Payment Gateway through Openpay for WooCommerece.
-  Version: 1.0
+  Version: 1.1.0
   Author: Federico Balderas
   Author URI: http://foograde.com
 

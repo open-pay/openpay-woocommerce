@@ -3,8 +3,26 @@ OpenPay.setApiKey(wc_openpay_params.public_key);
 OpenPay.setSandboxMode(wc_openpay_params.sandbox_mode);
 
 jQuery( document ).ready(function() {
-    
+        
     var $form = jQuery('form.checkout,form#order_review');
+    var total = wc_openpay_params.total;        
+    
+    jQuery(document).on("change", "#openpay_month_interest_free", function() {
+        
+        monthly_payment = 0;
+        months = parseInt(jQuery(this).val());     
+
+        if (months > 1) {
+            jQuery("#total-monthly-payment").removeClass('hidden');
+        } else {
+            jQuery("#total-monthly-payment").addClass('hidden');
+        }
+
+        monthly_payment = total/months;
+        monthly_payment = monthly_payment.toFixed(2);
+        
+        jQuery("#monthly-payment").text('$'+monthly_payment+' '+wc_openpay_params.currency);
+    });
     
     jQuery('.wc-credit-card-form-card-number').cardNumberInput();
     jQuery('.wc-credit-card-form-card-expiry').payment('formatCardExpiry');
