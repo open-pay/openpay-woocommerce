@@ -50,26 +50,35 @@ class Openpay_Stores extends WC_Payment_Gateway
 
         if (!$this->validateCurrency()) {
             $this->enabled = false;
-        }
-    }
-
-    public function process_admin_options() {
-
-        $this->validate_settings_fields();
-
-        if (count($this->errors) > 0) {
-            $this->display_errors();
-            return false;
-        } else {
-            update_option($this->plugin_id.$this->id.'_settings', apply_filters('woocommerce_settings_api_sanitized_fields_'.$this->id, $this->sanitized_fields));
-            $this->init_settings();
-            $this->createWebhook();
-            return true;
-        }
+        }        
     }
     
+    public function process_admin_options() {
+        $post_data = $this->get_post_data();
+        $mode = 'live';    
+        
+        if($post_data['woocommerce_'.$this->id.'_sandbox'] == '1'){
+            $mode = 'test';            
+        }
+        
+        $this->merchant_id = $post_data['woocommerce_'.$this->id.'_'.$mode.'_merchant_id'];
+        $this->private_key = $post_data['woocommerce_'.$this->id.'_'.$mode.'_private_key'];
+        $this->publishable_key = $post_data['woocommerce_'.$this->id.'_'.$mode.'_publishable_key'];
+        
+        $env = ($mode == 'live') ? 'Producton' : 'Sandbox';
+        
+        if($this->merchant_id == '' || $this->private_key == '' || $this->publishable_key == ''){
+            $settings = new WC_Admin_Settings();
+            $settings->add_error('You need to enter "'.$env.'" credentials if you want to use this plugin in this mode.');
+        } else {
+            $this->createWebhook();
+        } 
+        
+        return parent::process_admin_options();        
+    }    
+
     public function webhook_handler() {
-        header('HTTP/1.1 200 OK');
+        header('HTTP/1.1 200 OK');        
         $obj = file_get_contents('php://input');
         $json = json_decode($obj);
 
@@ -83,7 +92,8 @@ class Openpay_Stores extends WC_Payment_Gateway
         }
     }
 
-    public function init_form_fields() {
+    public function init_form_fields() {        
+        
         $this->form_fields = array(
             'enabled' => array(
                 'type' => 'checkbox',
@@ -155,13 +165,14 @@ class Openpay_Stores extends WC_Payment_Gateway
 
     protected function processOpenpayCharge() {
         
+        date_default_timezone_set('America/Mexico_City');
         $due_date = date('Y-m-d\TH:i:s', strtotime('+ '.$this->deadline.' hours'));
         
         $charge_request = array(
             "method" => "store",
             "amount" => (float) $this->order->get_total(),
             "currency" => strtolower(get_woocommerce_currency()),
-            "description" => sprintf("Cargo para %s", $this->order->billing_email),
+            "description" => sprintf("Cargo para %s", $this->order->billing_email),                        
             "order_id" => $this->order->id,
             'due_date' => $due_date
         );
@@ -254,7 +265,7 @@ class Openpay_Stores extends WC_Payment_Gateway
         if ($this->order->billing_address_1 && $this->order->billing_state && $this->order->billing_city && $this->order->billing_postcode && $this->order->billing_country) {
             $customerData['address'] = array(
                 'line1' => substr($this->order->billing_address_1, 0, 200),
-                'line2' => substr($this->order->billing_address_2, 0, 50),                
+                'line2' => substr($this->order->billing_address_2, 0, 50),
                 'state' => $this->order->billing_state,
                 'city' => $this->order->billing_city,
                 'postal_code' => $this->order->billing_postcode,
@@ -302,8 +313,7 @@ class Openpay_Stores extends WC_Payment_Gateway
                 'chargeback.accepted'
             )
         );
-                       
-
+             
         $openpay = Openpay::getInstance($this->merchant_id, $this->private_key);
         Openpay::setProductionMode($this->is_sandbox ? false : true);
         try {
@@ -314,7 +324,7 @@ class Openpay_Stores extends WC_Payment_Gateway
             return $webhook;
         } catch (Exception $e) {
             $force_host_ssl = ($force_host_ssl == false) ? true : false; // Si viene con parámtro FALSE, solicito que se force el host SSL
-            $this->errorWebhook($e, $force_host_ssl);
+            $this->errorWebhook($e, $force_host_ssl, $url);
             return false;
         }
     }
@@ -344,7 +354,7 @@ class Openpay_Stores extends WC_Payment_Gateway
     }
     
     
-    public function errorWebhook($e, $force_host_ssl) {
+    public function errorWebhook($e, $force_host_ssl, $url) {
 
         switch ($e->getErrorCode()) {            
             case '6001':
@@ -352,7 +362,7 @@ class Openpay_Stores extends WC_Payment_Gateway
                 return;
             case '6002':
             case '6003';    
-                $msg = 'El webhook no pudo ser creado.';                
+                $msg = 'No es posible conectarse con el servicio de webhook, verifica la URL: '.$url;                
                 if($force_host_ssl == true){
                     $this->createWebhook(true);
                 }                                
