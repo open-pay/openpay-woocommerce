@@ -161,7 +161,7 @@ class Openpay_Cards extends WC_Payment_Gateway
             'minimum_amount_interest_free' => array(
                 'type' => 'number',
                 'title' => __('Minimum amount', 'woothemes'),
-                'description' => __('Minimum amount to accept months interest-free (shipping included).', 'woothemes'),
+                'description' => __('Minimum amount to accept months interest-free (minimum amount must be at least $1,800 MXN).', 'woothemes'),
                 'default' => __('', 'woothemes')
             ),
             
