@@ -283,7 +283,11 @@ class Openpay_Cards extends WC_Payment_Gateway
         global $woocommerce;
         $device_session_id = isset($_POST['device_session_id']) ? wc_clean($_POST['device_session_id']) : '';
         $openpay_token = $_POST['openpay_token'];
-        $interest_free = $_POST['openpay_month_interest_free'];
+        $interest_free = null;
+        
+        if(isset($_POST['openpay_month_interest_free'])){
+            $interest_free = $_POST['openpay_month_interest_free'];
+        }
         
         $this->order = new WC_Order($order_id);
         if ($this->processOpenpayCharge($device_session_id, $openpay_token, $interest_free)) {
