@@ -3,14 +3,14 @@ OpenPay.setApiKey(wc_openpay_params.public_key);
 OpenPay.setSandboxMode(wc_openpay_params.sandbox_mode);
 
 jQuery( document ).ready(function() {
-        
+
     var $form = jQuery('form.checkout,form#order_review');
-    var total = wc_openpay_params.total;        
-    
+    var total = wc_openpay_params.total;
+
     jQuery(document).on("change", "#openpay_month_interest_free", function() {
-        
+
         monthly_payment = 0;
-        months = parseInt(jQuery(this).val());     
+        months = parseInt(jQuery(this).val());
 
         if (months > 1) {
             jQuery("#total-monthly-payment").removeClass('hidden');
@@ -20,10 +20,10 @@ jQuery( document ).ready(function() {
 
         monthly_payment = total/months;
         monthly_payment = monthly_payment.toFixed(2);
-        
+
         jQuery("#monthly-payment").text('$'+monthly_payment+' '+wc_openpay_params.currency);
     });
-    
+
     jQuery('.wc-credit-card-form-card-number').cardNumberInput();
     jQuery('.wc-credit-card-form-card-expiry').payment('formatCardExpiry');
     jQuery('.wc-credit-card-form-card-cvc').payment('formatCardCVC');
@@ -34,26 +34,22 @@ jQuery( document ).ready(function() {
         jQuery('.wc-credit-card-form-card-expiry').payment('formatCardExpiry');
         jQuery('.wc-credit-card-form-card-cvc').payment('formatCardCVC');
     });
-    
+
     jQuery('body').on('click', 'form#order_review input:submit', function(){
         if(jQuery('input[name=payment_method]:checked').val() != 'openpay_cards'){
             return true;
         }
         return false;
     });
-    
+
     jQuery('body').on('click', 'form.checkout input:submit', function(){
         jQuery('.woocommerce_error, .woocommerce-error, .woocommerce-message, .woocommerce_message').remove();
         // Make sure there's not an old token on the form
         jQuery('form.checkout').find('[name=openpay_token]').remove();
     });
-    
-    // Bind to the checkout_place_order event to add the token
-    jQuery('form.checkout').bind('checkout_place_order', function (e) {
 
-        if (jQuery('input[name=payment_method]:checked').val() != 'openpay_cards') {
-            return true;
-        }
+    // Bind to the checkout_place_order event to add the token
+    jQuery('form.checkout').bind('checkout_place_order_openpay_cards', function (e) {
         $form.find('.payment-errors').html('');
         $form.block({message: null, overlayCSS: {background: "#fff url(" + woocommerce_params.ajax_loader_url + ") no-repeat center", backgroundSize: "16px 16px", opacity: 0.6}});
 
@@ -64,12 +60,12 @@ jQuery( document ).ready(function() {
         openpayFormHandler();
         // Prevent the form from submitting with the default action
         return false;
-    });    
+    });
 
 });
 
 function openpayFormHandler() {
-        
+
     var holder_name = jQuery('#openpay-holder-name').val();
     var card = jQuery('#openpay-card-number').val();
     var cvc = jQuery('#openpay-card-cvc').val();
@@ -85,10 +81,10 @@ function openpayFormHandler() {
         card_number: card.replace(/ /g,''),
         cvv2: cvc,
         expiration_month: expires['month'] || 0,
-        expiration_year: year || 0                
+        expiration_year: year || 0
     };
 
-    if (jQuery('#billing_address_1').length) {                                
+    if (jQuery('#billing_address_1').length) {
         if(jQuery('#billing_address_1').val() && jQuery('#billing_state').val() && jQuery('#billing_city').val() && jQuery('#billing_postcode').val()) {
             data.address = {};
             data.address.line1 = jQuery('#billing_address_1').val();
@@ -97,11 +93,11 @@ function openpayFormHandler() {
             data.address.city = jQuery('#billing_city').val();
             data.address.postal_code = jQuery('#billing_postcode').val();
             data.address.country_code = 'MX';
-        }                                 
-    } 
+        }
+    }
 
-    OpenPay.token.create(data, success_callback, error_callback);            
-    
+    OpenPay.token.create(data, success_callback, error_callback);
+
 }
 
 
@@ -156,5 +152,5 @@ function error_callback(response) {
     jQuery('.woocommerce_error, .woocommerce-error, .woocommerce-message, .woocommerce_message').remove();
     jQuery('#openpay-holder-name').closest('p').before('<ul style="background-color: #e2401c; color: #fff;" class="woocommerce_error woocommerce-error"><li> ERROR ' + response.data.error_code + '. '+msg+'</li></ul>');
     $form.unblock();
-    
+
 };
