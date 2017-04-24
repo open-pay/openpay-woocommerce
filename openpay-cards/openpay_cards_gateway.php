@@ -344,14 +344,16 @@ class Openpay_Cards extends WC_Payment_Gateway
 
     public function createOpenpayCustomer() {
 
-        $customerData = array(
-            //'external_id' => $this->order->user_id == null ? null : $this->order->user_id,
+        $customerData = array(            
             'name' => $this->order->billing_first_name,
             'last_name' => $this->order->billing_last_name,
             'email' => $this->order->billing_email,
             'requires_account' => false,
-            'phone_number' => $this->order->billing_phone,
-            'address' => array(
+            'phone_number' => $this->order->billing_phone            
+        );
+        
+        if($this->hasAddress($this->order)) {
+            $customerData['address'] = array(
                 'line1' => substr($this->order->billing_address_1, 0, 200),
                 'line2' => substr($this->order->billing_address_2, 0, 50),
                 'line3' => '',
@@ -359,8 +361,8 @@ class Openpay_Cards extends WC_Payment_Gateway
                 'city' => $this->order->billing_city,
                 'postal_code' => $this->order->billing_postcode,
                 'country_code' => $this->order->billing_country
-            )
-        );
+            );
+        }
 
         $openpay = Openpay::getInstance($this->merchant_id, $this->private_key);
         Openpay::setProductionMode($this->is_sandbox ? false : true);
@@ -377,6 +379,13 @@ class Openpay_Cards extends WC_Payment_Gateway
             $this->error($e);
             return false;
         }
+    }
+    
+    public function hasAddress($order) {
+        if($order->billing_address_1 && $order->billing_state && $order->billing_postcode && $order->billing_country && $order->billing_city) {
+            return true;
+        }
+        return false;    
     }
 
     public function error($e) {
