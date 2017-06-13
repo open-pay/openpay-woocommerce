@@ -2,7 +2,7 @@
 /*
   Title:	Openpay Payment extension for WooCommerce
   Author:	Federico Balderas
-  URL:		http://foograde.com
+  URL:		http://www.openpay.mx
   License: GNU General Public License v3.0
   License URI: http://www.gnu.org/licenses/gpl-3.0.html
  */
@@ -27,11 +27,11 @@
 <div style="overflow: hidden;">
     <div style="overflow: hidden;">
         <div style="width: 35%; float: left;">
-            <h5>Tarjetas de crédito</h5>	
+            <h5>Trajetas de crédito</h5>	
             <img alt="" src="<?php echo $this->images_dir ?>credit_cards.png">	
         </div>
         <div style="width: 65%; float: left;">
-            <h5>Tarjetas de débito</h5>	
+            <h5>Trajetas de débito</h5>	
             <img alt="" src="<?php echo $this->images_dir ?>debit_cards.png">	
         </div>
     </div>	

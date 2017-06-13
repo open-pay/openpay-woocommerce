@@ -2,10 +2,10 @@
 /*
   Plugin Name: Openpay Stores Plugin
   Plugin URI: http://www.openpay.mx/docs/plugins/woocommerce.html
-  Description: Provides a cash payment gateway through Openpay for WooCommerce.
-  Version: 1.0
+  Description: Provides a cash payment gateway through Openpay for WooCommerce. Compatible with WooCommerce 3.0.8 and Wordpress 4.8.
+  Version: 1.3.0
   Author: Federico Balderas
-  Author URI: http://foograde.com
+  Author URI: http://www.openpay.mx
 
   License: GNU General Public License v3.0
   License URI: http://www.gnu.org/licenses/gpl-3.0.html

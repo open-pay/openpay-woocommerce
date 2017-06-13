@@ -6,7 +6,7 @@ if (!class_exists('Openpay')) {
 /*
   Title:	Openpay Payment extension for WooCommerce
   Author:	Federico Balderas
-  URL:		http://foograde.com
+  URL:		http://www.openpay.mx
   License: GNU General Public License v3.0
   License URI: http://www.gnu.org/licenses/gpl-3.0.html
  */
@@ -86,7 +86,7 @@ class Openpay_Stores extends WC_Payment_Gateway
             $order_id = $json->transaction->order_id;
             $payment_date = date("Y-m-d", $json->event_date);
             $order = new WC_Order($order_id);
-            update_post_meta($order->id, 'openpay_payment_date', $payment_date);
+            update_post_meta($order->get_id(), 'openpay_payment_date', $payment_date);
             $order->payment_complete();
             $order->add_order_note(sprintf("Payment completed."));
         }
@@ -172,8 +172,8 @@ class Openpay_Stores extends WC_Payment_Gateway
             "method" => "store",
             "amount" => (float) $this->order->get_total(),
             "currency" => strtolower(get_woocommerce_currency()),
-            "description" => sprintf("Cargo para %s", $this->order->billing_email),                        
-            "order_id" => $this->order->id,
+            "description" => sprintf("Cargo para %s", $this->order->get_billing_email()),                        
+            "order_id" => $this->order->get_id(),
             'due_date' => $due_date
         );
 
@@ -186,9 +186,9 @@ class Openpay_Stores extends WC_Payment_Gateway
             $this->transaction_id = $result_json->id;
             WC()->session->set('pdf_url', $this->pdf_url_base.'/'.$this->merchant_id.'/'.$result_json->payment_method->reference);
             //Save data for the ORDER
-            update_post_meta($this->order->id, '_openpay_customer_id', $openpay_customer->id);
-            update_post_meta($this->order->id, '_transaction_id', $result_json->id);
-            update_post_meta($this->order->id, '_key', $this->private_key);
+            update_post_meta($this->order->get_id(), '_openpay_customer_id', $openpay_customer->id);
+            update_post_meta($this->order->get_id(), '_transaction_id', $result_json->id);
+            update_post_meta($this->order->get_id(), '_key', $this->private_key);
 
             return true;
         } else {
@@ -255,21 +255,21 @@ class Openpay_Stores extends WC_Payment_Gateway
     public function createOpenpayCustomer() {
 
         $customerData = array(
-            'name' => $this->order->billing_first_name,
-            'last_name' => $this->order->billing_last_name,
-            'email' => $this->order->billing_email,
+            'name' => $this->order->get_billing_first_name(),
+            'last_name' => $this->order->get_billing_last_name(),
+            'email' => $this->order->get_billing_email(),
             'requires_account' => false,
-            'phone_number' => $this->order->billing_phone
+            'phone_number' => $this->order->get_billing_phone()
         );
 
-        if ($this->order->billing_address_1 && $this->order->billing_state && $this->order->billing_city && $this->order->billing_postcode && $this->order->billing_country) {
+        if ($this->order->get_billing_address_1() && $this->order->get_billing_state() && $this->order->get_billing_city() && $this->order->get_billing_postcode() && $this->order->get_billing_country()) {
             $customerData['address'] = array(
-                'line1' => substr($this->order->billing_address_1, 0, 200),
-                'line2' => substr($this->order->billing_address_2, 0, 50),
-                'state' => $this->order->billing_state,
-                'city' => $this->order->billing_city,
-                'postal_code' => $this->order->billing_postcode,
-                'country_code' => $this->order->billing_country
+                'line1' => substr($this->order->get_billing_address_1(), 0, 200),
+                'line2' => substr($this->order->get_billing_address_2(), 0, 50),
+                'state' => $this->order->get_billing_state(),
+                'city' => $this->order->get_billing_city(),
+                'postal_code' => $this->order->get_billing_postcode(),
+                'country_code' => $this->order->get_billing_country()
             );
         }
 

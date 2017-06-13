@@ -7,7 +7,7 @@ if (!class_exists('Openpay')) {
 /*
   Title:	Openpay Payment extension for WooCommerce
   Author:	Federico Balderas
-  URL:		http://foograde.com
+  URL:		http://www.openpay.mx
   License: GNU General Public License v3.0
   License URI: http://www.gnu.org/licenses/gpl-3.0.html
  */
@@ -209,9 +209,9 @@ class Openpay_Cards extends WC_Payment_Gateway
         global $woocommerce;
                 
         wp_enqueue_script('openpay_js', 'https://openpay.s3.amazonaws.com/openpay.v1.min.js', '', '', true);
-        wp_enqueue_script('openpay_fraud_js', 'https://openpay.s3.amazonaws.com/openpay-data.v1.min.js', '', '', true);
-        wp_enqueue_script('payment', WP_PLUGIN_URL."/".plugin_basename(dirname(__FILE__)).'/assets/js/jquery.payment.js', '', '', true);
-        wp_enqueue_script('openpay', WP_PLUGIN_URL."/".plugin_basename(dirname(__FILE__)).'/assets/js/openpay.js', '', '1.0', true);
+        wp_enqueue_script('openpay_fraud_js', 'https://openpay.s3.amazonaws.com/openpay-data.v1.min.js', '', '', true);        
+        wp_enqueue_script('payment', plugins_url('assets/js/jquery.payment.js', __FILE__), array( 'jquery' ), '', true);
+        wp_enqueue_script('openpay', plugins_url('assets/js/openpay.js', __FILE__), array( 'jquery' ), '', true);        
 
 
         $openpay_params = array(
@@ -228,15 +228,15 @@ class Openpay_Cards extends WC_Payment_Gateway
             $order_id = absint($_GET['order_id']);
             $order = new WC_Order($order_id);
 
-            if ($order->id == $order_id && $order->order_key == $order_key) {
-                $openpay_params['billing_first_name'] = $order->billing_first_name;
-                $openpay_params['billing_last_name'] = $order->billing_last_name;
-                $openpay_params['billing_address_1'] = $order->billing_address_1;
-                $openpay_params['billing_address_2'] = $order->billing_address_2;
-                $openpay_params['billing_state'] = $order->billing_state;
-                $openpay_params['billing_city'] = $order->billing_city;
-                $openpay_params['billing_postcode'] = $order->billing_postcode;
-                $openpay_params['billing_country'] = $order->billing_country;
+            if ($order->get_id() == $order_id && $order->get_order_key() == $order_key) {
+                $openpay_params['get_billing_first_name()'] = $order->get_billing_first_name();
+                $openpay_params['get_billing_last_name()'] = $order->get_billing_last_name();
+                $openpay_params['get_billing_address_1()'] = $order->get_billing_address_1();
+                $openpay_params['get_billing_address_2()'] = $order->get_billing_address_2();
+                $openpay_params['get_billing_state()'] = $order->get_billing_state();
+                $openpay_params['get_billing_city()'] = $order->get_billing_city();
+                $openpay_params['get_billing_postcode()'] = $order->get_billing_postcode();
+                $openpay_params['get_billing_country()'] = $order->get_billing_country();
             }
         }
 
@@ -254,8 +254,8 @@ class Openpay_Cards extends WC_Payment_Gateway
             "currency" => strtolower(get_woocommerce_currency()),
             "source_id" => $openpay_token,
             "device_session_id" => $device_session_id,
-            "description" => sprintf("Charge for %s", $this->order->billing_email),
-            "order_id" => $this->order->id
+            "description" => sprintf("Charge for %s", $this->order->get_billing_email()),
+            "order_id" => $this->order->get_id()
         );
         
         if($interest_free > 1){
@@ -269,9 +269,9 @@ class Openpay_Cards extends WC_Payment_Gateway
         if ($result_json != false) {
             $this->transaction_id = $result_json->id;
             //Save data for the ORDER
-            update_post_meta($this->order->id, '_openpay_customer_id', $openpay_customer->id);
-            update_post_meta($this->order->id, '_transaction_id', $result_json->id);
-            update_post_meta($this->order->id, '_key', $this->private_key);
+            update_post_meta($this->order->get_id(), '_openpay_customer_id', $openpay_customer->id);
+            update_post_meta($this->order->get_id(), '_transaction_id', $result_json->id);
+            update_post_meta($this->order->get_id(), '_key', $this->private_key);
 
             return true;
         } else {
@@ -311,7 +311,7 @@ class Openpay_Cards extends WC_Payment_Gateway
     }
 
     public function createOpenpayCharge($customer, $charge_request) {
-        Openpay::getInstance($this->merchant_id, $this->private_key);
+        Openpay::getInstance($this->merchant_id, $this->private_key);        
         Openpay::setProductionMode($this->is_sandbox ? false : true);
         try {
             $charge = $customer->charges->create($charge_request);
@@ -345,22 +345,22 @@ class Openpay_Cards extends WC_Payment_Gateway
     public function createOpenpayCustomer() {
 
         $customerData = array(            
-            'name' => $this->order->billing_first_name,
-            'last_name' => $this->order->billing_last_name,
-            'email' => $this->order->billing_email,
+            'name' => $this->order->get_billing_first_name(),
+            'last_name' => $this->order->get_billing_last_name(),
+            'email' => $this->order->get_billing_email(),
             'requires_account' => false,
-            'phone_number' => $this->order->billing_phone            
+            'phone_number' => $this->order->get_billing_phone()            
         );
         
         if($this->hasAddress($this->order)) {
             $customerData['address'] = array(
-                'line1' => substr($this->order->billing_address_1, 0, 200),
-                'line2' => substr($this->order->billing_address_2, 0, 50),
+                'line1' => substr($this->order->get_billing_address_1(), 0, 200),
+                'line2' => substr($this->order->get_billing_address_2(), 0, 50),
                 'line3' => '',
-                'state' => $this->order->billing_state,
-                'city' => $this->order->billing_city,
-                'postal_code' => $this->order->billing_postcode,
-                'country_code' => $this->order->billing_country
+                'state' => $this->order->get_billing_state(),
+                'city' => $this->order->get_billing_city(),
+                'postal_code' => $this->order->get_billing_postcode(),
+                'country_code' => $this->order->get_billing_country()
             );
         }
 
@@ -382,13 +382,13 @@ class Openpay_Cards extends WC_Payment_Gateway
     }
     
     public function hasAddress($order) {
-        if($order->billing_address_1 && $order->billing_state && $order->billing_postcode && $order->billing_country && $order->billing_city) {
+        if($order->get_billing_address_1() && $order->get_billing_state() && $order->get_billing_postcode() && $order->get_billing_country() && $order->get_billing_city()) {
             return true;
         }
         return false;    
     }
 
-    public function error($e) {
+    public function error(Exception $e) {
         global $woocommerce;
 
         /* 6001 el webhook ya existe */
@@ -434,7 +434,7 @@ class Openpay_Cards extends WC_Payment_Gateway
                 $msg = 'La petición no pudo ser procesada.';
                 break;
         }
-        $error = 'ERROR '.$e->getErrorCode().'. '.$msg;
+        $error = 'ERROR '.$e->getErrorCode().'. '.$msg;        
 
         if (function_exists('wc_add_notice')) {
             wc_add_notice($error, $notice_type = 'error');
