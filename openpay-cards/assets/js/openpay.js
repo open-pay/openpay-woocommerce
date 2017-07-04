@@ -165,7 +165,7 @@ function error_callback(response) {
 
     // show the errors on the form
     jQuery('.woocommerce_error, .woocommerce-error, .woocommerce-message, .woocommerce_message').remove();
-    jQuery('#openpay-holder-name').closest('p').before('<ul style="background-color: #e2401c; color: #fff;" class="woocommerce_error woocommerce-error"><li> ERROR ' + response.data.error_code + '. ' + msg + '</li></ul>');
+    jQuery('#openpay-holder-name').closest('div').before('<ul style="background-color: #e2401c; color: #fff;" class="woocommerce_error woocommerce-error"><li> ERROR ' + response.data.error_code + '. ' + msg + '</li></ul>');
     $form.unblock();
 
 }
