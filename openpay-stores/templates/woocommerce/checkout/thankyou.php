@@ -67,7 +67,7 @@ if (!defined('ABSPATH')) {
 
             </ul>
 
-            <?php if (WC()->session->__isset('pdf_url')): ?>
+            <?php if (WC()->session->__isset('pdf_url') && ($order->get_payment_method() == 'openpay_stores' || $order->get_payment_method() == 'openpay_spei')): ?>            
                 <div class="clear"></div>
                 <br>                    
                 <iframe id="pdf" src="<?php echo WC()->session->get('pdf_url') ?>" style="width:100%; height:950px; visibility: visible !important; opacity: 1 !important;" frameborder="0"></iframe>
