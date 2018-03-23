@@ -6,7 +6,7 @@ if (!class_exists('Openpay')) {
 
 /*
   Title:	Openpay Payment extension for WooCommerce
-  Author:	Federico Balderas
+  Author:	Openpay
   URL:		http://www.openpay.mx
   License: GNU General Public License v3.0
   License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -302,6 +302,9 @@ class Openpay_Cards extends WC_Payment_Gateway
             );
         } else {
             $this->order->add_order_note(sprintf("%s Credit Card Payment Failed with message: '%s'", $this->GATEWAY_NAME, $this->transactionErrorMessage));
+            $this->order->set_status('failed');
+            $this->order->save();
+            
             if (function_exists('wc_add_notice')) {
                 wc_add_notice(__('Error en la transacción: No se pudo completar tu pago.'), $notice_type = 'error');
             } else {
@@ -435,7 +438,7 @@ class Openpay_Cards extends WC_Payment_Gateway
                 break;
         }
         $error = 'ERROR '.$e->getErrorCode().'. '.$msg;        
-
+        $this->transactionErrorMessage = $error;
         if (function_exists('wc_add_notice')) {
             wc_add_notice($error, $notice_type = 'error');
         } else {
