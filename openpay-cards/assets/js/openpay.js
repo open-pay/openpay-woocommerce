@@ -41,15 +41,7 @@ jQuery(document).ready(function () {
         jQuery('.wc-credit-card-form-card-cvc').payment('formatCardCVC');
     });
 
-    jQuery('body').on('click', 'form#order_review input:submit', function () {
-        console.log("order_review");
-        if (jQuery('input[name=payment_method]:checked').val() !== 'openpay_cards') {
-            return true;
-        }
-        return false;
-    });
-
-    jQuery('body').on('click', 'form.checkout input:submit', function () {
+    jQuery('body').on('click', 'form.checkout button:submit', function () {
         console.log("woocommerce_error");
         jQuery('.woocommerce_error, .woocommerce-error, .woocommerce-message, .woocommerce_message').remove();
         // Make sure there's not an old token on the form
