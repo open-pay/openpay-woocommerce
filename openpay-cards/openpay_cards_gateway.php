@@ -245,7 +245,7 @@ class Openpay_Cards extends WC_Payment_Gateway
 
     protected function processOpenpayCharge($device_session_id, $openpay_token, $interest_free) {
 
-        WC()->session->__unset('pdf_url');
+        WC()->session->__unset('pdf_url');                
 
         // Get the credit card details submitted by the form
         $charge_request = array(
@@ -254,7 +254,7 @@ class Openpay_Cards extends WC_Payment_Gateway
             "currency" => strtolower(get_woocommerce_currency()),
             "source_id" => $openpay_token,
             "device_session_id" => $device_session_id,
-            "description" => sprintf("Charge for %s", $this->order->get_billing_email()),
+            "description" => sprintf("Charge for #%s %s", $this->order->get_id(), $this->order->get_billing_email()),
             "order_id" => $this->order->get_id()
         );
         
