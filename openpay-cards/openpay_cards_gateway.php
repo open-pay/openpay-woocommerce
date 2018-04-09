@@ -250,7 +250,7 @@ class Openpay_Cards extends WC_Payment_Gateway
         // Get the credit card details submitted by the form
         $charge_request = array(
             "method" => "card",
-            "amount" => (float) $this->order->get_total(),
+            "amount" => round($this->order->get_total(), 2),
             "currency" => strtolower(get_woocommerce_currency()),
             "source_id" => $openpay_token,
             "device_session_id" => $device_session_id,
