@@ -8,7 +8,7 @@ Stable tag: 1.3.1
 License: GNU General Public License v3.0
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
-Provides a Credit Card Payment Gateway through Openpay for WooCommerce.
+Provides a credit card payment method with Openpay for WooCommerce.
 
 == Installation ==
 For more information about this module go to: 
