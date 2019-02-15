@@ -66,13 +66,20 @@ if (!defined('ABSPATH')) {
                 <?php endif; ?>
 
             </ul>
-
-            <?php if (WC()->session->__isset('pdf_url') && ($order->get_payment_method() == 'openpay_stores' || $order->get_payment_method() == 'openpay_spei')): ?>            
-                <div class="clear"></div>
-                <br>                    
+            
+            <?php if(strlen(get_post_meta($order->get_id(), '_pdf_url', true)) && ($order->get_payment_method() == 'openpay_stores' || $order->get_payment_method() == 'openpay_spei')): ?> 
+                <h2 class="woocommerce-order-details__title">Recibo de pago</h2>
                 <iframe id="pdf" src="<?php echo WC()->session->get('pdf_url') ?>" style="width:100%; height:950px; visibility: visible !important; opacity: 1 !important;" frameborder="0"></iframe>
             <?php endif; ?>    
+                
             <div class="clear"></div>
+            
+            <?php if(get_post_meta($order->get_id(), '_show_map', true) == 'yes'): ?>      
+                <div style="margin: 20px 0px;">
+                    <h2 class="woocommerce-order-details__title">Mapa de tiendas</h2>
+                    <iframe src="https://www.paynet.com.mx/mapa-tiendas/index.html?locationNotAllowed=true&postalCode=<?php echo $order->get_shipping_postcode() ?>" style="border: 1px solid #000; width:100%; height:300px; visibility: visible !important; opacity: 1 !important;" frameborder="0"></iframe>                
+                </div>    
+            <?php endif; ?>    
 
         <?php endif; ?>
 

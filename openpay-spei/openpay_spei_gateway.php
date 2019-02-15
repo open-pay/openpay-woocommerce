@@ -82,13 +82,20 @@ class Openpay_Spei extends WC_Payment_Gateway
         $obj = file_get_contents('php://input');
         $json = json_decode($obj);
 
-        if ($json->type == 'charge.succeeded') {
-            $order_id = $json->transaction->order_id;
-            $payment_date = date("Y-m-d", $json->event_date);
-            $order = new WC_Order($order_id);
-            update_post_meta($order->get_id(), 'openpay_payment_date', $payment_date);
-            $order->payment_complete();
-            $order->add_order_note(sprintf("Payment completed."));
+        if ($json->type == 'charge.succeeded') {            
+            $openpay = Openpay::getInstance($this->merchant_id, $this->private_key);
+            Openpay::setProductionMode($this->is_sandbox ? false : true);
+            
+            $charge = $openpay->charges->get($json->transaction->id);
+            
+            if ($charge->status == 'completed') {
+                $order_id = $json->transaction->order_id;
+                $payment_date = date("Y-m-d", $json->event_date);
+                $order = new WC_Order($order_id);
+                update_post_meta($order->get_id(), 'openpay_payment_date', $payment_date);
+                $order->payment_complete();
+                $order->add_order_note(sprintf("Payment completed."));
+            }
         }
     }
 
@@ -96,53 +103,52 @@ class Openpay_Spei extends WC_Payment_Gateway
         $this->form_fields = array(
             'enabled' => array(
                 'type' => 'checkbox',
-                'title' => __('Enable/Disable', 'woothemes'),
-                'label' => __('Enable Openpay SPEI', 'woothemes'),
+                'title' => __('Habilitar módulo', 'woothemes'),
+                'label' => __('Habilitar', 'woothemes'),
                 'default' => 'yes'
             ),
             'sandbox' => array(
                 'type' => 'checkbox',
-                'title' => __('Sandbox mode', 'woothemes'),
-                'label' => __('Enable sandbox', 'woothemes'),
-                'description' => __('Place the payment gateway in test mode using Sandbox API keys.', 'woothemes'),
+                'title' => __('Modo de pruebas', 'woothemes'),
+                'label' => __('Habilitar', 'woothemes'),                
                 'default' => 'no'
             ),
             'test_merchant_id' => array(
                 'type' => 'text',
-                'title' => __('Sandbox merchant ID', 'woothemes'),
-                'description' => __('Get your Sandbox API keys from your Openpay account.', 'woothemes'),
+                'title' => __('ID de comercio de pruebas', 'woothemes'),
+                'description' => __('Obten tus llaves de prueba de tu cuenta de Openpay.', 'woothemes'),
                 'default' => __('', 'woothemes')
             ),
             'test_private_key' => array(
                 'type' => 'text',
-                'title' => __('Sandbox secret key', 'woothemes'),
-                'description' => __('Get your Sandbox API keys from your Openpay account ("sk_").', 'woothemes'),
+                'title' => __('Llave secreta de pruebas', 'woothemes'),
+                'description' => __('Obten tus llaves de prueba de tu cuenta de Openpay ("sk_").', 'woothemes'),
                 'default' => __('', 'woothemes')
             ),
             'test_publishable_key' => array(
                 'type' => 'text',
-                'title' => __('Sandbox public key', 'woothemes'),
-                'description' => __('Get your Sandbox API keys from your Openpay account ("pk_").', 'woothemes'),
+                'title' => __('Llave pública de pruebas', 'woothemes'),
+                'description' => __('Obten tus llaves de prueba de tu cuenta de Openpay ("pk_").', 'woothemes'),
                 'default' => __('', 'woothemes')
             ),
             'live_merchant_id' => array(
                 'type' => 'text',
-                'title' => __('Production merchant ID', 'woothemes'),
-                'description' => __('Get your Production API keys from your Openpay account.', 'woothemes'),
+                'title' => __('ID de comercio de producción', 'woothemes'),
+                'description' => __('Obten tus llaves de producción de tu cuenta de Openpay.', 'woothemes'),
                 'default' => __('', 'woothemes')
             ),
             'live_private_key' => array(
                 'type' => 'text',
-                'title' => __('Production secret key', 'woothemes'),
-                'description' => __('Get your Production API keys from your Openpay account ("sk_").', 'woothemes'),
+                'title' => __('Llave secreta de producción', 'woothemes'),
+                'description' => __('Obten tus llaves de producción de tu cuenta de Openpay ("sk_").', 'woothemes'),
                 'default' => __('', 'woothemes')
             ),
             'live_publishable_key' => array(
                 'type' => 'text',
-                'title' => __('Production public key', 'woothemes'),
-                'description' => __('Get your Production API keys from your Openpay account ("pk_").', 'woothemes'),
+                'title' => __('Llave pública de producción', 'woothemes'),
+                'description' => __('Obten tus llaves de producción de tu cuenta de Openpay ("pk_").', 'woothemes'),
                 'default' => __('', 'woothemes')
-            ),
+            ),      
             'deadline' => array(
                 'type' => 'number',
                 'required' => true,
@@ -150,6 +156,13 @@ class Openpay_Spei extends WC_Payment_Gateway
                 'description' => __('Define how many hours have the customer to make the payment.', 'woothemes'),
                 'default' => '48'
             ),
+            'show_map' => array(
+                'type' => 'checkbox',
+                'title' => __('Mostrar mapa', 'woothemes'),
+                'label' => __('Habilitar', 'woothemes'),
+                'description' => __('Al selccionar esta opción, un mapa se desplegará mostrando las tiendas más cercanas al momento mostrar el recipo de pago (https://www.openpay.mx/docs/stores-map.html).', 'woothemes'),
+                'default' => 'no'
+            )
         );
     }
 
@@ -181,11 +194,13 @@ class Openpay_Spei extends WC_Payment_Gateway
 
         if ($result_json != false) {
             $this->transaction_id = $result_json->id;
-            WC()->session->set('pdf_url', $this->pdf_url_base.'/'.$this->merchant_id.'/'.$result_json->id);
+            $pdf_url = $this->pdf_url_base.'/'.$this->merchant_id.'/'.$result_json->id;
+            //WC()->session->set('pdf_url', $pdf_url);
             //Save data for the ORDER
             update_post_meta($this->order->get_id(), '_openpay_customer_id', $openpay_customer->id);
             update_post_meta($this->order->get_id(), '_transaction_id', $result_json->id);
-            update_post_meta($this->order->get_id(), '_key', $this->private_key);
+            update_post_meta($this->order->get_id(), '_show_map', $this->settings['show_map']);               
+            update_post_meta($this->order->get_id(), '_pdf_url', $pdf_url);            
 
             return true;
         } else {
@@ -250,7 +265,6 @@ class Openpay_Spei extends WC_Payment_Gateway
     }
 
     public function createOpenpayCustomer() {
-
         $customerData = array(
             'name' => $this->order->get_billing_first_name(),
             'last_name' => $this->order->get_billing_last_name(),
@@ -440,5 +454,3 @@ function openpay_spei_template($template, $template_name, $template_path) {
 
 add_filter('woocommerce_payment_gateways', 'openpay_spei_add_creditcard_gateway');
 add_filter('woocommerce_locate_template', 'openpay_spei_template', 1, 3);
-//add_filter( 'woocommerce_email_attachments', 'attach_terms_conditions_pdf_to_email', 1, 3); 
-//add_action('woocommerce_order_status_processing_to_completed', 'openpay_spei_order_status_completed');
