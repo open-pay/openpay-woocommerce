@@ -1,4 +1,5 @@
-<?php 
+<?php
+
 /**
  * Openpay API v1 Client for PHP (version 1.0.0)
  * 
@@ -6,10 +7,13 @@
  * http://www.openpay.mx/
  * soporte@openpay.mx
  */
+class OpenpayToken extends OpenpayApiResourceBase
+{
+    protected $card;
 
-class OpenpayCapture extends OpenpayApiResourceBase {
-	protected function getResourceUrlName($p = true){
-		return parent::getResourceUrlName(false);
-	}
+    public function get($param) {
+        return $this->_getAttributes($param);
+    }
 }
+
 ?>
