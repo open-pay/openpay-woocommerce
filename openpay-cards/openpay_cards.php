@@ -24,6 +24,49 @@ add_action('plugins_loaded', 'openpay_cards_init_your_gateway', 0);
 add_action('template_redirect', 'wc_custom_redirect_after_purchase', 0);
 add_action('woocommerce_order_refunded', 'openpay_woocommerce_order_refunded', 10, 2);        
 add_action('woocommerce_order_status_changed','openpay_woocommerce_order_status_change_custom', 10, 3);
+add_action('woocommerce_api_openpay_confirm', 'openpay_woocommerce_confirm', 10, 0);         
+
+function openpay_woocommerce_confirm() {   
+        global $woocommerce;
+        $logger = wc_get_logger();
+        
+        $id = $_GET['id'];        
+        
+        $logger->info('openpay_woocommerce_confirm => '.$id);   
+        
+        try {            
+            $openpay_cards = new Openpay_Cards();    
+            $openpay = $openpay_cards->getOpenpayInstance();
+            $charge = $openpay->charges->get($id);
+            $order = new WC_Order($charge->order_id);
+            
+            $logger->info('openpay_woocommerce_confirm => '.json_encode(array('id' => $charge->id, 'status' => $charge->status)));   
+
+            if ($order && $charge->status != 'completed') {
+                $order->add_order_note(sprintf("%s Credit Card Payment Failed with message: '%s'", 'Openpay_Cards', 'Status '+$charge->status));
+                $order->set_status('failed');
+                $order->save();
+
+                if (function_exists('wc_add_notice')) {
+                    wc_add_notice(__('Error en la transacción: No se pudo completar tu pago.'), 'error');
+                } else {
+                    $woocommerce->add_error(__('Error en la transacción: No se pudo completar tu pago.'), 'woothemes');
+                }
+            } else if ($order && $charge->status == 'completed') {
+                $order->payment_complete();
+                $woocommerce->cart->empty_cart();
+                $order->add_order_note(sprintf("%s payment completed with Transaction Id of '%s'", 'Openpay_Cards', $charge->id));
+            }
+                        
+            wp_redirect($openpay_cards->get_return_url($order));            
+        } catch (Exception $e) {
+            $logger->error($e->getMessage());            
+            status_header( 404 );
+            nocache_headers();
+            include(get_query_template('404'));
+            die();
+        }                
+    }    
 
 function wc_custom_redirect_after_purchase() {
     global $wp;

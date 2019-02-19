@@ -62,8 +62,7 @@ class Openpay_Cards extends WC_Payment_Gateway
         // https://developer.wordpress.org/reference/functions/add_action/
         add_action('wp_enqueue_scripts', array($this, 'payment_scripts'));
         add_action('woocommerce_update_options_payment_gateways_'.$this->id, array($this, 'process_admin_options'));
-        add_action('admin_notices', array(&$this, 'perform_ssl_check'));
-        add_action('woocommerce_api_'.strtolower(get_class($this)), array($this, 'webhook_handler'));         
+        add_action('admin_notices', array(&$this, 'perform_ssl_check'));        
         add_action('woocommerce_checkout_create_order', array($this, 'action_woocommerce_checkout_create_order'), 10, 2);                
     }       
     
@@ -81,41 +80,6 @@ class Openpay_Cards extends WC_Payment_Gateway
         }        
     } 
     
-    public function webhook_handler() {   
-        global $woocommerce;
-        $id = $_GET['id'];        
-        
-        try {            
-            $openpay = $this->getOpenpayInstance();
-            $charge = $openpay->charges->get($id);
-            $order = new WC_Order($charge->order_id);
-
-            if ($order && $charge->status != 'completed') {
-                $order->add_order_note(sprintf("%s Credit Card Payment Failed with message: '%s'", 'Openpay_Cards', 'Status '+$charge->status));
-                $order->set_status('failed');
-                $order->save();
-
-                if (function_exists('wc_add_notice')) {
-                    wc_add_notice(__('Error en la transacción: No se pudo completar tu pago.'), 'error');
-                } else {
-                    $woocommerce->add_error(__('Error en la transacción: No se pudo completar tu pago.'), 'woothemes');
-                }
-            } else if ($order && $charge->status == 'completed') {
-                $order->payment_complete();
-                $woocommerce->cart->empty_cart();
-                $order->add_order_note(sprintf("%s payment completed with Transaction Id of '%s'", 'Openpay_Cards', $charge->id));
-            }
-                        
-            wp_redirect($this->get_return_url($order));            
-        } catch (Exception $e) {
-            $this->logger->error($e->getMessage());            
-            status_header( 404 );
-            nocache_headers();
-            include(get_query_template('404'));
-            die();
-        }                
-    }    
-
     public function perform_ssl_check() {
         if (!$this->is_sandbox && get_option('woocommerce_force_ssl_checkout') == 'no' && $this->enabled == 'yes') :
             echo '<div class="error"><p>'.sprintf(__('%s sandbox testing is disabled and can performe live transactions but the <a href="%s">force SSL option</a> is disabled; your checkout is not secure! Please enable SSL and ensure your server has a valid SSL certificate.', 'woothemes'), $this->GATEWAY_NAME, admin_url('admin.php?page=settings')).'</p></div>';
@@ -445,7 +409,8 @@ class Openpay_Cards extends WC_Payment_Gateway
     protected function processOpenpayCharge($device_session_id, $openpay_token, $interest_free, $use_card_points, $openpay_cc, $save_cc) {
         WC()->session->__unset('pdf_url');   
         $protocol = (get_option('woocommerce_force_ssl_checkout') == 'no') ? 'http' : 'https';        
-        $redirect_url_3d = site_url('/', $protocol).'wc-api/Openpay_Cards';                  
+        //$redirect_url_3d = site_url('/', $protocol).'wc-api/Openpay_Cards';                  
+        $redirect_url_3d = site_url('/', $protocol).'?wc-api=openpay_confirm&';
         
         $charge_request = array(
             "method" => "card",
@@ -461,7 +426,7 @@ class Openpay_Cards extends WC_Payment_Gateway
         
         $this->logger->debug('extra_data', array('$openpay_cc' => $openpay_cc, '$save_cc' => $save_cc));   
         
-        $this->logger->info('processOpenpayCharge');   
+        $this->logger->info('processOpenpayCharge Order => '.$this->order->get_id());   
         
         $openpay_customer = $this->getOpenpayCustomer();
         
@@ -494,7 +459,7 @@ class Openpay_Cards extends WC_Payment_Gateway
             update_post_meta($this->order->get_id(), '_transaction_id', $charge->id);            
             update_post_meta($this->order->get_id(), '_openpay_capture', ($this->capture ? 'true' : 'false'));            
             
-            if (isset($charge->payment_method) && $charge->payment_method->type == 'redirect') {
+            if ($charge->payment_method && $charge->payment_method->type == 'redirect') {
                 update_post_meta($this->order->get_id(), '_openpay_3d_secure_url', $charge->payment_method->url);                
             }            
             return true;
@@ -508,9 +473,6 @@ class Openpay_Cards extends WC_Payment_Gateway
         Openpay::setProductionMode($this->is_sandbox ? false : true);
         
         try {
-            
-            
-            
             $charge = $customer->charges->create($charge_request);
             return $charge;
         } catch (Exception $e) {           
@@ -519,6 +481,15 @@ class Openpay_Cards extends WC_Payment_Gateway
                 $charge_request['use_3d_secure'] = true;
                 $charge_request['redirect_url'] = $redirect_url_3d;
                 $charge = $customer->charges->create($charge_request);
+                
+                $this->logger->info('createOpenpayCharge Auth Order => '.$this->order->get_id()); 
+                
+                
+                if ($charge->payment_method && $charge->payment_method->type == 'redirect') {
+                    $this->logger->info('createOpenpayCharge update_post_meta => '.$charge->payment_method->url); 
+                    update_post_meta($this->order->get_id(), '_openpay_3d_secure_url', $charge->payment_method->url);                
+                }            
+                
                 return $charge;
             }
             
