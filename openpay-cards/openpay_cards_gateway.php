@@ -33,6 +33,10 @@ class Openpay_Cards extends WC_Payment_Gateway
         $this->init_form_fields();
         $this->init_settings();
         $this->logger = wc_get_logger();        
+        
+        $use_card_points = isset($this->settings['use_card_points']) ? (strcmp($this->settings['use_card_points'], 'true') == 0) : false;
+        $capture = isset($this->settings['capture']) ? (strcmp($this->settings['capture'], 'true') == 0) : true;
+        $save_cc = isset($this->settings['save_cc']) ? (strcmp($this->settings['save_cc'], 'true') == 0) : false;
 
         $this->title = 'Pago con tarjeta de crédito o débito';
         $this->description = '';        
@@ -47,9 +51,9 @@ class Openpay_Cards extends WC_Payment_Gateway
         $this->merchant_id = $this->is_sandbox ? $this->test_merchant_id : $this->live_merchant_id;
         $this->publishable_key = $this->is_sandbox ? $this->test_publishable_key : $this->live_publishable_key;
         $this->private_key = $this->is_sandbox ? $this->test_private_key : $this->live_private_key;
-        $this->use_card_points = strcmp($this->settings['use_card_points'], 'yes') == 0;
-        $this->capture = strcmp($this->settings['capture'], 'true') == 0;
-        $this->save_cc = strcmp($this->settings['save_cc'], 'yes') == 0;
+        $this->use_card_points = $use_card_points;
+        $this->capture = $capture;
+        $this->save_cc = $save_cc;
 
         if ($this->is_sandbox) {
             $this->description .= __('SANDBOX MODE ENABLED. In test mode, you can use the card number 4111111111111111 with any CVC and a valid expiration date.', 'openpay-woosubscriptions');
@@ -75,6 +79,7 @@ class Openpay_Cards extends WC_Payment_Gateway
      * @link https://docs.woocommerce.com/wc-apidocs/source-class-WC_Checkout.html#334
      */
     public function action_woocommerce_checkout_create_order($order, $data) {        
+        $this->logger->debug('action_woocommerce_checkout_create_order => '.json_encode(array('$this->capture' => $this->capture)));   
         if (!$this->capture && $order->get_payment_method() == 'openpay_cards') {
             $order->set_status('on-hold', 'Pre-autorización');            
         }        
@@ -173,7 +178,7 @@ class Openpay_Cards extends WC_Payment_Gateway
                 'type' => 'checkbox',
                 'title' => __('Guardar tarjetas', 'woothemes'),
                 'label' => __('Habilitar', 'woothemes'),
-                'description' => __('Permite a los usuarios rgistrados guardar sus tarjetas de crédito para agilizar sus futuras compras.', 'woothemes'),
+                'description' => __('Permite a los usuarios registrados guardar sus tarjetas de crédito para agilizar sus futuras compras.', 'woothemes'),
                 'desc_tip' => true,
                 'default' => 'no'
             ),
@@ -424,7 +429,7 @@ class Openpay_Cards extends WC_Payment_Gateway
             'capture' => $this->capture
         );
         
-        $this->logger->debug('extra_data', array('$openpay_cc' => $openpay_cc, '$save_cc' => $save_cc));   
+        $this->logger->debug('extra_data => '.json_encode(array('$openpay_cc' => $openpay_cc, '$save_cc' => $save_cc, '$capture' => $this->capture)));   
         
         $this->logger->info('processOpenpayCharge Order => '.$this->order->get_id());   
         

@@ -78,7 +78,7 @@
             <label for="openpay-card-cvc">CVV <span class="required">*</span></label>
             <input id="openpay-card-cvc" class="input-text wc-credit-card-form-card-cvc" type="text" autocomplete="off" placeholder="CVC" data-openpay-card="cvv2" />
         </div>        
-        <div class="form-row form-row-wide <?php !$this->can_save_cc ? 'hidden' : '' ?>" style="margin-bottom: 20px;">
+        <div class="form-row form-row-wide <?php echo !$this->can_save_cc ? 'hidden' : '' ?>" style="margin-bottom: 20px;">
             <label for="save_cc" class="label">
                 <input type="checkbox" name="save_cc" id="save_cc" /> <span style="font-weight: 600;">Guardar tarjeta</span>
             </label>    
