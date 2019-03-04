@@ -198,8 +198,7 @@ class Openpay_Spei extends WC_Payment_Gateway
             //WC()->session->set('pdf_url', $pdf_url);
             //Save data for the ORDER
             update_post_meta($this->order->get_id(), '_openpay_customer_id', $openpay_customer->id);
-            update_post_meta($this->order->get_id(), '_transaction_id', $result_json->id);
-            update_post_meta($this->order->get_id(), '_show_map', $this->settings['show_map']);               
+            update_post_meta($this->order->get_id(), '_transaction_id', $result_json->id);            
             update_post_meta($this->order->get_id(), '_pdf_url', $pdf_url);            
 
             return true;
