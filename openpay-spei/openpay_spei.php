@@ -40,7 +40,7 @@ function attach_spei_payment_receipt($attachments, $email_id, $order) {
         $logger->info('basedir: ' . $upload_dir['basedir']);
 
         $pdf_path = $upload_dir['basedir'] . '/instrucciones_pago_' . $order_id . '.pdf';
-        file_put_contents($pdf_path, file_get_contents('https://sandbox-dashboard.openpay.mx/paynet-pdf/mcdzlerxfgoy6runmynl/1010103805241658'));
+        file_put_contents($pdf_path, file_get_contents($pdf_url));
         $attachments[] = $pdf_path;
     }
 
