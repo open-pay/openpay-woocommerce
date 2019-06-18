@@ -19,7 +19,7 @@
     </div>
     <div class="col-md-4" style="text-align: center;">
         <img alt="" src="<?php echo $this->images_dir ?>step1.png">	
-        <p>Haz clic en el botón "Generar ficha de pago", donde tu compra quedará en espera de que realices tu pago.</p>
+        <p>Haz clic en el botón "Realizar pedido", así tu compra quedará en espera de que realices tu pago.</p>
     </div>
     <div class="col-md-4" style="text-align: center;">
         <img alt="" src="<?php echo $this->images_dir ?>step2.png">	
