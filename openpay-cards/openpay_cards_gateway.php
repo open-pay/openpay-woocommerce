@@ -223,7 +223,13 @@ class Openpay_Cards extends WC_Payment_Gateway
                 'show_if_checked' => 'yes',
                 'autoload'        => false,
                 'description' => __('Revisa la documentación de los MSI (https://www.openpay.mx/costos.html).', 'woothemes'),
-            )            
+            ),
+            'minimum_amount_interest_free' => array(
+                'type' => 'number',
+                'title' => __('Monto mínimo MSI', 'woothemes'),
+                'description' => __('Monto mínimo para aceptar meses sin intereses.', 'woothemes'),
+                'default' => __('1', 'woothemes')
+            )
         );
     }
 
@@ -244,8 +250,7 @@ class Openpay_Cards extends WC_Payment_Gateway
         }
                 
         $this->show_months_interest_free = false;
-        //if(count($months) > 0 && ($woocommerce->cart->total >= $this->settings['minimum_amount_interest_free'])) {
-        if(count($months) > 0) {
+        if(count($months) > 0 && ($woocommerce->cart->total >= $this->settings['minimum_amount_interest_free'])) {        
             $this->show_months_interest_free = true;
         }
         
@@ -413,13 +418,13 @@ class Openpay_Cards extends WC_Payment_Gateway
     
     protected function processOpenpayCharge($device_session_id, $openpay_token, $interest_free, $use_card_points, $openpay_cc, $save_cc) {
         WC()->session->__unset('pdf_url');   
-        $protocol = (get_option('woocommerce_force_ssl_checkout') == 'no') ? 'http' : 'https';        
-        //$redirect_url_3d = site_url('/', $protocol).'wc-api/Openpay_Cards';                  
+        $protocol = (get_option('woocommerce_force_ssl_checkout') == 'no') ? 'http' : 'https';                             
         $redirect_url_3d = site_url('/', $protocol).'?wc-api=openpay_confirm&';
-        
+        $amount = number_format((float)$this->order->get_total(), 2, '.', '');
+                
         $charge_request = array(
             "method" => "card",
-            "amount" => round($this->order->get_total(), 2),
+            "amount" => $amount,
             "currency" => strtolower(get_woocommerce_currency()),
             "source_id" => $openpay_token,
             "device_session_id" => $device_session_id,
