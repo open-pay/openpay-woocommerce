@@ -419,7 +419,7 @@ class Openpay_Cards extends WC_Payment_Gateway
     protected function processOpenpayCharge($device_session_id, $openpay_token, $interest_free, $use_card_points, $openpay_cc, $save_cc) {
         WC()->session->__unset('pdf_url');   
         $protocol = (get_option('woocommerce_force_ssl_checkout') == 'no') ? 'http' : 'https';                             
-        $redirect_url_3d = site_url('/', $protocol).'?wc-api=openpay_confirm&';
+        $redirect_url_3d = site_url('/', $protocol).'?wc-api=openpay_confirm';
         $amount = number_format((float)$this->order->get_total(), 2, '.', '');
                 
         $charge_request = array(
