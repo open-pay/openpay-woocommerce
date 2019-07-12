@@ -186,7 +186,7 @@ class Openpay_Stores extends WC_Payment_Gateway
             "amount" => (float) $this->order->get_total(),
             "currency" => strtolower(get_woocommerce_currency()),
             "description" => sprintf("Cargo para %s", $this->order->get_billing_email()),                        
-            //"order_id" => $this->order->get_id(),
+            "order_id" => $this->order->get_id(),
             'due_date' => $due_date
         );
 
