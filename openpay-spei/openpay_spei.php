@@ -3,7 +3,7 @@
 /*
   Plugin Name: Openpay SPEI Plugin
   Plugin URI: http://www.openpay.mx/docs/plugins/woocommerce.html
-  Description: Provides an electronic funds transfer payment method with Openpay for WooCommerce. Compatible with WooCommerce 3.5.3 and Wordpress 5.0.3.
+  Description: Provides an electronic funds transfer payment method with Openpay for WooCommerce. Compatible with WooCommerce 3.6.4 and Wordpress 5.0.3.
   Version: 1.4.3
   Author: Openpay
   Author URI: http://www.openpay.mx
