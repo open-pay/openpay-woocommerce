@@ -179,10 +179,11 @@ class Openpay_Spei extends WC_Payment_Gateway
                 
         date_default_timezone_set('America/Mexico_City');
         $due_date = date('Y-m-d\TH:i:s', strtotime('+ '.$this->deadline.' hours'));
+        $amount = number_format((float) $this->order->get_total(), 2, '.', '');
         
         $charge_request = array(
             "method" => "bank_account",
-            "amount" => (float) $this->order->get_total(),
+            "amount" => $amount,
             "description" => sprintf("Cargo para %s", $this->order->get_billing_email()),
             "order_id" => $this->order->get_id(),
             'due_date' => $due_date
