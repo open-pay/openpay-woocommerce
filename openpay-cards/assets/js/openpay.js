@@ -119,7 +119,7 @@ jQuery(document).ready(function () {
             holder_name: holder_name,
             card_number: card.replace(/ /g, ''),
             cvv2: cvc,
-            expiration_month: expires['month'] || 0,
+            expiration_month: (expires['month']<10)?'0'+expires['month']:expires['month'],
             expiration_year: year || 0        
         };
 
