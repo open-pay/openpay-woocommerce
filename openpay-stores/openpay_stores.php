@@ -4,7 +4,7 @@
   Plugin Name: Openpay Stores Plugin
   Plugin URI: http://www.openpay.mx/docs/plugins/woocommerce.html
   Description: Provides a cash payment method with Openpay for WooCommerce. Compatible with WooCommerce 3.6.4 and Wordpress 5.0.3.
-  Version: 1.4.3
+  Version: 1.4.5
   Author: Openpay
   Author URI: http://www.openpay.mx
 
@@ -24,6 +24,11 @@ add_action('plugins_loaded', 'openpay_stores_init_your_gateway', 0);
 add_filter('woocommerce_email_attachments', 'attach_store_payment_receipt', 10, 3);
 
 function attach_store_payment_receipt($attachments, $email_id, $order) {
+    // Avoiding errors and problems
+    if (!is_a($order, 'WC_Order') || !isset($email_id)) {
+        return $attachments;
+    }
+    
     $logger = wc_get_logger();
     $upload_dir = wp_upload_dir();
     $order_id = $order->get_id();
