@@ -1,17 +1,22 @@
 <?php
 
-/*
-  Plugin Name: Openpay Cards Plugin
-  Plugin URI: http://www.openpay.mx/docs/plugins/woocommerce.html
-  Description: Provides a credit card payment method with Openpay for WooCommerce. Compatible with WooCommerce 3.5.3 and Wordpress 5.0.3.
-  Version: 1.6.1
-  Author: Openpay
-  Author URI: http://www.openpay.mx
-
-  License: GNU General Public License v3.0
-  License URI: http://www.gnu.org/licenses/gpl-3.0.html
-
-  Openpay Docs: http://www.openpay.mx/docs/
+ /**
+ * Plugin Name: Openpay Cards Plugin
+ * Plugin URI: http://www.openpay.mx/docs/plugins/woocommerce.html
+ * Description: Provides a credit card payment method with Openpay for WooCommerce. Compatible with WooCommerce 4.0.0 and Wordpress 5.0.3.
+ * Version: 1.7.0
+ * Author: Openpay
+ * Author URI: http://www.openpay.mx
+ * Developer: Openpay
+ * Text Domain: openpay-cards
+ *
+ * WC requires at least: 3.0
+ * WC tested up to: 4.0
+ *
+ * License: GNU General Public License v3.0
+ * License URI: http://www.gnu.org/licenses/gpl-3.0.html
+ * 
+ * Openpay Docs: http://www.openpay.mx/docs/
  */
 
 function openpay_cards_init_your_gateway() {
@@ -24,7 +29,8 @@ add_action('plugins_loaded', 'openpay_cards_init_your_gateway', 0);
 add_action('template_redirect', 'wc_custom_redirect_after_purchase', 0);
 add_action('woocommerce_order_refunded', 'openpay_woocommerce_order_refunded', 10, 2);        
 add_action('woocommerce_order_status_changed','openpay_woocommerce_order_status_change_custom', 10, 3);
-add_action('woocommerce_api_openpay_confirm', 'openpay_woocommerce_confirm', 10, 0);         
+add_action('woocommerce_api_openpay_confirm', 'openpay_woocommerce_confirm', 10, 0);
+add_action('admin_enqueue_scripts',  'openpay_card_load_scripts');          
 
 function openpay_woocommerce_confirm() {   
         global $woocommerce;
@@ -173,4 +179,7 @@ function openpay_woocommerce_order_status_change_custom($order_id, $old_status, 
     }        
 
     return;
+}
+function openpay_card_load_scripts() {
+    wp_enqueue_script('cardScript', plugin_dir_url( __FILE__ ).'assets/js/cardScript.js');
 }
