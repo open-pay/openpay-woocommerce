@@ -24,6 +24,7 @@ class Openpay_Cards extends WC_Payment_Gateway
     protected $transactionErrorMessage = null;
     protected $currencies = array('MXN', 'USD');
     protected $capture = true;
+    protected $msi = array();
 
     public function __construct() {        
         $this->id = 'openpay_cards';
@@ -32,11 +33,14 @@ class Openpay_Cards extends WC_Payment_Gateway
 
         $this->init_form_fields();
         $this->init_settings();
-        $this->logger = wc_get_logger();        
+        $this->logger = wc_get_logger();
         
-        $use_card_points = isset($this->settings['use_card_points']) ? (strcmp($this->settings['use_card_points'], 'true') == 0) : false;
+        $this->msi = $this->settings['msi'];
+        $this->minimum_amount_interest_free = $this->settings['minimum_amount_interest_free'];
+        
+        $use_card_points = isset($this->settings['use_card_points']) ? (strcmp($this->settings['use_card_points'], 'yes') == 0) : false;
         $capture = isset($this->settings['capture']) ? (strcmp($this->settings['capture'], 'true') == 0) : true;
-        $save_cc = isset($this->settings['save_cc']) ? (strcmp($this->settings['save_cc'], 'true') == 0) : false;
+        $save_cc = isset($this->settings['save_cc']) ? (strcmp($this->settings['save_cc'], 'yes') == 0) : false;
 
         $this->title = 'Pago con tarjeta de crédito o débito';
         $this->description = '';        
@@ -182,47 +186,16 @@ class Openpay_Cards extends WC_Payment_Gateway
                 'desc_tip' => true,
                 'default' => 'no'
             ),
-            'interest_free_3_months' => array(
-                'title'           => __( 'Meses sin intereses', 'woothemes' ),
-                'label'            => __( '3 meses', 'woocommerce' ),                    
-                'default'         => 'no',
-                'type'            => 'checkbox',
-                'checkboxgroup'   => 'start',
-                'show_if_checked' => 'option',
-                'autoload'        => false,                
-            ),
-            'interest_free_6_months' => array(
-                'label'            => __( '6 meses', 'woothemes' ),                    
-                'default'         => 'no',
-                'type'            => 'checkbox',
-                'checkboxgroup'   => '',
-                'show_if_checked' => 'yes',
-                'autoload'        => false
-            ),
-            'interest_free_9_months' => array(
-                'label'            => __( '9 meses', 'woothemes' ),                    
-                'default'         => 'no',
-                'type'            => 'checkbox',
-                'checkboxgroup'   => '',
-                'show_if_checked' => 'yes',
-                'autoload'        => false
-            ),
-            'interest_free_12_months' => array(
-                'label'            => __( '12 meses', 'woothemes' ),                    
-                'default'         => 'no',
-                'type'            => 'checkbox',
-                'checkboxgroup'   => 'end',
-                'show_if_checked' => 'yes',
-                'autoload'        => false,                
-            ),               
-            'interest_free_18_months' => array(
-                'label'            => __( '18 months', 'woothemes' ),                    
-                'default'         => 'no',
-                'type'            => 'checkbox',
-                'checkboxgroup'   => 'end',
-                'show_if_checked' => 'yes',
-                'autoload'        => false,
-                'description' => __('Revisa la documentación de los MSI (https://www.openpay.mx/costos.html).', 'woothemes'),
+            'msi' => array(
+                'title' => __('Meses sin intereses', 'woocommerce'),
+                'type' => 'multiselect',
+                'class' => 'wc-enhanced-select',
+                'css' => 'width: 400px;',
+                'default' => '',
+                'options' => $this->getMsi(),
+                'custom_attributes' => array(
+                    'data-placeholder' => __('Opciones', 'woocommerce'),
+                ),
             ),
             'minimum_amount_interest_free' => array(
                 'type' => 'number',
@@ -233,6 +206,10 @@ class Openpay_Cards extends WC_Payment_Gateway
         );
     }
 
+    public function getMsi() {
+        return array('3' => '3 meses', '6' => '6 meses', '9' => '9 meses', '12' => '12 meses', '18' => '18 meses');
+    }
+
     public function admin_options() {
         include_once('templates/admin.php');
     }
@@ -240,17 +217,15 @@ class Openpay_Cards extends WC_Payment_Gateway
     public function payment_fields() {
         //$this->images_dir = WP_PLUGIN_URL."/".plugin_basename(dirname(__FILE__)).'/assets/images/';    
         global $woocommerce;
-        $this->images_dir = plugin_dir_url( __FILE__ ).'/assets/images/';        
-        $months = array('3' => '3 meses', '6' => '6 meses', '9' => '9 meses', '12' => '12 meses', '18' => '18 meses');
-        
-        foreach ($months as $key => $month){
-            if($this->settings['interest_free_'.$key.'_months'] == 'no'){
-                unset($months[$key]);
-            }
-        }
+        $this->images_dir = plugin_dir_url( __FILE__ ).'/assets/images/';
                 
         $this->show_months_interest_free = false;
-        if(count($months) > 0 && ($woocommerce->cart->total >= $this->settings['minimum_amount_interest_free'])) {        
+        
+        $months = array();          
+        foreach ($this->msi as $msi) {
+            $months[$msi] = $msi . ' meses';
+        }
+        if (count($months) > 0 && ($woocommerce->cart->total >= $this->minimum_amount_interest_free)) {
             $this->show_months_interest_free = true;
         }
         
@@ -275,7 +250,12 @@ class Openpay_Cards extends WC_Payment_Gateway
             return array(array('value' => 'new', 'name' => 'Nueva tarjeta'));
         }        
                 
-        $customer_id = get_user_meta(get_current_user_id(), '_openpay_customer_id', true);         
+        if($this->is_sandbox){
+            $customer_id = get_user_meta(get_current_user_id(), '_openpay_customer_sandbox_id', true); 
+        }else{
+            $customer_id = get_user_meta(get_current_user_id(), '_openpay_customer_id', true); 
+        }
+
         if ($this->isNullOrEmptyString($customer_id)) {
             return array(array('value' => 'new', 'name' => 'Nueva tarjeta'));
         } 
@@ -511,7 +491,11 @@ class Openpay_Cards extends WC_Payment_Gateway
     public function getOpenpayCustomer() {
         $customer_id = null;
         if (is_user_logged_in()) {
-            $customer_id = get_user_meta(get_current_user_id(), '_openpay_customer_id', true);
+            if($this->is_sandbox){
+                $customer_id = get_user_meta(get_current_user_id(), '_openpay_customer_sandbox_id', true);
+            }else{
+                $customer_id = get_user_meta(get_current_user_id(), '_openpay_customer_id', true);
+            }
         }
 
         if ($this->isNullOrEmptyString($customer_id)) {
@@ -556,7 +540,11 @@ class Openpay_Cards extends WC_Payment_Gateway
             $customer = $openpay->customers->add($customerData);
 
             if (is_user_logged_in()) {
-                update_user_meta(get_current_user_id(), '_openpay_customer_id', $customer->id);
+                if($this->is_sandbox){
+                    update_user_meta(get_current_user_id(), '_openpay_customer_sandbox_id', $customer->id);
+                }else{
+                    update_user_meta(get_current_user_id(), '_openpay_customer_id', $customer->id);
+                }
             }
 
             return $customer;
