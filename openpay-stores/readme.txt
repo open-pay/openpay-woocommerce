@@ -16,8 +16,8 @@ For more information about this module go to:
 http://www.openpay.mx/docs/plugins/woocommerce.html
 
 == Changelog ==
-1.4.5
-Fix. Evita conflicto del filtro woocommerce_email_attachments con otros plugins
+= 1.4.5 =
+* Fix. Evita conflicto del filtro woocommerce_email_attachments con otros plugins
 
 == Upgrade Notice ==
 Mejoras menores
