@@ -19,3 +19,10 @@ http://www.openpay.mx/docs/plugins/woocommerce.html
 1. https://www.openpay.mx/img/plugins/woocommerce_config_03.png
 2. https://www.openpay.mx/img/plugins/woocommerce_config_04.png
 3. https://www.openpay.mx/img/plugins/woocommerce_config_06.png
+
+== Changelog ==
+= 1.7.0 =
+* Fix. Evita conflicto de cuentas de clientes al cambiar de ambiente
+
+== Upgrade Notice ==
+Mejoras menores

@@ -16,6 +16,8 @@ For more information about this module go to:
 http://www.openpay.mx/docs/plugins/woocommerce.html
 
 == Changelog ==
+= 1.7.0 =
+* Fix. Evita conflicto de cuentas de clientes al cambiar de ambiente
 = 1.4.5 =
 * Fix. Evita conflicto del filtro woocommerce_email_attachments con otros plugins
 
