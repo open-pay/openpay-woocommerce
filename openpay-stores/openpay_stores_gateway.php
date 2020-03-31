@@ -251,7 +251,11 @@ class Openpay_Stores extends WC_Payment_Gateway
     public function getOpenpayCustomer() {
         $customer_id = null;
         if (is_user_logged_in()) {
-            $customer_id = get_user_meta(get_current_user_id(), '_openpay_customer_id', true);
+            if($this->is_sandbox){
+                $customer_id = get_user_meta(get_current_user_id(), '_openpay_customer_sandbox_id', true);
+            }else{
+                $customer_id = get_user_meta(get_current_user_id(), '_openpay_customer_id', true);
+            }
         }
 
         if ($this->isNullOrEmptyString($customer_id)) {
@@ -295,7 +299,11 @@ class Openpay_Stores extends WC_Payment_Gateway
             $customer = $openpay->customers->add($customerData);
 
             if (is_user_logged_in()) {
-                update_user_meta(get_current_user_id(), '_openpay_customer_id', $customer->id);
+                if($this->is_sandbox){
+                    update_user_meta(get_current_user_id(), '_openpay_customer_sandbox_id', $customer->id);
+                }else{
+                    update_user_meta(get_current_user_id(), '_openpay_customer_id', $customer->id);
+                }
             }
 
             return $customer;
