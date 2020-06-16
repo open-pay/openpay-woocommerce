@@ -461,6 +461,9 @@ class Openpay_Cards extends WC_Payment_Gateway
     public function createOpenpayCharge($customer, $charge_request, $redirect_url_3d) {
         Openpay::getInstance($this->merchant_id, $this->private_key);        
         Openpay::setProductionMode($this->is_sandbox ? false : true);
+
+        $userAgent = "Openpay-WOOCMX/v2";
+        Openpay::setUserAgent($userAgent);
         
         try {
             $charge = $customer->charges->create($charge_request);
@@ -505,6 +508,10 @@ class Openpay_Cards extends WC_Payment_Gateway
         try {
             $openpay = Openpay::getInstance($this->merchant_id, $this->private_key);
             Openpay::setProductionMode($this->is_sandbox ? false : true);
+
+            $userAgent = "Openpay-WOOCMX/v2";
+            Openpay::setUserAgent($userAgent);
+
             return $openpay->customers->get($customer_id);
         } catch (Exception $e) {
             $this->error($e);
@@ -535,6 +542,9 @@ class Openpay_Cards extends WC_Payment_Gateway
 
         $openpay = Openpay::getInstance($this->merchant_id, $this->private_key);
         Openpay::setProductionMode($this->is_sandbox ? false : true);
+
+        $userAgent = "Openpay-WOOCMX/v2";
+        Openpay::setUserAgent($userAgent);
 
         try {
             $customer = $openpay->customers->add($customerData);
