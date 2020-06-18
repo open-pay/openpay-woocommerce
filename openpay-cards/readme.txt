@@ -21,6 +21,8 @@ http://www.openpay.mx/docs/plugins/woocommerce.html
 3. https://www.openpay.mx/img/plugins/woocommerce_config_06.png
 
 == Changelog ==
+= 1.8.0 =
+* Enhancement. Se agregó la etiqueta User-Agent para identificar las transacciones del plugin
 = 1.7.0 =
 * Fix. Evita conflicto de cuentas de clientes al cambiar de ambiente
 
