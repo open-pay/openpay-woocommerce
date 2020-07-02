@@ -82,19 +82,21 @@ class Openpay_Spei extends WC_Payment_Gateway
         $obj = file_get_contents('php://input');
         $json = json_decode($obj);
 
-        if ($json->type == 'charge.succeeded') {            
+        if($json->transaction->method == 'bank_account'){
             $openpay = Openpay::getInstance($this->merchant_id, $this->private_key);
             Openpay::setProductionMode($this->is_sandbox ? false : true);
-            
+
             $charge = $openpay->charges->get($json->transaction->id);
-            
-            if ($charge->status == 'completed') {
-                $order_id = $json->transaction->order_id;
+            $order_id = $json->transaction->order_id;
+            $order = new WC_Order($order_id);
+
+            if ($json->type == 'charge.succeeded' && $charge->status == 'completed') {            
                 $payment_date = date("Y-m-d", $json->event_date);
-                $order = new WC_Order($order_id);
                 update_post_meta($order->get_id(), 'openpay_payment_date', $payment_date);
                 $order->payment_complete();
-                $order->add_order_note(sprintf("Payment completed."));
+                $order->add_order_note(sprintf("Payment completed.")); 
+            }else if($json->type == 'transaction.expired' && $charge->status == 'cancelled'){
+                $order->update_status('cancelled', 'Payment is due.');
             }
         }
     }
@@ -336,7 +338,8 @@ class Openpay_Spei extends WC_Payment_Gateway
                 'spei.received',
                 'chargeback.created',
                 'chargeback.rejected',
-                'chargeback.accepted'
+                'chargeback.accepted',
+                'transaction.expired'
             )
         );
                        
