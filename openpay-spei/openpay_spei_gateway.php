@@ -34,14 +34,11 @@ class Openpay_Spei extends WC_Payment_Gateway
         $this->is_sandbox = strcmp($this->settings['sandbox'], 'yes') == 0;
         $this->test_merchant_id = $this->settings['test_merchant_id'];
         $this->test_private_key = $this->settings['test_private_key'];
-        $this->test_publishable_key = $this->settings['test_publishable_key'];
         $this->live_merchant_id = $this->settings['live_merchant_id'];
         $this->live_private_key = $this->settings['live_private_key'];
-        $this->live_publishable_key = $this->settings['live_publishable_key'];
         $this->deadline = $this->settings['deadline'];
 
         $this->merchant_id = $this->is_sandbox ? $this->test_merchant_id : $this->live_merchant_id;
-        $this->publishable_key = $this->is_sandbox ? $this->test_publishable_key : $this->live_publishable_key;
         $this->private_key = $this->is_sandbox ? $this->test_private_key : $this->live_private_key;
         $this->pdf_url_base = $this->is_sandbox ? 'https://sandbox-dashboard.openpay.mx/spei-pdf' : 'https://dashboard.openpay.mx/spei-pdf';
         // tell WooCommerce to save options
@@ -63,11 +60,10 @@ class Openpay_Spei extends WC_Payment_Gateway
         
         $this->merchant_id = $post_data['woocommerce_'.$this->id.'_'.$mode.'_merchant_id'];
         $this->private_key = $post_data['woocommerce_'.$this->id.'_'.$mode.'_private_key'];
-        $this->publishable_key = $post_data['woocommerce_'.$this->id.'_'.$mode.'_publishable_key'];
         
         $env = ($mode == 'live') ? 'Producton' : 'Sandbox';
         
-        if($this->merchant_id == '' || $this->private_key == '' || $this->publishable_key == ''){
+        if($this->merchant_id == '' || $this->private_key == ''){
             $settings = new WC_Admin_Settings();
             $settings->add_error('You need to enter "'.$env.'" credentials if you want to use this plugin in this mode.');
         } else {
@@ -86,7 +82,13 @@ class Openpay_Spei extends WC_Payment_Gateway
             $openpay = Openpay::getInstance($this->merchant_id, $this->private_key);
             Openpay::setProductionMode($this->is_sandbox ? false : true);
 
-            $charge = $openpay->charges->get($json->transaction->id);
+            if(isset($json->transaction->customer_id)){
+                $customer = $openpay->customers->get($json->transaction->customer_id);
+                $charge = $customer->charges->get($json->transaction->id);
+            }else{
+                $charge = $openpay->charges->get($json->transaction->id);
+            }
+
             $order_id = $json->transaction->order_id;
             $order = new WC_Order($order_id);
 
@@ -127,12 +129,6 @@ class Openpay_Spei extends WC_Payment_Gateway
                 'description' => __('Obten tus llaves de prueba de tu cuenta de Openpay ("sk_").', 'woothemes'),
                 'default' => __('', 'woothemes')
             ),
-            'test_publishable_key' => array(
-                'type' => 'text',
-                'title' => __('Llave pública de pruebas', 'woothemes'),
-                'description' => __('Obten tus llaves de prueba de tu cuenta de Openpay ("pk_").', 'woothemes'),
-                'default' => __('', 'woothemes')
-            ),
             'live_merchant_id' => array(
                 'type' => 'text',
                 'title' => __('ID de comercio de producción', 'woothemes'),
@@ -144,12 +140,6 @@ class Openpay_Spei extends WC_Payment_Gateway
                 'title' => __('Llave secreta de producción', 'woothemes'),
                 'description' => __('Obten tus llaves de producción de tu cuenta de Openpay ("sk_").', 'woothemes'),
                 'default' => __('', 'woothemes')
-            ),
-            'live_publishable_key' => array(
-                'type' => 'text',
-                'title' => __('Llave pública de producción', 'woothemes'),
-                'description' => __('Obten tus llaves de producción de tu cuenta de Openpay ("pk_").', 'woothemes'),
-                'default' => __('', 'woothemes')
             ),      
             'deadline' => array(
                 'type' => 'number',
@@ -157,13 +147,6 @@ class Openpay_Spei extends WC_Payment_Gateway
                 'title' => __('Payment deadline', 'woothemes'),
                 'description' => __('Define how many hours have the customer to make the payment.', 'woothemes'),
                 'default' => '48'
-            ),
-            'show_map' => array(
-                'type' => 'checkbox',
-                'title' => __('Mostrar mapa', 'woothemes'),
-                'label' => __('Habilitar', 'woothemes'),
-                'description' => __('Al selccionar esta opción, un mapa se desplegará mostrando las tiendas más cercanas al momento mostrar el recipo de pago (https://www.openpay.mx/docs/stores-map.html).', 'woothemes'),
-                'default' => 'no'
             )
         );
     }
@@ -200,7 +183,11 @@ class Openpay_Spei extends WC_Payment_Gateway
             $pdf_url = $this->pdf_url_base.'/'.$this->merchant_id.'/'.$result_json->id;
             //WC()->session->set('pdf_url', $pdf_url);
             //Save data for the ORDER
-            update_post_meta($this->order->get_id(), '_openpay_customer_id', $openpay_customer->id);
+            if($this->is_sandbox){
+                update_post_meta($this->order->get_id(), '_openpay_customer_sandbox_id', $openpay_customer->id);
+            }else{
+                update_post_meta($this->order->get_id(), '_openpay_customer_id', $openpay_customer->id);
+            }
             update_post_meta($this->order->get_id(), '_transaction_id', $result_json->id);            
             update_post_meta($this->order->get_id(), '_pdf_url', $pdf_url);            
 
@@ -218,7 +205,7 @@ class Openpay_Spei extends WC_Payment_Gateway
             $this->order->update_status('on-hold', 'En espera de pago');
             $this->order->reduce_order_stock();
             $woocommerce->cart->empty_cart();
-            $this->order->add_order_note(sprintf("%s payment completed with Transaction Id of '%s'", $this->GATEWAY_NAME, $this->transaction_id));
+            $this->order->add_order_note(sprintf("Payment will be processed by %s with Transaction Id: '%s'", $this->GATEWAY_NAME, $this->transaction_id));
             return array(
                 'result' => 'success',
                 'redirect' => $this->get_return_url($this->order)
@@ -390,7 +377,10 @@ class Openpay_Spei extends WC_Payment_Gateway
     
     public function errorWebhook($e, $force_host_ssl, $url) {
 
-        switch ($e->getErrorCode()) {            
+        switch ($e->getErrorCode()) {     
+            case '1003':
+                $msg = 'Puerto inválido, puertos válidos: 443, 8443 y 10443';
+                break;      
             case '6001':
                 $msg = 'El webhook ya existe, omite este mensaje.';
                 return;
