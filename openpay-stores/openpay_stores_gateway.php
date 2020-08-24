@@ -19,7 +19,11 @@ class Openpay_Stores extends WC_Payment_Gateway
     protected $order = null;
     protected $transaction_id = null;
     protected $transactionErrorMessage = null;
-    protected $currencies = array('MXN');    
+    protected $currencies = array('MXN');  
+    protected $logger = null;
+    protected $country = '';
+    protected $iva = 0;
+    protected $show_map = false;
 
     public function __construct() {
         $this->id = 'openpay_stores';
@@ -28,32 +32,44 @@ class Openpay_Stores extends WC_Payment_Gateway
 
         $this->init_form_fields();
         $this->init_settings();
-        $this->logger = wc_get_logger();        
+        $this->logger = wc_get_logger();      
+        
+        $this->country = $this->settings['country'];        
+        $this->iva = $this->country == 'CO' ? $this->settings['iva'] : 0;     
+        $this->show_map = $this->country == 'MX' ? $this->settings['show_map'] : false;     
 
         $this->title = 'Pago en efectivo en tiendas de conveniencia';
         $this->description = '';
         $this->is_sandbox = strcmp($this->settings['sandbox'], 'yes') == 0;
         $this->test_merchant_id = $this->settings['test_merchant_id'];
         $this->test_private_key = $this->settings['test_private_key'];
-        $this->test_publishable_key = $this->settings['test_publishable_key'];
+        
         $this->live_merchant_id = $this->settings['live_merchant_id'];
-        $this->live_private_key = $this->settings['live_private_key'];
-        $this->live_publishable_key = $this->settings['live_publishable_key'];
+        $this->live_private_key = $this->settings['live_private_key'];        
         $this->deadline = $this->settings['deadline'];        
 
-        $this->merchant_id = $this->is_sandbox ? $this->test_merchant_id : $this->live_merchant_id;
-        $this->publishable_key = $this->is_sandbox ? $this->test_publishable_key : $this->live_publishable_key;
+        $this->merchant_id = $this->is_sandbox ? $this->test_merchant_id : $this->live_merchant_id;        
         $this->private_key = $this->is_sandbox ? $this->test_private_key : $this->live_private_key;
-        $this->pdf_url_base = $this->is_sandbox ? 'https://sandbox-dashboard.openpay.mx/paynet-pdf' : 'https://dashboard.openpay.mx/paynet-pdf';
+        
+        $pdf_url_base_mx = $this->is_sandbox ? 'https://sandbox-dashboard.openpay.mx/paynet-pdf' : 'https://dashboard.openpay.mx/paynet-pdf';
+        $pdf_url_base_co = $this->is_sandbox ? 'https://sandbox-dashboard.openpay.co/paynet-pdf' : 'https://dashboard.openpay.co/paynet-pdf';        
+        $this->pdf_url_base = $this->country === 'MX' ? $pdf_url_base_mx : $pdf_url_base_co;
+        
         // tell WooCommerce to save options
         add_action('woocommerce_update_options_payment_gateways_'.$this->id, array($this, 'process_admin_options'));
-        add_action('woocommerce_api_'.strtolower(get_class($this)), array($this, 'webhook_handler'));        
+        add_action('woocommerce_api_'.strtolower(get_class($this)), array($this, 'webhook_handler'));     
+                
+        add_action('admin_enqueue_scripts', array($this, 'openpay_stores_admin_enqueue'), 10, 2);
 
         if (!$this->validateCurrency()) {
             $this->enabled = false;
         }        
     }
     
+    public function openpay_stores_admin_enqueue($hook) {
+        wp_enqueue_script('openpay_stores_admin_form', plugins_url('assets/js/admin.js', __FILE__), array('jquery'), '', true);
+    }
+
     public function process_admin_options() {
         $post_data = $this->get_post_data();
         $mode = 'live';    
@@ -64,11 +80,10 @@ class Openpay_Stores extends WC_Payment_Gateway
         
         $this->merchant_id = $post_data['woocommerce_'.$this->id.'_'.$mode.'_merchant_id'];
         $this->private_key = $post_data['woocommerce_'.$this->id.'_'.$mode.'_private_key'];
-        $this->publishable_key = $post_data['woocommerce_'.$this->id.'_'.$mode.'_publishable_key'];
         
         $env = ($mode == 'live') ? 'Producton' : 'Sandbox';
         
-        if($this->merchant_id == '' || $this->private_key == '' || $this->publishable_key == ''){
+        if($this->merchant_id == '' || $this->private_key == ''){
             $settings = new WC_Admin_Settings();
             $settings->add_error('You need to enter "'.$env.'" credentials if you want to use this plugin in this mode.');
         } else {
@@ -84,10 +99,17 @@ class Openpay_Stores extends WC_Payment_Gateway
         $json = json_decode($obj);
 
         if($json->transaction->method == 'store'){
-            $openpay = Openpay::getInstance($this->merchant_id, $this->private_key);
-            Openpay::setProductionMode($this->is_sandbox ? false : true);
 
-            $charge = $openpay->charges->get($json->transaction->id);
+            $openpay = Openpay::getInstance($this->merchant_id, $this->private_key, $this->country);
+            Openpay::setProductionMode($this->is_sandbox ? false : true);
+                
+            if(isset($json->transaction->customer_id)){
+                $customer = $openpay->customers->get($json->transaction->customer_id);
+                $charge = $customer->charges->get($json->transaction->id);
+            }else{
+                $charge = $openpay->charges->get($json->transaction->id);
+            }
+
             $order_id = $json->transaction->order_id;
             $order = new WC_Order($order_id);
 
@@ -97,7 +119,7 @@ class Openpay_Stores extends WC_Payment_Gateway
                 $order->payment_complete();
                 $order->add_order_note(sprintf("Payment completed."));
             }else if($json->type == 'transaction.expired' && $charge->status == 'cancelled'){
-                $order->update_status('cancelled', 'Payment expired.');
+                $order->update_status('cancelled', 'Payment is due.');
             }
         }
     }
@@ -109,12 +131,21 @@ class Openpay_Stores extends WC_Payment_Gateway
                 'title' => __('Habilitar módulo', 'woothemes'),
                 'label' => __('Habilitar', 'woothemes'),
                 'default' => 'yes'
-            ),
+            ),            
             'sandbox' => array(
                 'type' => 'checkbox',
                 'title' => __('Modo de pruebas', 'woothemes'),
                 'label' => __('Habilitar', 'woothemes'),                
                 'default' => 'no'
+            ),
+            'country' => array(
+                'type' => 'select',
+                'title' => __('País', 'woothemes'),                             
+                'default' => 'MX',
+                'options' => array(
+                    'MX' => 'México',
+                    'CO' => 'Colombia',
+                )
             ),
             'test_merchant_id' => array(
                 'type' => 'text',
@@ -127,13 +158,7 @@ class Openpay_Stores extends WC_Payment_Gateway
                 'title' => __('Llave secreta de pruebas', 'woothemes'),
                 'description' => __('Obten tus llaves de prueba de tu cuenta de Openpay ("sk_").', 'woothemes'),
                 'default' => __('', 'woothemes')
-            ),
-            'test_publishable_key' => array(
-                'type' => 'text',
-                'title' => __('Llave pública de pruebas', 'woothemes'),
-                'description' => __('Obten tus llaves de prueba de tu cuenta de Openpay ("pk_").', 'woothemes'),
-                'default' => __('', 'woothemes')
-            ),
+            ),            
             'live_merchant_id' => array(
                 'type' => 'text',
                 'title' => __('ID de comercio de producción', 'woothemes'),
@@ -145,13 +170,7 @@ class Openpay_Stores extends WC_Payment_Gateway
                 'title' => __('Llave secreta de producción', 'woothemes'),
                 'description' => __('Obten tus llaves de producción de tu cuenta de Openpay ("sk_").', 'woothemes'),
                 'default' => __('', 'woothemes')
-            ),
-            'live_publishable_key' => array(
-                'type' => 'text',
-                'title' => __('Llave pública de producción', 'woothemes'),
-                'description' => __('Obten tus llaves de producción de tu cuenta de Openpay ("pk_").', 'woothemes'),
-                'default' => __('', 'woothemes')
-            ),      
+            ),            
             'deadline' => array(
                 'type' => 'number',
                 'required' => true,
@@ -164,8 +183,16 @@ class Openpay_Stores extends WC_Payment_Gateway
                 'title' => __('Mostrar mapa', 'woothemes'),
                 'label' => __('Habilitar', 'woothemes'),
                 'description' => __('Al selccionar esta opción, un mapa se desplegará mostrando las tiendas más cercanas al momento mostrar el recipo de pago (https://www.openpay.mx/docs/stores-map.html).', 'woothemes'),
-                'default' => 'no'
-            )
+                'default' => 'no',
+                'id' => 'openpay_show_map',                
+            ),
+            'iva' => array(
+                'type' => 'number',
+                'required' => true,
+                'title' => __('IVA', 'woothemes'),                
+                'default' => '0',
+                'id' => 'openpay_show_iva',                
+            ),
         );
     }
 
@@ -174,7 +201,7 @@ class Openpay_Stores extends WC_Payment_Gateway
     }
 
     public function payment_fields() {
-        $this->images_dir = plugin_dir_url( __FILE__ ).'/assets/images/';        
+        $this->images_dir = plugin_dir_url( __FILE__ ).'/assets/images/';          
         include_once('templates/payment.php');
     }
 
@@ -192,6 +219,10 @@ class Openpay_Stores extends WC_Payment_Gateway
             "order_id" => $this->order->get_id(),
             'due_date' => $due_date
         );
+        
+        if ($this->country === 'CO') {
+            $charge_request['iva'] = $this->iva;
+        }
 
         $openpay_customer = $this->getOpenpayCustomer();
 
@@ -202,9 +233,13 @@ class Openpay_Stores extends WC_Payment_Gateway
             $pdf_url = $this->pdf_url_base.'/'.$this->merchant_id.'/'.$result_json->payment_method->reference;
             //WC()->session->set('pdf_url', $pdf_url);
             //Save data for the ORDER
-            update_post_meta($this->order->get_id(), '_openpay_customer_id', $openpay_customer->id);
+            if ($this->is_sandbox) {
+                $customer_id = get_user_meta(get_current_user_id(), '_openpay_customer_sandbox_id', true);
+            } else {
+                $customer_id = get_user_meta(get_current_user_id(), '_openpay_customer_id', true);
+            }
             update_post_meta($this->order->get_id(), '_transaction_id', $result_json->id);
-            update_post_meta($this->order->get_id(), '_show_map', $this->settings['show_map']);               
+            update_post_meta($this->order->get_id(), '_show_map', $this->show_map);               
             update_post_meta($this->order->get_id(), '_pdf_url', $pdf_url);            
             
             return true;
@@ -221,7 +256,7 @@ class Openpay_Stores extends WC_Payment_Gateway
             $this->order->update_status('on-hold', 'En espera de pago');
             $this->order->reduce_order_stock();
             $woocommerce->cart->empty_cart();
-            $this->order->add_order_note(sprintf("%s payment completed with Transaction Id of '%s'", $this->GATEWAY_NAME, $this->transaction_id));            
+            $this->order->add_order_note(sprintf("Payment will be processed by %s with Transaction Id: '%s'", $this->GATEWAY_NAME, $this->transaction_id));            
             
             return array(
                 'result' => 'success',
@@ -239,10 +274,10 @@ class Openpay_Stores extends WC_Payment_Gateway
     }
 
     public function createOpenpayCharge($customer, $charge_request) {
-        Openpay::getInstance($this->merchant_id, $this->private_key);
+        Openpay::getInstance($this->merchant_id, $this->private_key, $this->country);
         Openpay::setProductionMode($this->is_sandbox ? false : true);
 
-        $userAgent = "Openpay-WOOCMX/v2";
+        $userAgent = "Openpay-WOOC".$this->country."/v2";
         Openpay::setUserAgent($userAgent);
 
         try {
@@ -257,17 +292,17 @@ class Openpay_Stores extends WC_Payment_Gateway
     public function getOpenpayCustomer() {
         $customer_id = null;
         if (is_user_logged_in()) {
-            if($this->is_sandbox){
+            if ($this->is_sandbox) {
                 $customer_id = get_user_meta(get_current_user_id(), '_openpay_customer_sandbox_id', true);
-            }else{
+            } else {
                 $customer_id = get_user_meta(get_current_user_id(), '_openpay_customer_id', true);
-            }
+            }              
         }
 
         if ($this->isNullOrEmptyString($customer_id)) {
             return $this->createOpenpayCustomer();
         } else {
-            $openpay = Openpay::getInstance($this->merchant_id, $this->private_key);
+            $openpay = Openpay::getInstance($this->merchant_id, $this->private_key, $this->country);
             Openpay::setProductionMode($this->is_sandbox ? false : true);
             try {
                 return $openpay->customers->get($customer_id);
@@ -279,40 +314,33 @@ class Openpay_Stores extends WC_Payment_Gateway
     }
 
     public function createOpenpayCustomer() {
-        $customerData = array(
+        $customer_data = array(
             'name' => $this->order->get_billing_first_name(),
             'last_name' => $this->order->get_billing_last_name(),
             'email' => $this->order->get_billing_email(),
             'requires_account' => false,
             'phone_number' => $this->order->get_billing_phone()
         );
-
-        if ($this->order->get_billing_address_1() && $this->order->get_billing_state() && $this->order->get_billing_city() && $this->order->get_billing_postcode() && $this->order->get_billing_country()) {
-            $customerData['address'] = array(
-                'line1' => substr($this->order->get_billing_address_1(), 0, 200),
-                'line2' => substr($this->order->get_billing_address_2(), 0, 50),
-                'state' => $this->order->get_billing_state(),
-                'city' => $this->order->get_billing_city(),
-                'postal_code' => $this->order->get_billing_postcode(),
-                'country_code' => $this->order->get_billing_country()
-            );
+        
+        if ($this->hasAddress($this->order)) {
+            $customer_data = $this->formatAddress($customer_data, $this->order);
         }
 
-        $openpay = Openpay::getInstance($this->merchant_id, $this->private_key);
+        $openpay = Openpay::getInstance($this->merchant_id, $this->private_key, $this->country);
         Openpay::setProductionMode($this->is_sandbox ? false : true);
 
-        $userAgent = "Openpay-WOOCMX/v2";
+        $userAgent = "Openpay-WOOC".$this->country."/v2";
         Openpay::setUserAgent($userAgent);
 
         try {
-            $customer = $openpay->customers->add($customerData);
+            $customer = $openpay->customers->add($customer_data);
 
             if (is_user_logged_in()) {
-                if($this->is_sandbox){
+                if ($this->is_sandbox) {
                     update_user_meta(get_current_user_id(), '_openpay_customer_sandbox_id', $customer->id);
-                }else{
+                } else {
                     update_user_meta(get_current_user_id(), '_openpay_customer_id', $customer->id);
-                }
+                }                
             }
 
             return $customer;
@@ -320,6 +348,35 @@ class Openpay_Stores extends WC_Payment_Gateway
             $this->error($e);
             return false;
         }
+    }
+    
+    private function formatAddress($customer_data, $order) {
+        if ($this->country === 'MX') {
+            $customer_data['address'] = array(
+                'line1' => substr($order->get_billing_address_1(), 0, 200),
+                'line2' => substr($order->get_billing_address_2(), 0, 50),
+                'state' => $order->get_billing_state(),
+                'city' => $order->get_billing_city(),
+                'postal_code' => $order->get_billing_postcode(),
+                'country_code' => $order->get_billing_country()
+            );
+        } else if ($this->country === 'CO') {
+            $customer_data['customer_address'] = array(
+                'department' => $order->get_billing_state(),
+                'city' => $order->get_billing_city(),
+                'additional' => substr($order->get_billing_address_1(), 0, 200).' '.substr($order->get_billing_address_2(), 0, 50)
+            );
+        }
+        
+        return $customer_data;
+    }
+    
+    
+    public function hasAddress($order) {
+        if($order->get_billing_address_1() && $order->get_billing_state() && $order->get_billing_postcode() && $order->get_billing_country() && $order->get_billing_city()) {
+            return true;
+        }
+        return false;    
     }
 
     public function createWebhook($force_host_ssl = false) {
@@ -347,10 +404,10 @@ class Openpay_Stores extends WC_Payment_Gateway
             )
         );
              
-        $openpay = Openpay::getInstance($this->merchant_id, $this->private_key);
+        $openpay = Openpay::getInstance($this->merchant_id, $this->private_key, $this->country );
         Openpay::setProductionMode($this->is_sandbox ? false : true);
 
-        $userAgent = "Openpay-WOOCMX/v2";
+        $userAgent = "Openpay-WOOC".$this->country."/v2";
         Openpay::setUserAgent($userAgent);
         
         try {
@@ -393,7 +450,10 @@ class Openpay_Stores extends WC_Payment_Gateway
     
     public function errorWebhook($e, $force_host_ssl, $url) {
 
-        switch ($e->getErrorCode()) {            
+        switch ($e->getErrorCode()) {
+            case '1003':
+                $msg = 'Puerto inválido, puertos válidos: 443, 8443 y 10443';
+                break;           
             case '6001':
                 $msg = 'El webhook ya existe, omite este mensaje.';
                 return;
@@ -434,7 +494,13 @@ class Openpay_Stores extends WC_Payment_Gateway
      * @return bool
      */
     public function validateCurrency() {
-        return in_array(get_woocommerce_currency(), $this->currencies);
+        if ($this->country === 'MX') {
+            return in_array(get_woocommerce_currency(), $this->currencies);            
+        } else if ($this->country === 'CO') {
+            return get_woocommerce_currency() == 'COP';
+        }
+        
+        return false;        
     }
 
     public function isNullOrEmptyString($string) {

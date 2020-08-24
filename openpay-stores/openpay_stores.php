@@ -3,15 +3,15 @@
  /**
  * Plugin Name: Openpay Stores Plugin
  * Plugin URI: http://www.openpay.mx/docs/plugins/woocommerce.html
- * Description: Provides a cash payment method with Openpay for WooCommerce. Compatible with WooCommerce 4.0.0 and Wordpress 5.0.3.
- * Version: 1.7.0
+ * Description: Provides a cash payment method with Openpay for WooCommerce. Compatible with WooCommerce 4.4.1 and Wordpress 5.5.
+ * Version: 1.9.0
  * Author: Openpay
  * Author URI: http://www.openpay.mx
  * Developer: Openpay
  * Text Domain: openpay-stores
  *
  * WC requires at least: 3.0
- * WC tested up to: 4.0
+ * WC tested up to: 4.4
  *
  * License: GNU General Public License v3.0
  * License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -27,7 +27,6 @@ function openpay_stores_init_your_gateway() {
 
 add_action('plugins_loaded', 'openpay_stores_init_your_gateway', 0);
 add_filter('woocommerce_email_attachments', 'attach_store_payment_receipt', 10, 3);
-add_action('admin_enqueue_scripts',  'openpay_store_load_scripts');
 
 function attach_store_payment_receipt($attachments, $email_id, $order) {
     // Avoiding errors and problems
@@ -56,7 +55,4 @@ function attach_store_payment_receipt($attachments, $email_id, $order) {
     }
 
     return $attachments;
-}
-function openpay_store_load_scripts() {
-    wp_enqueue_script('storeScript', plugin_dir_url( __FILE__ ).'assets/js/storeScript.js');
 }
