@@ -7,31 +7,21 @@
  * http://www.openpay.mx/
  * soporte@openpay.mx
  */
-class OpenpayFee extends OpenpayApiResourceBase
-{
+class OpenpayPse extends OpenpayApiResourceBase {
 
     protected $authorization;
     protected $creation_date;
     protected $currency;
+    protected $customer_id;
     protected $operation_type;
     protected $status;
     protected $transaction_type;
-    protected $error_message;
-    protected $method;    
-    protected $derivedResources = array('Refund' => null);
-
-    public function refund($params) {
-        $resource = $this->derivedResources['refunds'];
-        if ($resource) {
-            return parent::_create($resource->resourceName, $params, array('parent' => $this));
-        }
-    }    
+    protected $derivedResources = array();    
 
 }
 
 // ----------------------------------------------------------------------------
-class OpenpayFeeList extends OpenpayApiDerivedResource
-{
+class OpenpayPseList extends OpenpayApiDerivedResource {
 
     public function create($params) {
         return $this->add($params);

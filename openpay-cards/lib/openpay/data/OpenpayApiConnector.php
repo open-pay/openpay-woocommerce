@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Openpay API v1 Client for PHP (version 1.0.0)
+ * Openpay API v1 Client for PHP (version 2.0.0)
  * 
  * Copyright © Openpay SAPI de C.V. All rights reserved.
  * http://www.openpay.mx/
@@ -54,6 +54,7 @@ class OpenpayApiConnector
         $absUrl .= '/'.$myId.$url;
 
         //$params = self::_encodeObjects($params);
+        
         $userAgent = Openpay::getUserAgent();
 
         if(empty($userAgent))
