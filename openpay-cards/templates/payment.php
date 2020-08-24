@@ -38,15 +38,26 @@
 
 <div style="overflow: hidden;">
     <div>
-        <div style="width: 100%;">
-            <h5>Tarjetas de crédito</h5>	
-            <img alt="" src="<?php echo $this->images_dir ?>credit_cards.png" style="float: left !important;">	
-        </div>
-        <div style="width: 100%;">
-            <h5>Tarjetas de débito</h5>	
-            <img alt="" src="<?php echo $this->images_dir ?>debit_cards.png">	
-        </div>
-    </div>	
+        <?php if($this->country == 'MX'): ?>
+            <div style="width: 100%;">
+                <h5>Tarjetas de crédito</h5>
+                <img alt="" src="<?php echo $this->images_dir ?>credit_cards.png" style="float: left !important;">	
+            </div>
+            <div style="width: 100%;">
+                <h5>Tarjetas de débito</h5>
+                <img alt="" src="<?php echo $this->images_dir ?>debit_cards.png">
+            </div>
+        <?php elseif($this->country == 'CO'): ?>
+            <div style="width: 100%;">
+                <h5>Tarjetas de crédito</h5>
+                <img alt="" src="<?php echo $this->images_dir ?>credit_cards_co.png" style="float: left !important;">	
+            </div>
+            <div style="width: 100%;">
+                <h5>Tarjetas de débito</h5>
+                <img alt="" src="<?php echo $this->images_dir ?>debit_cards_co.png" style="float: left !important; margin-bottom: 10px;">
+            </div>
+        <?php endif; ?>
+    </div>
     <div style="height: 1px; clear: both; border-bottom: 1px solid #CCC; margin: 10px 0 10px 0;"></div>
 <!--	<span class='payment-errors required'></span>-->
     <h3>Información de Pago</h3>
@@ -88,7 +99,7 @@
     <?php if($this->show_months_interest_free): ?>
         <div class="form-row form-row-wide">
             <label for="openpay-card-number">Pago a meses sin intereses <span class="required">*</span></label>
-            <select name="openpay_month_interest_free" id="openpay_month_interest_free" class="form-control">
+            <select name="openpay_month_interest_free" id="openpay_month_interest_free" class="openpay-select">
                 <option value="1">Pago de contado</option>
                 <?php foreach($this->months as $key => $month): ?>
                     <option value="<?php echo $key ?>"><?php echo $month ?></option>
@@ -100,6 +111,19 @@
             <p class="openpay-total"><span id="monthly-payment"></span></p>
         </div>
     <?php endif; ?>
+        
+    <?php if($this->show_installments): ?>
+        <div class="form-row form-row-wide">
+            <label for="openpay-card-number">Cuotas <span class="required">*</span></label>
+            <select name="openpay_installments" id="openpay_installments" class="openpay-select">
+                <option value="1">Sola una cuota</option>
+                <?php foreach($this->installments as $key => $installments): ?>
+                    <option value="<?php echo $key ?>"><?php echo $installments ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>            
+    <?php endif; ?>    
+        
     <input type="hidden" name="device_session_id" id="device_session_id" />
     <input type="hidden" name="use_card_points" id="use_card_points" value="false" />
 </div>

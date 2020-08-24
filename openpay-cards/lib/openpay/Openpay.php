@@ -25,6 +25,7 @@ require(dirname(__FILE__) . '/data/OpenpayApiDerivedResource.php');
 require(dirname(__FILE__) . '/data/OpenpayApi.php');
 
 require(dirname(__FILE__) . '/resources/OpenpayBankAccount.php');
+require(dirname(__FILE__) . '/resources/OpenpayBine.php');
 require(dirname(__FILE__) . '/resources/OpenpayCapture.php');
 require(dirname(__FILE__) . '/resources/OpenpayCard.php');
 require(dirname(__FILE__) . '/resources/OpenpayCharge.php');
@@ -37,4 +38,5 @@ require(dirname(__FILE__) . '/resources/OpenpaySubscription.php');
 require(dirname(__FILE__) . '/resources/OpenpayTransfer.php');
 require(dirname(__FILE__) . '/resources/OpenpayWebhook.php');
 require(dirname(__FILE__) . '/resources/OpenpayToken.php');
+require(dirname(__FILE__) . '/resources/OpenpayPse.php');
 ?>

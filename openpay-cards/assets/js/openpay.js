@@ -77,6 +77,30 @@ jQuery(document).ready(function () {
         jQuery('form.checkout').find('[name=openpay_token]').remove();
     });
 
+    jQuery('form#order_review').submit(function () {
+        console.log("form#order_review");
+        if (jQuery('input[name=payment_method]:checked').val() !== 'openpay_cards') {
+            return true;
+        }
+        $form.find('.payment-errors').html('');
+        $form.block({message: null, overlayCSS: {background: "#fff url(" + woocommerce_params.ajax_loader_url + ") no-repeat center", backgroundSize: "16px 16px", opacity: 0.6}});
+        
+        if (jQuery('#openpay_cc').val() !== 'new') {
+            $form.append('<input type="hidden" name="openpay_token" value="' + jQuery('#openpay_cc').val() + '" />');
+            return true;
+        }
+
+        // Pass if we have a token
+        if ($form.find('[name=openpay_token]').length){
+            console.log("openpay_token = true");
+            return true;
+        }else{
+            console.log("openpay_token = false");
+        }
+       openpayFormHandler();
+        return false;
+    });
+
     // Bind to the checkout_place_order event to add the token
     jQuery('form.checkout').bind('checkout_place_order', function (e) {
         console.log("form.checkout");

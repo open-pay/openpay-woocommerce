@@ -1,17 +1,17 @@
 <?php
 
- /**
+/**
  * Plugin Name: Openpay Cards Plugin
  * Plugin URI: http://www.openpay.mx/docs/plugins/woocommerce.html
- * Description: Provides a credit card payment method with Openpay for WooCommerce. Compatible with WooCommerce 4.0.0 and Wordpress 5.0.3.
- * Version: 1.8.0
+ * Description: Provides a credit card payment method with Openpay for WooCommerce. Compatible with WooCommerce 4.4.1 and Wordpress 5.5.
+ * Version: 2.3.0
  * Author: Openpay
  * Author URI: http://www.openpay.mx
  * Developer: Openpay
  * Text Domain: openpay-cards
  *
  * WC requires at least: 3.0
- * WC tested up to: 4.0
+ * WC tested up to: 4.4
  *
  * License: GNU General Public License v3.0
  * License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -29,8 +29,7 @@ add_action('plugins_loaded', 'openpay_cards_init_your_gateway', 0);
 add_action('template_redirect', 'wc_custom_redirect_after_purchase', 0);
 add_action('woocommerce_order_refunded', 'openpay_woocommerce_order_refunded', 10, 2);        
 add_action('woocommerce_order_status_changed','openpay_woocommerce_order_status_change_custom', 10, 3);
-add_action('woocommerce_api_openpay_confirm', 'openpay_woocommerce_confirm', 10, 0);
-add_action('admin_enqueue_scripts',  'openpay_card_load_scripts');          
+add_action('woocommerce_api_openpay_confirm', 'openpay_woocommerce_confirm', 10, 0);         
 
 function openpay_woocommerce_confirm() {   
         global $woocommerce;
@@ -126,7 +125,13 @@ function openpay_woocommerce_order_refunded($order_id, $refund_id) {
     $logger->info('_transaction_id: '.$transaction_id);             
 
     try {
-        $openpay_cards = new Openpay_Cards();    
+        $openpay_cards = new Openpay_Cards();
+        
+        $settings = $openpay_cards->init_settings();
+        if($settings['country'] != 'MX'){
+            $order->add_order_note('Openpay plugin does not support refunds');             
+            return;
+        }
 
         $openpay = $openpay_cards->getOpenpayInstance();
         $customer = $openpay->customers->get($customer_id);
@@ -135,7 +140,7 @@ function openpay_woocommerce_order_refunded($order_id, $refund_id) {
             'description' => $reason,
             'amount' => $amount                
         ));
-        $order->add_order_note('Payment was also redunded in Openpay');
+        $order->add_order_note('Payment was also refunded in Openpay');
     } catch (Exception $e) {
         $logger->error($e->getMessage());             
         $order->add_order_note('There was an error refunding charge in Openpay: '.$e->getMessage());
@@ -157,7 +162,6 @@ function openpay_woocommerce_order_status_change_custom($order_id, $old_status, 
     }
     
     $expected_new_status = array('completed', 'processing');
-    $customer_id = get_post_meta($order_id, '_openpay_customer_id', true);
     $transaction_id = get_post_meta($order_id, '_transaction_id', true);
     $capture = get_post_meta($order_id, '_openpay_capture', true);    
     $logger->info('$capture: '.$capture);             
@@ -166,6 +170,14 @@ function openpay_woocommerce_order_status_change_custom($order_id, $old_status, 
         try {
             $openpay_cards = new Openpay_Cards();    
             $openpay = $openpay_cards->getOpenpayInstance();
+            $settings = $openpay_cards->init_settings();
+
+            if(strcmp($settings['sandbox'], 'yes')){
+                $customer_id = get_post_meta($order_id, '_openpay_customer_sandbox_id', true); 
+            }else{
+                $customer_id = get_post_meta($order_id, '_openpay_customer_id', true);    
+            }
+
             $customer = $openpay->customers->get($customer_id);
             $charge = $customer->charges->get($transaction_id);
             $charge->capture(array(
@@ -179,7 +191,4 @@ function openpay_woocommerce_order_status_change_custom($order_id, $old_status, 
     }        
 
     return;
-}
-function openpay_card_load_scripts() {
-    wp_enqueue_script('cardScript', plugin_dir_url( __FILE__ ).'assets/js/cardScript.js');
 }

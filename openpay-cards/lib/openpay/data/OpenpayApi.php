@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Openpay API v1 Client for PHP (version 1.0.3)
+ * Openpay API v1 Client for PHP (version 2.0.0)
  * 
  * Copyright © Openpay SAPI de C.V. All rights reserved.
  * http://www.openpay.mx/
@@ -14,20 +14,25 @@ class Openpay
     private static $id = '';
     private static $apiKey = '';
     private static $userAgent = '';
-    private static $apiEndpoint = 'https://api.openpay.mx/v1';
-    private static $apiSandboxEndpoint = 'https://sandbox-api.openpay.mx/v1';
+    private static $country = 'MX';
+    private static $apiEndpoint = '';
+    private static $apiSandboxEndpoint = '';
     private static $sandboxMode = true;
 
     public function __construct() {
         
     }
 
-    public static function getInstance($id = '', $apiKey = '') {
+    public static function getInstance($id = '', $apiKey = '', $country = 'MX') {
         if ($id != '') {
             self::setId($id);
         }
         if ($apiKey != '') {
             self::setApiKey($apiKey);
+        }
+        if ($country != '') {
+            self::setCountry($country);
+            self::setEndpointUrl($country);
         }
         $instance = OpenpayApi::getInstance(null);
         return $instance;
@@ -43,7 +48,7 @@ class Openpay
         $userAgent = self::$userAgent; 
         return $userAgent;
     }
-    
+
     public static function setApiKey($key = '') {
         if ($key != '') {
             self::$apiKey = $key;
@@ -62,6 +67,17 @@ class Openpay
         if ($id != '') {
             self::$id = $id;
         }
+    }
+
+    public static function setCountry($country = ''){
+        if ($country != '') {
+            self::$country = $country;
+        }
+    }
+
+    public static function getCountry(){
+        $country = self::$country;
+        return $country;
     }
 
     public static function getId() {
@@ -96,6 +112,15 @@ class Openpay
         self::$sandboxMode = $mode ? false : true;
     }
 
+    public static function setEndpointUrl($country){
+        if($country == 'MX'){
+            self::$apiEndpoint = 'https://api.openpay.mx/v1';
+            self::$apiSandboxEndpoint = 'https://sandbox-api.openpay.mx/v1';
+        }elseif($country == 'CO'){
+            self::$apiEndpoint = 'https://api.openpay.co/v1';
+            self::$apiSandboxEndpoint = 'https://sandbox-api.openpay.co/v1';
+        }
+    }
     public static function getEndpointUrl() {
         return (self::getSandboxMode() ? self::$apiSandboxEndpoint : self::$apiEndpoint);
     }
@@ -106,9 +131,12 @@ class Openpay
 class OpenpayApi extends OpenpayApiResourceBase
 {
 
-    protected $derivedResources = array('Customer' => array(),
+    protected $derivedResources = array(
+        'Bine' => array(),
+        'Customer' => array(),
         'Card' => array(),
         'Charge' => array(),
+        'Pse' => array(),
         'Payout' => array(),
         'Fee' => array(),
         'Plan' => array(),
