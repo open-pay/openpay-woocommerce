@@ -25,6 +25,8 @@ class Openpay_Cards extends WC_Payment_Gateway
     protected $currencies = array('MXN', 'USD');
     protected $capture = true;
     protected $country = '';
+    protected $merchant_classification = 'general';
+    protected $affiliation_bbva = null;
     protected $iva = 0;
 
     public function __construct() {        
@@ -60,6 +62,8 @@ class Openpay_Cards extends WC_Payment_Gateway
         $this->live_merchant_id = $this->settings['live_merchant_id'];
         $this->live_private_key = $this->settings['live_private_key'];
         $this->live_publishable_key = $this->settings['live_publishable_key'];        
+        $this->merchant_classification = $this->settings['merchant_classification'];        
+        $this->affiliation_bbva = $this->settings['affiliation_bbva'];        
         $this->merchant_id = $this->is_sandbox ? $this->test_merchant_id : $this->live_merchant_id;
         $this->publishable_key = $this->is_sandbox ? $this->test_publishable_key : $this->live_publishable_key;
         $this->private_key = $this->is_sandbox ? $this->test_private_key : $this->live_private_key;
@@ -86,6 +90,53 @@ class Openpay_Cards extends WC_Payment_Gateway
         wp_enqueue_script('openpay_cards_admin_form', plugins_url('assets/js/admin.js', __FILE__), array('jquery'), '', true);
     }
 
+    public function process_admin_options() {
+        parent::process_admin_options();
+
+        $post_data = $this->get_post_data(); 
+        $mode = 'live';    
+        
+        if($post_data['woocommerce_'.$this->id.'_sandbox'] == '1'){
+            $mode = 'test';      
+        }
+        
+        $this->merchant_id = $post_data['woocommerce_'.$this->id.'_'.$mode.'_merchant_id'];
+        $this->affiliation_bbva = $post_data['woocommerce_'.$this->id.'_affiliation_bbva'];
+        $this->private_key = $post_data['woocommerce_'.$this->id.'_'.$mode.'_private_key'];
+        $this->country = $post_data['woocommerce_'.$this->id.'_country'];
+
+
+        $env = ($mode == 'live') ? 'Producton' : 'Sandbox';
+
+        $settings = new WC_Admin_Settings();
+        if($this->merchant_id == '' || $this->private_key == ''){
+            $settings->add_error('You need to enter "'.$env.'" credentials if you want to use this plugin in this mode.');
+        } else {
+            $merchantInfo = $this->getOriginMerchant();
+            $this->merchant_classification = $merchantInfo->classification;
+            $this->settings['merchant_classification'] = $merchantInfo->classification;
+
+            if($this->merchant_classification === 'eglobal'){
+                if($this->affiliation_bbva == ''){
+                    $settings->add_error('The bbva affiliation field is required.');
+                    $this->settings['charge_type'] = '3d';
+                    $this->charge_type = '3d';
+                    $this->country = 'MX';
+                    $this->settings['country'] = 'MX';
+                }
+            }else {
+                if($this->affiliation_bbva != ''){
+                    $this->settings['charge_type'] = 'direct';
+                    $this->charge_type = 'direct';
+                    $this->settings['affiliation_bbva'] = '';
+                    $this->affiliation_bbva = '';
+                }
+            }
+        }
+
+        return update_option( $this->get_option_key(), apply_filters( 'woocommerce_settings_api_sanitized_fields_' . $this->id, $this->settings ), 'yes' );      
+    } 
+
     /**
      * Si el tipo de cargo esta configurado como Pre-autorización, el estatus de la orden es marcado como "on-hold"
      * 
@@ -109,6 +160,11 @@ class Openpay_Cards extends WC_Payment_Gateway
 
     public function init_form_fields() {
         $this->form_fields = array(
+            'merchant_classification' => array(
+                'type' => 'text',         
+                'title' => __('Clasificación Comercio', 'woothemes'),
+                'default' => 'GENERAL'
+            ),
             'enabled' => array(
                 'type' => 'checkbox',
                 'title' => __('Habilitar módulo', 'woothemes'),
@@ -129,6 +185,11 @@ class Openpay_Cards extends WC_Payment_Gateway
                     'MX' => 'México',
                     'CO' => 'Colombia',
                 )
+            ),
+            'affiliation_bbva' => array(
+                'type' => 'text',         
+                'title' => __('Número de afiliación', 'woothemes'),
+                'description' => __('Número de afiliación BBVA', 'woothemes'),
             ),
             'test_merchant_id' => array(
                 'type' => 'text',
@@ -244,7 +305,15 @@ class Openpay_Cards extends WC_Payment_Gateway
             ),
         );
     }
-    
+    public function getOriginMerchant(){
+        try {            
+            $openpay = $this->getOpenpayInstance();
+            return $openpay->getMerchantInfo();       
+        } catch (Exception $e) {
+            $this->logger->error($e->getMessage());            
+            return false;
+        }
+    }
     public function getInstallments() {
         $installments = [];
         for($i=2; $i <= 36; $i++) {
@@ -328,8 +397,7 @@ class Openpay_Cards extends WC_Payment_Gateway
         
         $list = array(array('value' => 'new', 'name' => 'Nueva tarjeta'));        
         try {            
-            $openpay = Openpay::getInstance($this->merchant_id, $this->private_key, $this->country);
-            Openpay::setProductionMode($this->is_sandbox ? false : true);
+            $openpay = $this->getOpenpayInstance();
             
             $customer = $openpay->customers->get($customer_id);
             
@@ -487,14 +555,17 @@ class Openpay_Cards extends WC_Payment_Gateway
             "description" => sprintf("Items: %s", $this->getProductsDetail()),            
             "order_id" => $this->order->get_id(),
             'use_card_points' => $use_card_points,
-            'capture' => $this->capture
+            'capture' => $this->capture,
         );
         
+        if($this->country === 'MX' && $this->merchant_classification == 'eglobal'){
+            $charge_request['affiliation_bbva'] = $this->affiliation_bbva;
+        }
         if ($this->country === 'CO') {
             $charge_request['iva'] = $this->iva;
         }
         
-        $this->logger->debug('extra_data => '.json_encode(array('$openpay_cc' => $openpay_cc, '$save_cc' => $save_cc, '$capture' => $this->capture)));   
+        $this->logger->debug('extra_data => '.json_encode(array('$openpay_cc' => $openpay_cc, '$save_cc' => $save_cc, '$capture' => $this->capture, '$charge_type' => $this->charge_type)));   
         
         $this->logger->info('processOpenpayCharge Order => '.$this->order->get_id());   
         
@@ -545,12 +616,6 @@ class Openpay_Cards extends WC_Payment_Gateway
     }
 
     public function createOpenpayCharge($customer, $charge_request, $redirect_url_3d) {
-        Openpay::getInstance($this->merchant_id, $this->private_key, $this->country);        
-        Openpay::setProductionMode($this->is_sandbox ? false : true);
-
-        $userAgent = "Openpay-WOOC".$this->country."/v2";
-        Openpay::setUserAgent($userAgent);
-        
         try {
             $charge = $customer->charges->create($charge_request);
             return $charge;
@@ -594,12 +659,7 @@ class Openpay_Cards extends WC_Payment_Gateway
         } 
         
         try {
-            $openpay = Openpay::getInstance($this->merchant_id, $this->private_key, $this->country);
-            Openpay::setProductionMode($this->is_sandbox ? false : true);
-
-            $userAgent = "Openpay-WOOC".$this->country."/v2";
-            Openpay::setUserAgent($userAgent);
-
+            $openpay = $this->getOpenpayInstance();
             return $openpay->customers->get($customer_id);
         } catch (Exception $e) {
             $this->error($e);
@@ -620,11 +680,7 @@ class Openpay_Cards extends WC_Payment_Gateway
             $customer_data = $this->formatAddress($customer_data, $this->order);
         }                
 
-        $openpay = Openpay::getInstance($this->merchant_id, $this->private_key, $this->country);
-        Openpay::setProductionMode($this->is_sandbox ? false : true);
-
-        $userAgent = "Openpay-WOOC".$this->country."/v2";
-        Openpay::setUserAgent($userAgent);
+        $openpay = $this->getOpenpayInstance();
 
         try {
             $customer = $openpay->customers->add($customer_data);
@@ -742,10 +798,15 @@ class Openpay_Cards extends WC_Payment_Gateway
     }
     
     public function getOpenpayInstance() {
+        Openpay::setOriginMerchant($this->merchant_classification);
         $openpay = Openpay::getInstance($this->merchant_id, $this->private_key, $this->country);
         Openpay::setProductionMode($this->is_sandbox ? false : true);
 
-        $userAgent = "Openpay-WOOC".$this->country."/v2";
+        if($this->merchant_classification === "eglobal")
+            $userAgent = "BBVA-WOOC".$this->country."/v1";
+        else
+            $userAgent = "Openpay-WOOC".$this->country."/v2";
+
         Openpay::setUserAgent($userAgent);
 
         return $openpay;

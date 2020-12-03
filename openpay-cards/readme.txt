@@ -16,6 +16,8 @@ For more information about this module go to:
 http://www.openpay.mx/docs/plugins/woocommerce.html
 
 == Changelog ==
+= 2.4.0 =
+* Enhancement. Unificación del plugin para procesar pagos BBVA
 = 2.3.0 =
 * Enhancement. Unificación del plugin para procesar pagos México/Colombia
 = 2.2.0 =
