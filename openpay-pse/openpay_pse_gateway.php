@@ -41,6 +41,7 @@ class Openpay_Pse extends WC_Payment_Gateway {
         $this->private_key = $this->is_sandbox ? $this->test_private_key : $this->live_private_key;
 
         // tell WooCommerce to save options
+        add_action('woocommerce_api_'.strtolower(get_class($this)), array($this, 'webhook_handler'));
         add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
 
         add_action('admin_enqueue_scripts', array($this, 'openpay_pse_admin_enqueue'), 10, 2);
@@ -70,9 +71,45 @@ class Openpay_Pse extends WC_Payment_Gateway {
         if ($this->merchant_id == '' || $this->private_key == '') {
             $settings = new WC_Admin_Settings();
             $settings->add_error('You need to enter "' . $env . '" credentials if you want to use this plugin in this mode.');
+        } else {
+            $this->createWebhook();
         }
 
         return parent::process_admin_options();
+    }
+
+    public function webhook_handler() {
+        header('HTTP/1.1 200 OK');        
+        $obj = file_get_contents('php://input');
+        $json = json_decode($obj);
+
+        if($json->transaction->method == 'bank_account'){
+
+            $openpay = Openpay::getInstance($this->merchant_id, $this->private_key, 'CO');
+            Openpay::setProductionMode($this->is_sandbox ? false : true);
+                
+            if(isset($json->transaction->customer_id)){
+                $customer = $openpay->customers->get($json->transaction->customer_id);
+                $charge = $customer->charges->get($json->transaction->id);
+            }else{
+                $charge = $openpay->charges->get($json->transaction->id);
+            }
+
+            $order_id = $json->transaction->order_id;
+            $order = new WC_Order($order_id);
+
+            if ($json->type == 'charge.succeeded' && $charge->status == 'completed') {
+                $payment_date = date("Y-m-d", $json->event_date);
+                update_post_meta($order->get_id(), 'openpay_payment_date', $payment_date);
+                $order->payment_complete();
+                $order->add_order_note(sprintf("Payment completed."));
+                
+                update_post_meta($order->get_id(), '_transaction_id', $charge->id);
+                   
+            }else if($json->type == 'transaction.expired' && $charge->status == 'cancelled'){
+                $order->update_status('cancelled', 'Payment is due.');
+            }
+        }
     }
 
     public function init_form_fields() {
@@ -275,6 +312,49 @@ class Openpay_Pse extends WC_Payment_Gateway {
             );
         return $customer_data;
     }
+
+    public function createWebhook($force_host_ssl = false) {
+
+        $protocol = (get_option('woocommerce_force_ssl_checkout') == 'no') ? 'http' : 'https';
+        $url = site_url('/', $protocol).'wc-api/Openpay_PSE';
+
+        $webhook_data = array(
+            'url' => $url,
+            'force_host_ssl' => $force_host_ssl,
+            'event_types' => array(
+                'verification',
+                'charge.succeeded',
+                'charge.created',
+                'charge.cancelled',
+                'charge.failed',
+                'payout.created',
+                'payout.succeeded',
+                'payout.failed',
+                'chargeback.created',
+                'chargeback.rejected',
+                'chargeback.accepted',
+                'transaction.expired'
+            )
+        );
+             
+        $openpay = Openpay::getInstance($this->merchant_id, $this->private_key, 'CO');
+        Openpay::setProductionMode($this->is_sandbox ? false : true);
+
+        $userAgent = "Openpay-WOOCCO/v2";
+        Openpay::setUserAgent($userAgent);
+        
+        try {
+            $webhook = $openpay->webhooks->add($webhook_data);
+            if (is_user_logged_in()) {
+                update_user_meta(get_current_user_id(), '_openpay_webhook_id', $webhook->id);
+            }
+            return $webhook;
+        } catch (Exception $e) {
+            $force_host_ssl = ($force_host_ssl == false) ? true : false; // Si viene con parámtro FALSE, solicito que se force el host SSL
+            $this->errorWebhook($e, $force_host_ssl, $url);
+            return false;
+        }
+    }
     
     
     public function hasAddress($order) {
@@ -298,6 +378,45 @@ class Openpay_Pse extends WC_Payment_Gateway {
         }
 
         $error = $e->getErrorCode() . '. ' . $msg;
+
+        if (function_exists('wc_add_notice')) {
+            wc_add_notice($error, 'error');
+        } else {
+            $settings = new WC_Admin_Settings();
+            $settings->add_error($error);
+        }
+    }
+
+    public function errorWebhook($e, $force_host_ssl, $url) {
+
+        switch ($e->getErrorCode()) {
+            case '1003':
+                $msg = 'Puerto inválido, puertos válidos: 443, 8443 y 10443';
+                break;           
+            case '6001':
+                $msg = 'El webhook ya existe, omite este mensaje.';
+                return;
+            case '6002':
+            case '6003';    
+                $msg = 'No es posible conectarse con el servicio de webhook, verifica la URL: '.$url;                
+                if($force_host_ssl == true){
+                    $this->createWebhook(true);
+                }                                
+                break;
+            default: /* Demás errores 400 */
+                $msg = 'La petición no pudo ser procesada.';
+                break;
+        }
+        
+        $error = $e->getErrorCode().'. '.$msg;
+        
+        /**
+         * Para solo mostrar un mensaje de error en backoffice y no 2, 
+         * esto debido a que se vuelve a realizar la petición "createWebhook" con el parámetro "force_host_ssl"         
+         **/         
+        if(!$force_host_ssl){
+            return;
+        }
 
         if (function_exists('wc_add_notice')) {
             wc_add_notice($error, 'error');
@@ -335,4 +454,3 @@ function openpay_pse_add_gateway($methods) {
 }
 
 add_filter('woocommerce_payment_gateways', 'openpay_pse_add_gateway');
-

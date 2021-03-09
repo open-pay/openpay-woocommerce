@@ -4,7 +4,7 @@ Tags: payment gateway, openpay
 Requires at least: 4.8
 Tested up to: 5.5
 Requires PHP: 5.6
-Stable tag: 2.3.0
+Stable tag: 2.4.1
 License: GNU General Public License v3.0
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -16,6 +16,8 @@ For more information about this module go to:
 http://www.openpay.mx/docs/plugins/woocommerce.html
 
 == Changelog ==
+= 2.4.1 =
+* Fix. Corrección de configuración para mostrar formatos disponibles por región México/Colombia
 = 2.4.0 =
 * Enhancement. Unificación del plugin para procesar pagos BBVA
 = 2.3.0 =
