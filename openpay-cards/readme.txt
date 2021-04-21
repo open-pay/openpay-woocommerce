@@ -2,7 +2,7 @@
 Contributors: openpay
 Tags: payment gateway, openpay
 Requires at least: 4.8
-Tested up to: 5.5
+Tested up to: 5.7
 Requires PHP: 5.6
 Stable tag: 2.4.1
 License: GNU General Public License v3.0

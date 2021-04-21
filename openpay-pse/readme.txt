@@ -1,8 +1,8 @@
 === Openpay PSE Plugin ===
 Contributors: openpay
 Tags: payments, payment gateway, openpay, woocommerce
-Requires at least: 4.8.0
-Tested up to: 5.5
+Requires at least: 4.8
+Tested up to: 5.7
 Requires PHP: 5.6
 Stable tag: 1.4.0
 License: GNU General Public License v3.0

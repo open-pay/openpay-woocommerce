@@ -60,6 +60,7 @@ class Openpay_Stores extends WC_Payment_Gateway
         add_action('woocommerce_api_'.strtolower(get_class($this)), array($this, 'webhook_handler'));     
                 
         add_action('admin_enqueue_scripts', array($this, 'openpay_stores_admin_enqueue'), 10, 2);
+        add_action('wp_enqueue_scripts', array($this, 'payment_scripts'));
 
         if (!$this->validateCurrency()) {
             $this->enabled = false;
@@ -68,6 +69,14 @@ class Openpay_Stores extends WC_Payment_Gateway
     
     public function openpay_stores_admin_enqueue($hook) {
         wp_enqueue_script('openpay_stores_admin_form', plugins_url('assets/js/admin.js', __FILE__), array('jquery'), '', true);
+    }
+
+    function payment_scripts(){
+        if (!is_checkout()) {
+            return;
+        }
+        wp_enqueue_script('openpay_stores', plugins_url('assets/js/openpay_stores.js', __FILE__), array( 'jquery' ), '', true);
+        wp_enqueue_style('checkout_style', plugins_url('assets/css/checkout-style.css', __FILE__));
     }
 
     public function process_admin_options() {

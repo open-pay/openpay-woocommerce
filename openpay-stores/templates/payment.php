@@ -13,8 +13,16 @@
             <img src="<?php echo $this->images_dir ?>stores.png" style="width: 100%;">
             <small><a href="http://www.openpay.mx/tiendas-de-conveniencia.html" target="_blank">Consulta las tiendas afiliadas</a></small>
         <?php elseif($this->country == 'CO'): ?>   
-            <img src="<?php echo $this->images_dir ?>co_stores.png" style="width: 100%;">
-            <small><a href="https://www.openpay.co/tiendas/" target="_blank">Consulta las tiendas afiliadas</a></small>
+            <div class="store-logos">
+                <div class="store-logos__puntored">
+                    <img src="<?php echo $this->images_dir ?>puntored_logo.jpeg">
+                </div>
+                <div class="store-logos__via">
+                    <img src="<?php echo $this->images_dir ?>baloto_logo.png">
+                    <img src="<?php echo $this->images_dir ?>via_logo.png">
+                </div>
+            </div>
+            <small class="store-link"><a href="https://www.openpay.co/tiendas/" target="_blank">Consulta los puntos de recaudo</a></small>
         <?php endif; ?>
     </div>
 </div>
@@ -39,6 +47,6 @@
     </div>
 </div>
 <div style="height: 1px; clear: both; border-bottom: 1px solid #CCC; margin: 10px 0 10px 0;"></div>
-<div style="text-align: center">
-	<img alt="" src="<?php echo $this->images_dir ?>openpay.png">	
+<div style="text-align: center" class="store-logos__openpay">
+	<img alt="" src="<?php echo $this->images_dir ?>openpay_logo.png">	
 </div>
