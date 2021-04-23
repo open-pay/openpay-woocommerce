@@ -21,6 +21,8 @@
 .store-logos .store-logos__via {
     flex: 0 0 100%;
     max-width: 100%;
+    text-align: center;
+    margin-bottom: 10px !important;
 }
 .store-logos .store-logos__via {
     display: inline-flex;
@@ -28,7 +30,7 @@
 }
 .store-logos__puntored > img {
     float: inherit !important;
-    margin: 0px auto 10px;
+    margin: auto !important;
 }
 .store-logos .store-logos__via img {
     float: inherit !important;
