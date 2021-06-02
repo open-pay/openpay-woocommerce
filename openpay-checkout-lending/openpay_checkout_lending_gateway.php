@@ -28,7 +28,6 @@ if (!class_exists('Openpay')) {
         $this->has_fields = true;
         $this->init_form_fields();
         $this->init_settings();
-        $this->country = $this->settings['country'];
         $this->title = 'Compra ahora, paga después';
         $this->description = '';
         $this->logger = wc_get_logger();
