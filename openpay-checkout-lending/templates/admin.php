@@ -13,7 +13,7 @@
 </h3>
 
 <?php if(!$this->validateCurrency()): ?>
-    <div class="inline error">Openpay Stores Plugin is only available for MXN currency.</div>
+    <div class="inline error">Openpay Checkout Lending is only available for MXN currency.</div>
 <?php endif; ?>
 
 <table class="form-table">
