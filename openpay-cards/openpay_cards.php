@@ -4,7 +4,7 @@
  * Plugin Name: Openpay Cards Plugin
  * Plugin URI: http://www.openpay.mx/docs/plugins/woocommerce.html
  * Description: Provides a credit card payment method with Openpay for WooCommerce.
- * Version: 2.4.1
+ * Version: 2.4.2
  * Author: Openpay
  * Author URI: http://www.openpay.mx
  * Developer: Openpay
@@ -81,7 +81,8 @@ function wc_custom_redirect_after_purchase() {
         $order = new WC_Order($wp->query_vars['order-received']);
         $redirect_url = get_post_meta($order->get_id(), '_openpay_3d_secure_url', true);
 
-        if ($redirect_url && $order->get_status() == 'pending') {
+        if ($redirect_url && $order->get_status() != 'completed') {
+            delete_post_meta($order->get_id(), '_openpay_3d_secure_url');
             $logger->debug($redirect_url);
             wp_redirect($redirect_url);
             exit();
