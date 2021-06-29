@@ -110,6 +110,7 @@
         <div id="total-monthly-payment" class="form-row form-row-wide hidden">
             <label>Estarías pagando mensualmente</label>
             <p class="openpay-total"><span id="monthly-payment"></span></p>
+            <div style="display: none"><?php echo WC()->cart->total?></div>
         </div>
     <?php endif; ?>
         

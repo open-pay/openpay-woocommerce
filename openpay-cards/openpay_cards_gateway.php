@@ -521,7 +521,7 @@ class Openpay_Cards extends WC_Payment_Gateway
             } else if (!$this->capture) {
                 $this->order->add_order_note(sprintf("%s payment pre-authorized with Transaction Id of '%s'", $this->GATEWAY_NAME, $this->transaction_id));                
             }
-                       
+                   
             return array(
                 'result' => 'success',
                 'redirect' => $this->get_return_url($this->order)

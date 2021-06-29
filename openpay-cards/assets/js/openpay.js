@@ -23,11 +23,12 @@ jQuery(document).ready(function () {
     
     jQuery( "body" ).append('<div class="modal fade" role="dialog" id="card-points-dialog"> <div class="modal-dialog modal-sm"> <div class="modal-content"> <div class="modal-header"> <h4 class="modal-title">Pagar con Puntos</h4> </div> <div class="modal-body"> <p>¿Desea usar los puntos de su tarjeta para realizar este pago?</p> </div> <div class="modal-footer"> <button type="button" class="btn btn-success" data-dismiss="modal" id="points-yes-button">Si</button> <button type="button" class="btn btn-default" data-dismiss="modal" id="points-no-button">No</button> </div> </div> </div></div>');
     var $form = jQuery('form.checkout,form#order_review');
-    var total = wc_openpay_params.total;        
+    //var total = wc_openpay_params.total;
     
     jQuery(document).on("change", "#openpay_month_interest_free", function() {        
         var monthly_payment = 0;
-        var months = parseInt(jQuery(this).val());     
+        var months = parseInt(jQuery(this).val());
+        let total = parseInt(jQuery("#total-monthly-payment div").text());
 
         if (months > 1) {
             jQuery("#total-monthly-payment").removeClass('hidden');
