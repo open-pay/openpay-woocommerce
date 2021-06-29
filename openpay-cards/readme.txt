@@ -4,7 +4,7 @@ Tags: payment gateway, openpay
 Requires at least: 4.8
 Tested up to: 5.7
 Requires PHP: 5.6
-Stable tag: 2.4.2
+Stable tag: 2.4.3
 License: GNU General Public License v3.0
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -16,6 +16,8 @@ For more information about this module go to:
 http://www.openpay.mx/docs/plugins/woocommerce.html
 
 == Changelog ==
+= 2.4.3 =
+* Fix. Adaptación de pagos MSI con plugin Advanced Flat Rate Shipping Method for WooCommerce
 = 2.4.2 =
 * Fix. Reintento de pago con 3DSecure activo
 = 2.4.1 =
