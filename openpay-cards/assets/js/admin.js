@@ -6,16 +6,21 @@ jQuery(document).ready(function () {
     showOrHideElements(country, merchantOrigin);
 
     function showOrHideElements(country, merchantOrigin) {
-        if (country === 'CO') {            
-            jQuery("#woocommerce_openpay_cards_iva").closest("tr").show();
-            jQuery("#woocommerce_openpay_cards_installments").closest("tr").show();
-            
+        if (country === 'CO' || country === 'PE') {            
+            if(country === 'CO') {
+                jQuery("#woocommerce_openpay_cards_installments").closest("tr").show(); 
+                jQuery("#woocommerce_openpay_cards_iva").closest("tr").show();
+            }
+            if (country === 'PE') {
+                jQuery("#woocommerce_openpay_cards_installments").closest("tr").hide();
+                jQuery("#woocommerce_openpay_cards_iva").closest("tr").hide();
+            }  
             jQuery("#woocommerce_openpay_cards_affiliation_bbva").closest("tr").hide();
             jQuery("#woocommerce_openpay_cards_charge_type").closest("tr").hide();
             jQuery("#woocommerce_openpay_cards_capture").closest("tr").hide();
             jQuery("#woocommerce_openpay_cards_use_card_points").closest("tr").hide();
             jQuery("#woocommerce_openpay_cards_msi").closest("tr").hide();      
-            jQuery("#woocommerce_openpay_cards_minimum_amount_interest_free").closest("tr").hide();         
+            jQuery("#woocommerce_openpay_cards_minimum_amount_interest_free").closest("tr").hide();    
         } else if (country === 'MX') {            
             jQuery("#woocommerce_openpay_cards_iva").closest("tr").hide();  
             jQuery("#woocommerce_openpay_cards_installments").closest("tr").hide();
