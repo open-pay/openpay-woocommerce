@@ -824,7 +824,7 @@ class Openpay_Cards extends WC_Payment_Gateway
             case 'CO':
             case 'PE':
                 $instance = $this->getOpenpayInstance();
-                $instance->customers->getList([]);
+                $instance->webhooks->getList(['limit'=>1]);
                 break;
         }
     }
