@@ -19,6 +19,8 @@ if(!class_exists('Utils')) {
 class Openpay_Cards extends WC_Payment_Gateway
 {
 
+    const VERSION_NUMBER_ADMIN_SCRIPT = '1.0.0';
+
     protected $GATEWAY_NAME = "Openpay Cards";
     protected $is_sandbox = true;
     protected $use_card_points = false;
@@ -91,7 +93,7 @@ class Openpay_Cards extends WC_Payment_Gateway
     }   
 
     public function openpay_cards_admin_enqueue($hook) {
-        wp_enqueue_script('openpay_cards_admin_form', plugins_url('assets/js/admin.js', __FILE__), array('jquery'), '', true);
+        wp_enqueue_script('openpay_cards_admin_form', plugins_url('assets/js/admin.js', __FILE__), array('jquery'), self::VERSION_NUMBER_ADMIN_SCRIPT, true);
     }
 
     public function process_admin_options() {
