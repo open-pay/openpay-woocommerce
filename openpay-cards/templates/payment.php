@@ -137,7 +137,7 @@
 <div style="height: 1px; clear: both; border-bottom: 1px solid #CCC; margin: 10px 0 10px 0;"></div>
 <div style="text-align: center">
     <?php if($this->merchant_classification != 'eglobal'): ?>
-        <img alt="" src="<?php echo $this->images_dir ?>openpay.png">
+        <img alt="" width="65px" src="<?php echo $this->images_dir ?>openpay.png">
     <?php else: ?>
         <img alt="" src="<?php echo $this->images_dir ?>bbva.png">
     <?php endif; ?>
