@@ -52,7 +52,7 @@
                 <?php elseif($this->country == 'CO'): ?>
                     <img alt="" src="<?php echo $this->images_dir ?>credit_cards_co.png" style="float: left !important;">
                 <?php elseif($this->country == 'PE'): ?>
-                    <img alt="" src="<?php echo $this->images_dir ?>credit_cards_pe.png" style="float: left !important; margin-bottom: 10px;">
+                    <img alt="" width="200px" src="<?php echo $this->images_dir ?>credit_cards_pe.png" style="float: left !important; margin-bottom: 10px;">
                 <?php endif; ?>
             </div>
             <div style="width: 100%;">
