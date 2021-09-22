@@ -3,6 +3,11 @@
 if (!class_exists('Openpay')) {
     require_once("lib/openpay/Openpay.php");
 }
+
+if (!class_exists('UtilsStores')) {
+    require_once("utils/utils_stores.php");
+}
+
 /*
   Title:	Openpay Payment extension for WooCommerce
   Author:	Openpay
@@ -13,13 +18,14 @@ if (!class_exists('Openpay')) {
 
 class Openpay_Stores extends WC_Payment_Gateway
 {
-
+    const VERSION_NUMBER_ADMIN_SCRIPT = '1.0.0';
+    
     protected $GATEWAY_NAME = "Openpay Stores";
     protected $is_sandbox = true;
     protected $order = null;
     protected $transaction_id = null;
     protected $transactionErrorMessage = null;
-    protected $currencies = array('MXN');  
+    protected $currencies;
     protected $logger = null;
     protected $country = '';
     protected $iva = 0;
@@ -32,9 +38,10 @@ class Openpay_Stores extends WC_Payment_Gateway
 
         $this->init_form_fields();
         $this->init_settings();
-        $this->logger = wc_get_logger();      
+        $this->logger = wc_get_logger();
         
-        $this->country = $this->settings['country'];        
+        $this->country = $this->settings['country'];
+        $this->currencies = UtilsStores::getCurrencies($this->country);        
         $this->iva = $this->country == 'CO' ? $this->settings['iva'] : 0;     
         $this->show_map = $this->country == 'MX' ? $this->settings['show_map'] : false;     
 
@@ -50,10 +57,8 @@ class Openpay_Stores extends WC_Payment_Gateway
 
         $this->merchant_id = $this->is_sandbox ? $this->test_merchant_id : $this->live_merchant_id;        
         $this->private_key = $this->is_sandbox ? $this->test_private_key : $this->live_private_key;
-        
-        $pdf_url_base_mx = $this->is_sandbox ? 'https://sandbox-dashboard.openpay.mx/paynet-pdf' : 'https://dashboard.openpay.mx/paynet-pdf';
-        $pdf_url_base_co = $this->is_sandbox ? 'https://sandbox-dashboard.openpay.co/paynet-pdf' : 'https://dashboard.openpay.co/paynet-pdf';        
-        $this->pdf_url_base = $this->country === 'MX' ? $pdf_url_base_mx : $pdf_url_base_co;
+                
+        $this->pdf_url_base = UtilsStores::getUrlPdfBase($this->is_sandbox, $this->country);
         
         // tell WooCommerce to save options
         add_action('woocommerce_update_options_payment_gateways_'.$this->id, array($this, 'process_admin_options'));
@@ -68,7 +73,7 @@ class Openpay_Stores extends WC_Payment_Gateway
     }
     
     public function openpay_stores_admin_enqueue($hook) {
-        wp_enqueue_script('openpay_stores_admin_form', plugins_url('assets/js/admin.js', __FILE__), array('jquery'), '', true);
+        wp_enqueue_script('openpay_stores_admin_form', plugins_url('assets/js/admin.js', __FILE__), array('jquery'), self::VERSION_NUMBER_ADMIN_SCRIPT, true);
     }
 
     function payment_scripts(){
@@ -89,15 +94,17 @@ class Openpay_Stores extends WC_Payment_Gateway
         
         $this->merchant_id = $post_data['woocommerce_'.$this->id.'_'.$mode.'_merchant_id'];
         $this->private_key = $post_data['woocommerce_'.$this->id.'_'.$mode.'_private_key'];
+        $this->country = $post_data['woocommerce_'.$this->id.'_country'];
         
         $env = ($mode == 'live') ? 'Producton' : 'Sandbox';
         
         if($this->merchant_id == '' || $this->private_key == ''){
             $settings = new WC_Admin_Settings();
             $settings->add_error('You need to enter "'.$env.'" credentials if you want to use this plugin in this mode.');
-        } else {
-            $this->createWebhook();
-        } 
+            return;
+        }
+
+        $this->createWebhook(); 
         
         return parent::process_admin_options();        
     }    
@@ -154,6 +161,7 @@ class Openpay_Stores extends WC_Payment_Gateway
                 'options' => array(
                     'MX' => 'México',
                     'CO' => 'Colombia',
+                    'PE' => 'Perú'
                 )
             ),
             'test_merchant_id' => array(
@@ -311,8 +319,7 @@ class Openpay_Stores extends WC_Payment_Gateway
         if ($this->isNullOrEmptyString($customer_id)) {
             return $this->createOpenpayCustomer();
         } else {
-            $openpay = Openpay::getInstance($this->merchant_id, $this->private_key, $this->country);
-            Openpay::setProductionMode($this->is_sandbox ? false : true);
+            $openpay = $this->getOpenpayInstance();
             try {
                 return $openpay->customers->get($customer_id);
             } catch (Exception $e) {
@@ -335,11 +342,7 @@ class Openpay_Stores extends WC_Payment_Gateway
             $customer_data = $this->formatAddress($customer_data, $this->order);
         }
 
-        $openpay = Openpay::getInstance($this->merchant_id, $this->private_key, $this->country);
-        Openpay::setProductionMode($this->is_sandbox ? false : true);
-
-        $userAgent = "Openpay-WOOC".$this->country."/v2";
-        Openpay::setUserAgent($userAgent);
+        $openpay = $this->getOpenpayInstance();
 
         try {
             $customer = $openpay->customers->add($customer_data);
@@ -360,7 +363,7 @@ class Openpay_Stores extends WC_Payment_Gateway
     }
     
     private function formatAddress($customer_data, $order) {
-        if ($this->country === 'MX') {
+        if ($this->country === 'MX' || $this->country === 'PE') {
             $customer_data['address'] = array(
                 'line1' => substr($order->get_billing_address_1(), 0, 200),
                 'line2' => substr($order->get_billing_address_2(), 0, 50),
@@ -393,6 +396,21 @@ class Openpay_Stores extends WC_Payment_Gateway
         $protocol = (get_option('woocommerce_force_ssl_checkout') == 'no') ? 'http' : 'https';
         $url = site_url('/', $protocol).'wc-api/Openpay_Stores';          
 
+        try {
+            $instance = $this->getOpenpayInstance();
+            $webhooks = $instance->webhooks->getList([]);
+            $webhookCreated = UtilsStores::isWebhookCreated($webhooks, $url);
+            if ($webhookCreated) {
+                return $webhookCreated;
+            }
+        }catch(Exception $e) {
+            $this->logger->error($e->getMessage());
+            $settings = new WC_Admin_Settings();
+            $settings->add_error($e->getMessage());
+            return;
+        }
+        
+
         $webhook_data = array(
             'url' => $url,
             'force_host_ssl' => $force_host_ssl,
@@ -413,14 +431,8 @@ class Openpay_Stores extends WC_Payment_Gateway
             )
         );
              
-        $openpay = Openpay::getInstance($this->merchant_id, $this->private_key, $this->country );
-        Openpay::setProductionMode($this->is_sandbox ? false : true);
-
-        $userAgent = "Openpay-WOOC".$this->country."/v2";
-        Openpay::setUserAgent($userAgent);
-        
         try {
-            $webhook = $openpay->webhooks->add($webhook_data);
+            $webhook = $instance->webhooks->add($webhook_data);
             if (is_user_logged_in()) {
                 update_user_meta(get_current_user_id(), '_openpay_webhook_id', $webhook->id);
             }
@@ -503,19 +515,22 @@ class Openpay_Stores extends WC_Payment_Gateway
      * @return bool
      */
     public function validateCurrency() {
-        if ($this->country === 'MX') {
-            return in_array(get_woocommerce_currency(), $this->currencies);            
-        } else if ($this->country === 'CO') {
-            return get_woocommerce_currency() == 'COP';
-        }
-        
-        return false;        
+        return in_array(get_woocommerce_currency(), $this->currencies);     
     }
 
     public function isNullOrEmptyString($string) {
         return (!isset($string) || trim($string) === '');
     }
 
+    public function getOpenpayInstance() {
+        $openpay = Openpay::getInstance($this->merchant_id, $this->private_key, $this->country );
+        Openpay::setProductionMode($this->is_sandbox ? false : true);
+    
+        $userAgent = "Openpay-WOOC".$this->country."/v2";
+        Openpay::setUserAgent($userAgent);
+    
+        return $openpay;
+    }
 }
 
 function openpay_stores_add_creditcard_gateway($methods) {

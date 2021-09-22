@@ -13,7 +13,13 @@
 </h3>
 
 <?php if(!$this->validateCurrency()): ?>
-    <div class="inline error">Openpay Stores Plugin is only available for MXN currency.</div>
+    <div class="inline error">
+        <?php
+            $countryName = UtilsStores::getCountryName($this->country);
+            $message = UtilsStores::getMessageError($countryName, $this->currencies[0]);
+            echo $message;
+        ?>
+    </div>
 <?php endif; ?>
 
 <table class="form-table">
