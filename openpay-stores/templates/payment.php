@@ -23,6 +23,13 @@
                 </div>
             </div>
             <small class="store-link"><a href="https://www.openpay.co/tiendas/" target="_blank">Consulta los puntos de recaudo</a></small>
+        <?php elseif($this->country == 'PE'): ?>
+            <div class="store-logos">
+                <div class="store-logos__puntored">
+                    <img src="<?php echo $this->images_dir ?>stores-pe.png">
+                </div>
+            </div>
+            <small><a href="http://www.openpay.mx/tiendas-de-conveniencia.html" target="_blank">Consulta las agencias afiliadas</a></small>
         <?php endif; ?>
     </div>
 </div>

@@ -39,7 +39,10 @@
 <div style="overflow: hidden;">
     <div>
             <div style="width: 100%;">
-                <h5>Tarjetas de crédito</h5>
+                <?php
+                    $title = ($this->country !== 'PE') ? 'Tarjetas de crédito' : 'Tarjetas de crédito/débito aceptadas'; 
+                ?>
+                <h5><?php echo $title; ?></h5>
                 <?php if($this->country == 'MX'): ?>
                     <?php if($this->merchant_classification != 'eglobal'): ?>
                         <img alt="" src="<?php echo $this->images_dir ?>credit_cards.png" style="float: left !important;">
@@ -48,10 +51,12 @@
                     <?php endif; ?>
                 <?php elseif($this->country == 'CO'): ?>
                     <img alt="" src="<?php echo $this->images_dir ?>credit_cards_co.png" style="float: left !important;">
+                <?php elseif($this->country == 'PE'): ?>
+                    <img alt="" width="200px" src="<?php echo $this->images_dir ?>credit_cards_pe.png" style="float: left !important; margin-bottom: 10px;">
                 <?php endif; ?>
             </div>
             <div style="width: 100%;">
-                <h5>Tarjetas de débito</h5>
+                <h5 class="<?php if($this->country == 'PE') echo 'hidden'; ?>">Tarjetas de débito</h5>
                 <?php if($this->country == 'MX'): ?>
                     <img alt="" src="<?php echo $this->images_dir ?>debit_cards.png">
                 <?php elseif($this->country == 'CO'): ?>
@@ -132,7 +137,7 @@
 <div style="height: 1px; clear: both; border-bottom: 1px solid #CCC; margin: 10px 0 10px 0;"></div>
 <div style="text-align: center">
     <?php if($this->merchant_classification != 'eglobal'): ?>
-        <img alt="" src="<?php echo $this->images_dir ?>openpay.png">
+        <img alt="" width="65px" src="<?php echo $this->images_dir ?>openpay.png">
     <?php else: ?>
         <img alt="" src="<?php echo $this->images_dir ?>bbva.png">
     <?php endif; ?>
