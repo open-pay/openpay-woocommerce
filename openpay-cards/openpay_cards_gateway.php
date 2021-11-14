@@ -46,8 +46,7 @@ class Openpay_Cards extends WC_Payment_Gateway
         
         $this->country = $this->settings['country'];
         $this->currencies = Utils::getCurrencies($this->country);       
-        $this->iva = $this->country == 'CO' ? $this->settings['iva'] : 0;   
-        $this->installments = $this->country == 'CO' ? $this->settings['installments'] : [];   
+        $this->iva = $this->country == 'CO' ? $this->settings['iva'] : 0; 
         $this->msi = $this->country == 'MX' ? $this->settings['msi'] : [];  
         $this->minimum_amount_interest_free = $this->country == 'MX' ? $this->settings['minimum_amount_interest_free'] : 0;
 
@@ -283,18 +282,7 @@ class Openpay_Cards extends WC_Payment_Gateway
                 'title' => __('Monto mínimo MSI', 'woothemes'),
                 'description' => __('Monto mínimo para aceptar meses sin intereses.', 'woothemes'),
                 'default' => __('1', 'woothemes')
-            ),            
-            'installments' => array(
-                'title' => __('Cuotas', 'woocommerce'),
-                'type' => 'multiselect',
-                'class' => 'wc-enhanced-select',
-                'css' => 'width: 400px;',
-                'default' => '',
-                'options' => $this->getInstallments(),
-                'custom_attributes' => array(
-                    'data-placeholder' => __('Opciones', 'woocommerce'),
-                ),
-            ),
+            )
         );
     }
     public function getOriginMerchant(){  
@@ -337,20 +325,13 @@ class Openpay_Cards extends WC_Payment_Gateway
             }
         }
                              
-        $this->show_installments = false;        
+        $this->show_installments = false;       
         
-        $installments = array();
-        if ($this->country == 'CO' && ($this->installments && count($this->installments))) {                        
-            foreach ($this->installments as $installment) {
-                $installments[$installment] = $installment . ' cuotas';
-            }
-            
-            if (count($installments) > 0 ) {
-                $this->show_installments = true;
-            }
+        if ($this->country == 'CO') {                        
+            $this->installments = $this->getInstallments();
+            $this->show_installments = true;
         }                
 
-        $this->installments = $installments;
         $this->months = $months;
         $this->cc_options = $this->getCreditCardList();
         $this->can_save_cc = $this->save_cc && is_user_logged_in();          
@@ -435,17 +416,23 @@ class Openpay_Cards extends WC_Payment_Gateway
         wp_enqueue_script('payment', plugins_url('assets/js/jquery.payment.js', __FILE__), array( 'jquery' ), '', true);
         wp_enqueue_script('openpay', plugins_url('assets/js/openpay.js', __FILE__), array( 'jquery' ), '', true);        
 
-
         $openpay_params = array(
             'merchant_id' => $this->merchant_id,
             'public_key' => $this->publishable_key,
             'sandbox_mode' => $this->is_sandbox,
+            'country' => $this->country,
             'total' => $woocommerce->cart->total,
+            'show_months_interest_free' => false,
             'currency' => get_woocommerce_currency(),
             'bootstrap_css' => plugins_url('assets/css/bootstrap.css', __FILE__),
             'bootstrap_js' => plugins_url('assets/js/bootstrap.js', __FILE__),
-            'use_card_points' => $this->use_card_points
+            'use_card_points' => $this->use_card_points,
+            'ajaxurl' => admin_url('admin-ajax.php')
         );
+
+        if ($this->msi && ($woocommerce->cart->total >= $this->minimum_amount_interest_free)) {
+            $openpay_params['show_months_interest_free'] = true;
+        }
 
         // If we're on the pay page we need to pass openpay.js the address of the order.
         if (is_checkout_pay_page() && isset($_GET['order']) && isset($_GET['order_id'])) {

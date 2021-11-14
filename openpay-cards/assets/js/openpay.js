@@ -233,4 +233,66 @@ jQuery(document).ready(function () {
         $form.unblock();
     }
 
+    var card_old;
+    jQuery('body').on("keypress focusout", "#openpay-card-number", function() {
+        let card = jQuery(this).val();
+        let country = wc_openpay_params.country;
+        let card_without_space = card.replace(/\s+/g, '')
+        if(card_without_space.length >= 6) {
+            if(country == 'PE') {
+                return;
+            }
+            if (country == 'MX' && !wc_openpay_params.show_months_interest_free) {
+                return;
+            }
+
+            var card_bin = card_without_space.substring(0, 6);
+            if(card_bin != card_old) {
+                getTypeCard(card_bin, country);
+                card_old = card_bin;
+            }
+        }
+    });
+
+    function getTypeCard(cardBin, country) {
+        jQuery.ajax({
+            type : "post",
+            url : wc_openpay_params.ajaxurl,
+            data : {
+                action: "get_type_card_openpay", 
+                card_bin : cardBin,
+            },
+            beforeSend: function () {
+                jQuery("#openpay_cards").addClass("opacity");
+                jQuery(".ajax-loader").addClass("is-active");
+            },
+            error: function(response){
+                console.log(response);
+            },
+            success: function(response) {
+                if(response.status == 'success') {
+                    if(response.card_type === 'CREDIT'){
+                        if (country == 'MX') jQuery("#openpay_month_interest_free").closest(".form-row").show(); else jQuery('#openpay_installments').closest(".form-row").show();
+                    } else {
+                        if (country == 'MX') {
+                            jQuery("#openpay_month_interest_free").closest(".form-row").hide();
+                            jQuery('#openpay_month_interest_free option[value="1"]').attr("selected",true);
+                            jQuery("#total-monthly-payment").hide();
+                        } else {
+                            jQuery("#openpay_installments").closest(".form-row").hide();
+                            jQuery('#openpay_installments option[value="1"]').attr("selected",true);
+                        }
+                    }
+                } else {
+                    jQuery("#openpay_month_interest_free").closest(".form-row").hide();
+                    jQuery("#openpay_installments").closest(".form-row").hide();
+                }
+            },
+            complete: function () { 
+                jQuery("#openpay_cards").removeClass("opacity");
+                jQuery(".ajax-loader").removeClass("is-active");  
+            } 
+        })
+    }
+
 });
