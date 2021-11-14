@@ -4,14 +4,14 @@
  * Plugin Name: Openpay Cards Plugin
  * Plugin URI: http://www.openpay.mx/docs/plugins/woocommerce.html
  * Description: Provides a credit card payment method with Openpay for WooCommerce.
- * Version: 2.5.0
+ * Version: 2.6.0
  * Author: Openpay
  * Author URI: http://www.openpay.mx
  * Developer: Openpay
  * Text Domain: openpay-cards
  *
  * WC requires at least: 3.0
- * WC tested up to: 5.6
+ * WC tested up to: 5.8
  *
  * License: GNU General Public License v3.0
  * License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -29,7 +29,13 @@ add_action('plugins_loaded', 'openpay_cards_init_your_gateway', 0);
 add_action('template_redirect', 'wc_custom_redirect_after_purchase', 0);
 add_action('woocommerce_order_refunded', 'openpay_woocommerce_order_refunded', 10, 2);        
 add_action('woocommerce_order_status_changed','openpay_woocommerce_order_status_change_custom', 10, 3);
-add_action('woocommerce_api_openpay_confirm', 'openpay_woocommerce_confirm', 10, 0);         
+add_action('woocommerce_api_openpay_confirm', 'openpay_woocommerce_confirm', 10, 0);
+
+// Hook para usuarios no logueados
+add_action('wp_ajax_nopriv_get_type_card_openpay', 'get_type_card_openpay');
+
+// Hook para usuarios logueados
+add_action('wp_ajax_get_type_card_openpay', 'get_type_card_openpay');
 
 function openpay_woocommerce_confirm() {   
         global $woocommerce;
@@ -192,4 +198,74 @@ function openpay_woocommerce_order_status_change_custom($order_id, $old_status, 
     }        
 
     return;
+}
+
+function get_type_card_openpay(){
+    $logger = wc_get_logger();
+
+    $card_bin  = isset( $_POST['card_bin'] ) ? $_POST['card_bin'] : false;
+    
+    if($card_bin) {
+        try {
+            $openpay_cards = new Openpay_Cards();
+            $settings = $openpay_cards->init_settings();
+
+            $country = $settings['country'];
+            if ($country == 'MX') {
+                $openpay = $openpay_cards->getOpenpayInstance();
+                $cardInfo = $openpay->bines->get($card_bin);
+                wp_send_json(array(
+                    'status' => 'success',
+                    'card_type' => $cardInfo->type
+                ));
+            } else {
+                $cardInfo = requestOpenpay('/cards/validate-bin?bin='.$card_bin, $country, strcmp($settings['sandbox'], 'yes'));
+                wp_send_json(array(
+                    'status' => 'success',
+                    'card_type' => $cardInfo->card_type
+                ));
+            }
+        } catch (Exception $e) {
+            $logger->error($e->getMessage());
+        }
+    }
+    wp_send_json(array(
+        'status' => 'error',
+        'card_type' => "credit card not found"
+    ));
+}
+
+function requestOpenpay($api, $country, $is_sandbox, $method = 'GET') {
+    $logger = wc_get_logger();
+
+    $logger->error($is_sandbox);
+
+    $sandbox_url_mx= 'https://sandbox-api.openpay.mx/v1';
+    $url_mx = 'https://api.openpay.mx/v1';
+
+    $sandbox_url_co = 'https://sandbox-api.openpay.co/v1';
+    $url_co = 'https://api.openpay.co/v1';
+
+    $url = $country === 'MX' ? $url_mx : $url_co;
+    $sandbox_url = $country === 'MX' ? $sandbox_url_mx : $sandbox_url_co;
+
+    $absUrl = $is_sandbox ? $sandbox_url : $url;
+    $absUrl .= $api;
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $absUrl);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
+    $result = curl_exec($ch);
+
+    if (curl_exec($ch) === false) {
+        $logger->error('Curl error '.curl_errno($ch).': '.curl_error($ch));
+    } else {
+        $info = curl_getinfo($ch);
+        $logger->error('HTTP code '.$info['http_code'].' on request to '.$info['url']);
+    }
+
+    curl_close($ch);
+
+    return json_decode($result);
 }

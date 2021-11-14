@@ -34,9 +34,49 @@
     .hidden {
         visibility: hidden;
     }
+
+    #openpay_cards.opacity {
+        opacity: 0.5;
+    }
+
+    #openpay_cards.opacity .ajax-loader.is-active {
+        position: absolute;
+        left: calc(50% - 15px);
+        top: calc(50% - 15px);
+        height:30px;
+        width:30px;
+        margin:0px auto;
+        -webkit-animation: rotation .6s infinite linear;
+        -moz-animation: rotation .6s infinite linear;
+        -o-animation: rotation .6s infinite linear;
+        animation: rotation .6s infinite linear;
+        border-left:4px solid rgba(0,174,239,.15);
+        border-right:4px solid rgba(0,174,239,.15);
+        border-bottom:4px solid rgba(0,174,239,.15);
+        border-top:4px solid rgba(0,174,239,.8);
+        border-radius:100%;
+    }
+
+    @-webkit-keyframes rotation {
+    from {-webkit-transform: rotate(0deg);}
+    to {-webkit-transform: rotate(359deg);}
+    }
+    @-moz-keyframes rotation {
+    from {-moz-transform: rotate(0deg);}
+    to {-moz-transform: rotate(359deg);}
+    }
+    @-o-keyframes rotation {
+    from {-o-transform: rotate(0deg);}
+    to {-o-transform: rotate(359deg);}
+    }
+    @keyframes rotation {
+    from {transform: rotate(0deg);}
+    to {transform: rotate(359deg);}
+    }
 </style>
 
-<div style="overflow: hidden;">
+<div id="openpay_cards" style="overflow: hidden; position: relative;">
+    <div class="ajax-loader"></div>
     <div>
             <div style="width: 100%;">
                 <?php
@@ -80,7 +120,7 @@
         
     <div id="payment_form_openpay_cards">    
         <div class="form-row form-row-wide">
-            <label for="openpay-holder-name">Nombre del tarjetahabiente <span class="required">*</span></label>
+            <label for="openpay-holder-name">Nombre del títular <span class="required">*</span></label>
             <input id="openpay-holder-name" style="font-size: 1.5em; padding: 8px;" class="input-text" type="text" autocomplete="off" placeholder="Nombre del tarjetahabiente" data-openpay-card="holder_name" />
         </div>	
         <div class="form-row form-row-wide">
@@ -103,7 +143,7 @@
     </div>    
         
     <?php if($this->show_months_interest_free): ?>
-        <div class="form-row form-row-wide">
+        <div class="form-row form-row-wide" style="display: none;">
             <label for="openpay-card-number">Pago a meses sin intereses <span class="required">*</span></label>
             <select name="openpay_month_interest_free" id="openpay_month_interest_free" class="openpay-select">
                 <option value="1">Pago de contado</option>
@@ -120,7 +160,7 @@
     <?php endif; ?>
         
     <?php if($this->show_installments): ?>
-        <div class="form-row form-row-wide">
+        <div class="form-row form-row-wide" style="display: none;">
             <label for="openpay-card-number">Cuotas <span class="required">*</span></label>
             <select name="openpay_installments" id="openpay_installments" class="openpay-select">
                 <option value="1">Sola una cuota</option>
