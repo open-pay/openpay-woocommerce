@@ -16,6 +16,8 @@ For more information about this module go to:
 http://www.openpay.mx/docs/plugins/woocommerce.html
 
 == Changelog ==
+= 1.9.0 =
+* Cambio de imagen Openpay (Rebranding)
 = 1.8.1 =
 * Comprobar funcionalidad en las últimas versiones de Wordpress y WooCommerce
 = 1.8.0 =
