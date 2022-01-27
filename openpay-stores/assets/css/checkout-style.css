@@ -37,7 +37,7 @@
 }
 .store-logos .store-logos__puntored img,
 .store-logos .store-logos__via img {
-    max-height: 50px !important;
+    max-height: 100% !important;
 }
 .store-logos__openpay > img {
     width: 100%;

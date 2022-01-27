@@ -1,17 +1,17 @@
 <?php
 
 /**
- * Plugin Name: Openpay PSE Plugin
+ * Plugin Name: Openpay PSE
  * Plugin URI: http://www.openpay.mx/docs/plugins/woocommerce.html
  * Description: Provides a PSE payment method with Openpay for WooCommerce. Compatible with WooCommerce 4.5.2 and Wordpress 5.5.
- * Version: 1.4.0
+ * Version: 1.4.1
  * Author: Openpay
  * Author URI: http://www.openpay.mx
  * Developer: Openpay
  * Text Domain: openpay-pse
  *
  * WC requires at least: 3.0
- * WC tested up to: 5.5
+ * WC tested up to: 5.1
  *
  * License: GNU General Public License v3.0
  * License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -26,14 +26,14 @@ function openpay_pse_init_your_gateway() {
 }
 
 add_action('plugins_loaded', 'openpay_pse_init_your_gateway', 0);
-add_action('template_redirect', 'wc_pse_redirect_after_purchase', 0);
+add_action('template_redirect', 'openpay_pse_redirect_after_purchase', 0);
 add_action('woocommerce_api_pse_confirm', 'openpay_pse_confirm', 10, 0);         
 
 function openpay_pse_confirm() {   
         global $woocommerce;
         $logger = wc_get_logger();
         
-        $id = $_GET['id'];        
+        $id = preg_replace('/[^a-z0-9]/', '', $_GET['id']);        
         
         $logger->info('openpay_woocommerce_confirm => '.$id);   
         
@@ -74,10 +74,10 @@ function openpay_pse_confirm() {
         }                
     }    
 
-function wc_pse_redirect_after_purchase() {
+function openpay_pse_redirect_after_purchase() {
     global $wp;
     $logger = wc_get_logger();
-    $logger->info('wc_pse_redirect_after_purchase');             
+    $logger->info('openpay_pse_redirect_after_purchase');             
 
     if (is_checkout() && !empty($wp->query_vars['order-received'])) {
         $order = new WC_Order($wp->query_vars['order-received']);
