@@ -17,7 +17,7 @@ http://www.openpay.mx/docs/plugins/woocommerce.html
 
 == Changelog ==
 = 2.6.0 =
-* Enhancement. Consulta de Bines para habilitar MSI/Coutas en el checkout del comercio
+* Enhancement. Consulta de Bines para habilitar MSN/Coutas en el checkout del comercio
 = 2.5.0 =
 * Enhancement. Unificación del plugin para soportar pagos México/Colombia/Perú
 = 2.4.3 =
