@@ -240,17 +240,8 @@ jQuery(document).ready(function () {
         let card_without_space = card.replace(/\s+/g, '')
         if(card_without_space.length >= 6) {
             
-            if(country == 'PE' && wc_openpay_params.msi_options_pe) {
 
-                var card_bin = card_without_space.substring(0, 6);
-                if(card_bin != card_old) {
-                    getTypeCard(card_bin, country);
-                    card_old = card_bin;
-                }
-                return;
-            }
-
-            if (country == 'MX' && !wc_openpay_params.show_months_interest_free) {
+            if ((country == 'MX' && !wc_openpay_params.show_months_interest_free) || (country == 'PE' && !wc_openpay_params.msi_options_pe)) {
                 return;
             }
 
