@@ -179,7 +179,17 @@
                 <?php endforeach; ?>
             </select>
         </div>            
-    <?php endif; ?>    
+    <?php endif; ?>
+
+
+    <?php if($this->show_installments_pe): ?>
+        <div class="form-row form-row-wide" style="display: none;">
+            <label for="openpay-card-number">Cuotas <span class="required">*</span></label>
+            <select name="openpay_installments_pe" id="openpay_installments_pe" class="openpay-select">
+            </select>
+        </div>            
+    <?php endif; ?>   
+    
         
     <input type="hidden" name="device_session_id" id="device_session_id" />
     <input type="hidden" name="use_card_points" id="use_card_points" value="false" />
