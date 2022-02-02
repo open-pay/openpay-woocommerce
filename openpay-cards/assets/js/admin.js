@@ -9,16 +9,16 @@ jQuery(document).ready(function () {
         if (country === 'CO' || country === 'PE') {            
             if(country === 'CO') {
                 jQuery("#woocommerce_openpay_cards_iva").closest("tr").show();
+                jQuery("#woocommerce_openpay_cards_capture").closest("tr").hide();
                 jQuery("#woocommerce_openpay_cards_msi_options_pe").closest("tr").hide();
             }
             if (country === 'PE') {
                 jQuery("#woocommerce_openpay_cards_iva").closest("tr").hide();
-                jQuery("#woocommerce_openpay_cards_capture").closest("tr").hide();
+                jQuery("#woocommerce_openpay_cards_capture").closest("tr").show();
                 jQuery("#woocommerce_openpay_cards_msi_options_pe").closest("tr").show();                
             }
             jQuery("#woocommerce_openpay_cards_affiliation_bbva").closest("tr").hide();
             jQuery("#woocommerce_openpay_cards_charge_type").closest("tr").hide();
-            jQuery("#woocommerce_openpay_cards_capture").closest("tr").hide();
             jQuery("#woocommerce_openpay_cards_use_card_points").closest("tr").hide();
             jQuery("#woocommerce_openpay_cards_msi").closest("tr").hide();      
             jQuery("#woocommerce_openpay_cards_minimum_amount_interest_free").closest("tr").hide();    
