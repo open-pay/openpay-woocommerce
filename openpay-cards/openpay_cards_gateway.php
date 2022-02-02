@@ -34,6 +34,7 @@ class Openpay_Cards extends WC_Payment_Gateway
     protected $merchant_classification = 'general';
     protected $affiliation_bbva = null;
     protected $iva = 0;
+    protected $msi_options_pe = false;
 
     public function __construct() {        
         $this->id = 'openpay_cards';
@@ -53,7 +54,8 @@ class Openpay_Cards extends WC_Payment_Gateway
         $use_card_points = isset($this->settings['use_card_points']) ? (strcmp($this->settings['use_card_points'], 'yes') == 0) : false;
         $capture = isset($this->settings['capture']) ? (strcmp($this->settings['capture'], 'true') == 0) : true;
         $save_cc = isset($this->settings['save_cc']) ? (strcmp($this->settings['save_cc'], 'yes') == 0) : false;
-        
+        $msi_options_pe = isset($this->settings['msi_options_pe']) ? (strcmp($this->settings['msi_options_pe'], 'yes') == 0) : false;
+
         $this->charge_type = $this->country == 'MX' ? $this->settings['charge_type'] : 'direct';
         $this->use_card_points = $this->country == 'MX' ? $use_card_points : false;
         $this->capture = $this->country == 'MX' ? $capture : true;
@@ -73,6 +75,7 @@ class Openpay_Cards extends WC_Payment_Gateway
         $this->publishable_key = $this->is_sandbox ? $this->test_publishable_key : $this->live_publishable_key;
         $this->private_key = $this->is_sandbox ? $this->test_private_key : $this->live_private_key;
         $this->save_cc = $save_cc;
+        $this->msi_options_pe = $msi_options_pe;
         
         if ($this->is_sandbox) {
             $this->description .= __('SANDBOX MODE ENABLED. In test mode, you can use the card number 4111111111111111 with any CVC and a valid expiration date.', 'openpay-woosubscriptions');
@@ -259,6 +262,14 @@ class Openpay_Cards extends WC_Payment_Gateway
                 'desc_tip' => true,
                 'default' => 'no'
             ),
+            'msi_options_pe' => array(
+                'type' => 'checkbox',
+                'title' => __('Meses sin intereses', 'woothemes'),
+                'label' => __('Habilitar', 'woothemes'),
+                'description' => __('Habilitar pagos a meses sin intereses.', 'woothemes'),
+                'desc_tip' => true,                
+                'default' => 'no'
+            ),
             'iva' => array(
                 'type' => 'number',
                 'required' => true,
@@ -331,7 +342,10 @@ class Openpay_Cards extends WC_Payment_Gateway
             $this->installments = $this->getInstallments();
             $this->show_installments = true;
         }                
-
+        
+        $this->show_installments_pe = false;
+        if($this->country == 'PE' && $this->msi_options_pe) $this->show_installments_pe = true;
+        
         $this->months = $months;
         $this->cc_options = $this->getCreditCardList();
         $this->can_save_cc = $this->save_cc && is_user_logged_in();          
@@ -427,11 +441,17 @@ class Openpay_Cards extends WC_Payment_Gateway
             'bootstrap_css' => plugins_url('assets/css/bootstrap.css', __FILE__),
             'bootstrap_js' => plugins_url('assets/js/bootstrap.js', __FILE__),
             'use_card_points' => $this->use_card_points,
-            'ajaxurl' => admin_url('admin-ajax.php')
+            'ajaxurl' => admin_url('admin-ajax.php'),
+            'msi_options_pe' => $this->msi_options_pe,
+            'show_installments_pe' => false,
         );
 
         if ($this->msi && ($woocommerce->cart->total >= $this->minimum_amount_interest_free)) {
             $openpay_params['show_months_interest_free'] = true;
+        }
+
+        if ($woocommerce->cart->total >= $this->minimum_amount_interest_free) {
+            $openpay_params['show_installments_pe'] = true;
         }
 
         // If we're on the pay page we need to pass openpay.js the address of the order.
@@ -481,6 +501,10 @@ class Openpay_Cards extends WC_Payment_Gateway
         if(isset($_POST['openpay_installments'])){
             $payment_plan = $_POST['openpay_installments'];
         }
+
+        if(isset($_POST['openpay_installments_pe'])){
+            $payment_plan = $_POST['openpay_installments_pe'];
+        }
         
         $this->order = new WC_Order($order_id);
         if ($this->processOpenpayCharge($device_session_id, $openpay_token, $payment_plan, $use_card_points, $openpay_cc, $save_cc)) {            
@@ -529,7 +553,7 @@ class Openpay_Cards extends WC_Payment_Gateway
             'use_card_points' => $use_card_points,
             'capture' => $this->capture,
         );
-        
+
         if($this->country === 'MX' && $this->merchant_classification == 'eglobal'){
             $charge_request['affiliation_bbva'] = $this->affiliation_bbva;
         }

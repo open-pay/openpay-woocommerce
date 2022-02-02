@@ -2,9 +2,9 @@
 Contributors: openpay
 Tags: payment gateway, openpay
 Requires at least: 4.8
-Tested up to: 5.8
-Requires PHP: 5.8
-Stable tag: 2.7.0
+Tested up to: 5.9
+Requires PHP: 5.9
+Stable tag: 2.7.1
 License: GNU General Public License v3.0
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -16,6 +16,8 @@ For more information about this module go to:
 http://www.openpay.mx/docs/plugins/woocommerce.html
 
 == Changelog ==
+= 2.7.1 =
+* Enhancement. Consulta de Bines para habilitar MSN/Coutas en Perú
 = 2.7.0 =
 * Cambio de imagen Openpay (Rebranding)
 = 2.6.0 =
