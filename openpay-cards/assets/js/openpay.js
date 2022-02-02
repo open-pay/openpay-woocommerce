@@ -239,9 +239,17 @@ jQuery(document).ready(function () {
         let country = wc_openpay_params.country;
         let card_without_space = card.replace(/\s+/g, '')
         if(card_without_space.length >= 6) {
-            if(country == 'PE') {
+            
+            if(country == 'PE' && wc_openpay_params.msi_options_pe) {
+
+                var card_bin = card_without_space.substring(0, 6);
+                if(card_bin != card_old) {
+                    getTypeCard(card_bin, country);
+                    card_old = card_bin;
+                }
                 return;
             }
+
             if (country == 'MX' && !wc_openpay_params.show_months_interest_free) {
                 return;
             }
@@ -273,6 +281,24 @@ jQuery(document).ready(function () {
                 if(response.status == 'success') {
                     if(response.card_type === 'CREDIT'){
                         if (country == 'MX') jQuery("#openpay_month_interest_free").closest(".form-row").show(); else jQuery('#openpay_installments').closest(".form-row").show();
+                    } else if(response.installments && response.installments.length > 0 && wc_openpay_params.show_installments_pe) {
+                        
+                        jQuery('#openpay_installments_pe').empty();
+                        
+                        jQuery('#openpay_installments_pe').append(jQuery('<option>', { 
+                            value: 1,
+                            text : 'Solo una cuota'
+                        }));
+
+                        jQuery('#openpay_installments_pe').closest(".form-row").show();
+
+                        jQuery.each( response.installments, function( i, val ) {
+                            jQuery('#openpay_installments_pe').append(jQuery('<option>', { 
+                                value: val,
+                                text : val + ' coutas'
+                            }));
+                        });
+
                     } else {
                         if (country == 'MX') {
                             jQuery("#openpay_month_interest_free").closest(".form-row").hide();
@@ -281,11 +307,15 @@ jQuery(document).ready(function () {
                         } else {
                             jQuery("#openpay_installments").closest(".form-row").hide();
                             jQuery('#openpay_installments option[value="1"]').attr("selected",true);
+                            jQuery('#openpay_installments_pe').closest(".form-row").hide();
+                            jQuery('#openpay_installments_pe option[value="1"]').attr("selected",true);
+
                         }
                     }
                 } else {
                     jQuery("#openpay_month_interest_free").closest(".form-row").hide();
                     jQuery("#openpay_installments").closest(".form-row").hide();
+                    jQuery('#openpay_installments_pe').closest(".form-row").hide();
                 }
             },
             complete: function () { 

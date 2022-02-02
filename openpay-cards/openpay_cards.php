@@ -4,14 +4,14 @@
  * Plugin Name: Openpay Cards Plugin
  * Plugin URI: http://www.openpay.mx/docs/plugins/woocommerce.html
  * Description: Provides a credit card payment method with Openpay for WooCommerce.
- * Version: 2.7.0
+ * Version: 2.7.1
  * Author: Openpay
  * Author URI: http://www.openpay.mx
  * Developer: Openpay
  * Text Domain: openpay-cards
  *
  * WC requires at least: 3.0
- * WC tested up to: 5.8
+ * WC tested up to: 5.9
  *
  * License: GNU General Public License v3.0
  * License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -201,30 +201,61 @@ function openpay_woocommerce_order_status_change_custom($order_id, $old_status, 
 }
 
 function get_type_card_openpay(){
-    $logger = wc_get_logger();
-
-    $card_bin  = isset( $_POST['card_bin'] ) ? $_POST['card_bin'] : false;
     
+    global $woocommerce;
+
+    $logger     = wc_get_logger();
+    $card_bin   = isset( $_POST['card_bin'] ) ? $_POST['card_bin'] : false;
+
     if($card_bin) {
         try {
-            $openpay_cards = new Openpay_Cards();
-            $settings = $openpay_cards->init_settings();
 
-            $country = $settings['country'];
-            if ($country == 'MX') {
-                $openpay = $openpay_cards->getOpenpayInstance();
-                $cardInfo = $openpay->bines->get($card_bin);
-                wp_send_json(array(
-                    'status' => 'success',
-                    'card_type' => $cardInfo->type
-                ));
-            } else {
-                $cardInfo = requestOpenpay('/cards/validate-bin?bin='.$card_bin, $country, strcmp($settings['sandbox'], 'yes'));
-                wp_send_json(array(
-                    'status' => 'success',
-                    'card_type' => $cardInfo->card_type
-                ));
+            $openpay_cards  = new Openpay_Cards();
+            $country        = $openpay_cards->settings['country'];
+            $is_sandbox     = strcmp($openpay_cards->settings['sandbox'], 'yes');
+            $merchant_id    = $is_sandbox === 0 ? $openpay_cards->settings['test_merchant_id'] : $openpay_cards->settings['live_merchant_id'];
+            $amount         = $woocommerce->cart->total;
+            $currency       = get_woocommerce_currency();
+
+            switch ($country) {
+
+                case 'MX':
+
+                    $openpay    = $openpay_cards->getOpenpayInstance();
+                    $cardInfo   = $openpay->bines->get($card_bin);
+                    
+                    wp_send_json(array(
+                        'status'    => 'success',
+                        'card_type' => $cardInfo->type
+                    ));
+
+                break;
+
+                case 'PE':
+
+                    $path       = sprintf('/%s/bines/%s/promotions', $merchant_id, $card_bin);
+                    $params     = array('amount' => $amount, 'currency' => $currency);
+                    $msiInfo    = requestOpenpay($path, $country, $is_sandbox, 'POST', $params);
+
+                    wp_send_json(array(
+                        'status'        => 'success',
+                        'installments'  => $msiInfo->installments
+                    ));
+
+                break;
+
+                default:
+
+                    $cardInfo = requestOpenpay('/cards/validate-bin?bin='.$card_bin, $country, strcmp($settings['sandbox'], 'yes'));
+                    wp_send_json(array(
+                        'status' => 'success',
+                        'card_type' => $cardInfo->card_type
+                    ));
+
+                break;
+
             }
+
         } catch (Exception $e) {
             $logger->error($e->getMessage());
         }
@@ -235,27 +266,30 @@ function get_type_card_openpay(){
     ));
 }
 
-function requestOpenpay($api, $country, $is_sandbox, $method = 'GET') {
+function requestOpenpay($api, $country, $is_sandbox, $method = 'GET', $params = []) {
+    
     $logger = wc_get_logger();
+    $logger->info($is_sandbox);
 
-    $logger->error($is_sandbox);
+    $country_tld    = strtolower($country);
+    $sandbox_url    = 'https://sandbox-api.openpay.'.$country_tld.'/v1';
+    $url            = 'https://api.openpay.'.$country_tld.'/v1';
+    $absUrl         = $is_sandbox === 0 ? $sandbox_url : $url;
+    $absUrl        .= $api;
 
-    $sandbox_url_mx= 'https://sandbox-api.openpay.mx/v1';
-    $url_mx = 'https://api.openpay.mx/v1';
-
-    $sandbox_url_co = 'https://sandbox-api.openpay.co/v1';
-    $url_co = 'https://api.openpay.co/v1';
-
-    $url = $country === 'MX' ? $url_mx : $url_co;
-    $sandbox_url = $country === 'MX' ? $sandbox_url_mx : $sandbox_url_co;
-
-    $absUrl = $is_sandbox ? $sandbox_url : $url;
-    $absUrl .= $api;
+    $logger->info('Current Route => '.$absUrl);
 
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $absUrl);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
+
+    if(!empty($params)){
+        $data = json_encode($params);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
+    }
+
     $result = curl_exec($ch);
 
     if (curl_exec($ch) === false) {
