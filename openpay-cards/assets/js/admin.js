@@ -13,9 +13,9 @@ jQuery(document).ready(function () {
             }
             if (country === 'PE') {
                 jQuery("#woocommerce_openpay_cards_iva").closest("tr").hide();
-                jQuery("#woocommerce_openpay_cards_msi_options_pe").closest("tr").show();
-
-            }  
+                jQuery("#woocommerce_openpay_cards_capture").closest("tr").hide();
+                jQuery("#woocommerce_openpay_cards_msi_options_pe").closest("tr").show();                
+            }
             jQuery("#woocommerce_openpay_cards_affiliation_bbva").closest("tr").hide();
             jQuery("#woocommerce_openpay_cards_charge_type").closest("tr").hide();
             jQuery("#woocommerce_openpay_cards_capture").closest("tr").hide();

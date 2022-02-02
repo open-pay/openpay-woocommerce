@@ -19,7 +19,7 @@ if(!class_exists('Utils')) {
 class Openpay_Cards extends WC_Payment_Gateway
 {
 
-    const VERSION_NUMBER_ADMIN_SCRIPT = '1.0.0';
+    const VERSION_NUMBER_ADMIN_SCRIPT = '1.0.1';
 
     protected $GATEWAY_NAME = "Openpay Cards";
     protected $is_sandbox = true;
@@ -58,7 +58,7 @@ class Openpay_Cards extends WC_Payment_Gateway
 
         $this->charge_type = $this->country == 'MX' ? $this->settings['charge_type'] : 'direct';
         $this->use_card_points = $this->country == 'MX' ? $use_card_points : false;
-        $this->capture = $this->country == 'MX' ? $capture : true;
+        $this->capture = ($this->country == 'MX' || $this->country == 'PE' ) ? $capture : true;
 
         $this->title = 'Pago con tarjeta de crédito o débito';
         $this->description = '';        
