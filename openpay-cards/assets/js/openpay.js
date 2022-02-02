@@ -240,7 +240,6 @@ jQuery(document).ready(function () {
         let card_without_space = card.replace(/\s+/g, '')
         if(card_without_space.length >= 6) {
             
-
             if ((country == 'MX' && !wc_openpay_params.show_months_interest_free) || (country == 'PE' && !wc_openpay_params.msi_options_pe)) {
                 return;
             }
