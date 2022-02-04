@@ -53,6 +53,16 @@ jQuery(document).ready(function () {
             jQuery('#openpay-card-cvc').val("");                                                         
                             
             jQuery('#payment_form_openpay_cards').hide();
+
+            if(wc_openpay_params.country === 'PE' && wc_openpay_params.msi_options_pe){
+                let selected_card   = jQuery('#openpay_cc option:selected').text();
+                let splited_card    = selected_card.split(" ");
+                let card_bin        = splited_card[1].substring(0, 6);
+
+                getTypeCard(card_bin, wc_openpay_params.country);
+
+            }
+
         } else {                    
             jQuery('#payment_form_openpay_cards').show();            
             jQuery('#save_cc').prop('disabled', false);
