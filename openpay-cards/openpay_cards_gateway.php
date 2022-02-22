@@ -264,10 +264,10 @@ class Openpay_Cards extends WC_Payment_Gateway
             ),
             'msi_options_pe' => array(
                 'type' => 'checkbox',
-                'title' => __('Meses sin intereses', 'woothemes'),
+                'title' => __('Cuotas', 'woothemes'),
                 'label' => __('Habilitar', 'woothemes'),
                 'description' => __('Habilitar pagos a meses sin intereses.', 'woothemes'),
-                'desc_tip' => true,                
+                'desc_tip' => true,
                 'default' => 'no'
             ),
             'iva' => array(
