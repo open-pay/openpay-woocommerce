@@ -246,7 +246,7 @@ function get_type_card_openpay(){
 
                 default:
 
-                    $cardInfo = requestOpenpay('/cards/validate-bin?bin='.$card_bin, $country, strcmp($settings['sandbox'], 'yes'));
+                    $cardInfo = requestOpenpay('/cards/validate-bin?bin='.$card_bin, $country, $is_sandbox);
                     wp_send_json(array(
                         'status' => 'success',
                         'card_type' => $cardInfo->card_type
