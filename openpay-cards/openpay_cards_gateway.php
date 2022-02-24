@@ -19,7 +19,7 @@ if(!class_exists('Utils')) {
 class Openpay_Cards extends WC_Payment_Gateway
 {
 
-    const VERSION_NUMBER_ADMIN_SCRIPT = '1.0.1';
+    const VERSION_NUMBER_ADMIN_SCRIPT = '1.0.3';
 
     protected $GATEWAY_NAME = "Openpay Cards";
     protected $is_sandbox = true;
@@ -44,6 +44,7 @@ class Openpay_Cards extends WC_Payment_Gateway
         $this->init_form_fields();
         $this->init_settings();
         $this->logger = wc_get_logger(); 
+        $this->settings['current_currency'] = get_woocommerce_currency(); 
         
         $this->country = $this->settings['country'];
         $this->currencies = Utils::getCurrencies($this->country);       
@@ -103,8 +104,8 @@ class Openpay_Cards extends WC_Payment_Gateway
 
         $post_data = $this->get_post_data(); 
         $mode = 'live';    
-        
-        if($post_data['woocommerce_'.$this->id.'_sandbox'] == '1'){
+        d
+        if(isset($post_data['woocommerce_'.$this->id.'_sandbox']) ){
             $mode = 'test';      
         }
         
@@ -153,6 +154,11 @@ class Openpay_Cards extends WC_Payment_Gateway
 
     public function init_form_fields() {
         $this->form_fields = array(
+            'current_currency' => array (
+                'type' => 'text',
+                'title' => __('Moneda configurada', 'woothemes'),
+                'default' => get_woocommerce_currency()
+            ),
             'merchant_classification' => array(
                 'type' => 'text',         
                 'title' => __('Clasificación Comercio', 'woothemes'),
@@ -168,16 +174,17 @@ class Openpay_Cards extends WC_Payment_Gateway
                 'type' => 'checkbox',
                 'title' => __('Modo de pruebas', 'woothemes'),
                 'label' => __('Habilitar', 'woothemes'),                
-                'default' => 'no'
+                'default' => 'yes'
             ),
             'country' => array(
                 'type' => 'select',
                 'title' => __('País', 'woothemes'),                             
-                'default' => 'MX',
+                'default' => 'PE',
                 'options' => array(
                     'MX' => 'México',
                     'CO' => 'Colombia',
-                    'PE' => 'Perú'
+                    'PE' => 'Perú',
+                    'AR' => 'Argentina'
                 )
             ),
             'affiliation_bbva' => array(
@@ -786,7 +793,7 @@ class Openpay_Cards extends WC_Payment_Gateway
      * @access public
      * @return bool
      */
-    public function validateCurrency() {        
+    public function validateCurrency() {      
         return in_array(get_woocommerce_currency(), $this->currencies);                   
     }
 
@@ -835,6 +842,7 @@ class Openpay_Cards extends WC_Payment_Gateway
                 
                 break;
             case 'CO':
+            case 'AR':
             case 'PE':
                 $instance = $this->getOpenpayInstance();
                 $instance->webhooks->getList(['limit'=>1]);

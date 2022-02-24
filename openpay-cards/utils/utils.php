@@ -14,6 +14,9 @@ class Utils {
             case 'PE':
                 $currencies[] = 'PEN';
                 return $currencies;
+            case 'AR':
+                $currencies[] = 'ARS';
+                return $currencies;
             default:
                 break;
         }
@@ -56,6 +59,8 @@ class Utils {
                 return 'Colombia';
             case 'PE':
                 return 'Peru';
+            case 'AR':
+                return 'Argentina';
             default:
                 break;
         }

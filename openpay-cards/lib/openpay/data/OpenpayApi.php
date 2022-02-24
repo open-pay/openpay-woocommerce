@@ -125,22 +125,17 @@ class Openpay
     }
 
     public static function setEndpointUrl($country){
-        if($country == 'MX'){
-            if(self::getOriginMerchant() != 'eglobal'){
-                self::$apiEndpoint = 'https://api.openpay.mx/v1';
-                self::$apiSandboxEndpoint = 'https://sandbox-api.openpay.mx/v1';
-            }else{
-                self::$apiEndpoint = 'https://api.ecommercebbva.com/v1';
-                self::$apiSandboxEndpoint = 'https://sand-api.ecommercebbva.com/v1';
-            }
-        }elseif($country == 'CO'){
-            self::$apiEndpoint = 'https://api.openpay.co/v1';
-            self::$apiSandboxEndpoint = 'https://sandbox-api.openpay.co/v1';
-        }elseif($country == 'PE'){
-            self::$apiEndpoint = 'https://api.openpay.pe/v1';
-            self::$apiSandboxEndpoint = 'https://sandbox-api.openpay.pe/v1';
+        $country_tld = strtolower($country);
+        if($country == 'MX' && self::getOriginMerchant() == 'eglobal'){
+            self::$apiEndpoint = 'https://api.ecommercebbva.com/v1';
+            self::$apiSandboxEndpoint = 'https://sand-api.ecommercebbva.com/v1';
+            return;
         }
+
+        self::$apiEndpoint = 'https://api.openpay.'.$country_tld.'/v1';
+        self::$apiSandboxEndpoint = 'https://sandbox-api.openpay.'.$country_tld.'/v1';
     }
+    
     public static function getEndpointUrl() {
         return (self::getSandboxMode() ? self::$apiSandboxEndpoint : self::$apiEndpoint);
     }
