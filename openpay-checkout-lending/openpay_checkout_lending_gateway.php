@@ -42,8 +42,7 @@ if (!class_exists('Openpay')) {
 
         add_action('woocommerce_update_options_payment_gateways_'.$this->id, array($this, 'process_admin_options'));
         add_action('admin_enqueue_scripts', array($this, 'openpay_checkout_lending_admin_enqueue'), 10, 2);
-        add_action( 'template_redirect', array($this,'checkout_lending_redirect_after_purchase'),0);
-        add_action('woocommerce_api_checkout_lending', array($this, 'webhook_handler')); 
+        add_action('woocommerce_api_checkout_lending', array($this, 'webhook_handler'));
         add_action( 'woocommerce_checkout_update_order_meta', array($this,'save_terms_conditions_acceptance' ));
 
         if (!$this->validateCurrency()) {
@@ -527,10 +526,9 @@ if (!class_exists('Openpay')) {
 
  }
 
-
  add_action( 'template_redirect','checkout_lending_redirect_after_purchase',0);
 
- function checkout_lending_redirect_after_purchase() {
+function checkout_lending_redirect_after_purchase() {
     global $wp;
     if (is_checkout() && !empty($wp->query_vars['order-received']) ) {
         $order = new WC_Order($wp->query_vars['order-received']);
@@ -543,4 +541,5 @@ if (!class_exists('Openpay')) {
         }
     }
 }
+
 
