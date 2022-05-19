@@ -597,15 +597,20 @@ class Openpay_Cards extends WC_Payment_Gateway
             } else {
                 update_post_meta($this->order->get_id(), '_openpay_customer_id', $openpay_customer->id);
             }
-            $captureString = ($this->capture) ? 'true' : 'false';
-            update_post_meta($this->order->get_id(), '_transaction_id', $charge->id);            
-            update_post_meta($this->order->get_id(), '_openpay_capture', $captureString);            
-            
+            update_post_meta($this->order->get_id(), '_transaction_id', $charge->id);
+
             if ($charge->payment_method && $charge->payment_method->type == 'redirect') {
                 update_post_meta($this->order->get_id(), '_openpay_3d_secure_url', $charge->payment_method->url);                
             }else{
                 delete_post_meta($this->order->get_id(), '_openpay_3d_secure_url');
-            }            
+            }
+
+            if($charge_request['capture'] == false && $charge->status == 'in_progress'){
+                $this->logger->info('Order:' . $this->order->get_id() . ' Set as preauthorized');
+                $captureString = ($this->capture) ? 'true' : 'false';
+                update_post_meta($this->order->get_id(), '_openpay_capture', $captureString);
+            }
+
             return true;
         } else {
             return false;
@@ -615,6 +620,7 @@ class Openpay_Cards extends WC_Payment_Gateway
     public function createOpenpayCharge($customer, $charge_request, $redirect_url_3d) {
         try {
             $charge = $customer->charges->create($charge_request);
+
             return $charge;
         } catch (Exception $e) {           
             // Si cuenta con autenticación selectiva y hay detección de fraude se envía por 3D Secure
@@ -631,8 +637,7 @@ class Openpay_Cards extends WC_Payment_Gateway
                     update_post_meta($this->order->get_id(), '_openpay_3d_secure_url', $charge->payment_method->url);                
                 }else{
                     delete_post_meta($this->order->get_id(), '_openpay_3d_secure_url');
-                }              
-                
+                }
                 return $charge;
             }
             
@@ -840,6 +845,30 @@ class Openpay_Cards extends WC_Payment_Gateway
                 $instance->webhooks->getList(['limit'=>1]);
                 break;
         }
+    }
+
+
+    public function get_order_auth_amount( $order ) {
+        $order_id = $order->get_id();
+        $amount   = $order->get_total();
+        return  $amount;
+    }
+
+    public function get_order_auth_remaining( $order ) {
+        $order_id = $order->get_id();
+        $amount   = $this->get_order_auth_amount( $order ) - $this->get_order_captured_total( $order );
+        return floatval( $amount );
+    }
+
+    public function get_order_captured_total( $order ) {
+        $order_id = $order->get_id();
+        $amount   = get_post_meta( $order_id, '_captured_total',true) ? get_post_meta( $order_id, '_captured_total',true) : 0;
+        return floatval( $amount );
+    }
+
+    public function is_preauthorized_order($order){
+        $order_id = $order->get_id();
+        return get_post_meta( $order_id, '_openpay_capture',true) == 'false';
     }
 
 }
