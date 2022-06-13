@@ -227,46 +227,38 @@ function get_type_card_openpay(){
             $country        = $openpay_cards->settings['country'];
             $is_sandbox     = strcmp($openpay_cards->settings['sandbox'], 'yes');
             $merchant_id    = $is_sandbox === 0 ? $openpay_cards->settings['test_merchant_id'] : $openpay_cards->settings['live_merchant_id'];
+            $sk   = $is_sandbox === 0 ? $openpay_cards->settings['test_private_key'] : $openpay_cards->settings['live_private_key'];
             $amount         = $woocommerce->cart->total;
             $currency       = get_woocommerce_currency();
 
             switch ($country) {
 
                 case 'MX':
-
-                    $openpay    = $openpay_cards->getOpenpayInstance();
-                    $cardInfo   = $openpay->bines->get($card_bin);
-                    
+                    $cardInfo = requestOpenpay('/'.$merchant_id.'/bines/man/'.$card_bin, $country, $is_sandbox,$sk);
                     wp_send_json(array(
-                        'status'    => 'success',
-                        'card_type' => $cardInfo->type
+                        'status' => 'success',
+                        'card_type' => $cardInfo->card_type
                     ));
-
                 break;
 
                 case 'PE':
-
                     $path       = sprintf('/%s/bines/%s/promotions', $merchant_id, $card_bin);
                     $params     = array('amount' => $amount, 'currency' => $currency);
-                    $msiInfo    = requestOpenpay($path, $country, $is_sandbox, 'POST', $params);
+                    $msiInfo    = requestOpenpay($path, $country, $is_sandbox,null, 'POST', $params);
 
                     wp_send_json(array(
                         'status'        => 'success',
                         'installments'  => $msiInfo->installments
                     ));
-
                 break;
 
                 default:
-
-                    $cardInfo = requestOpenpay('/cards/validate-bin?bin='.$card_bin, $country, $is_sandbox);
+                    $cardInfo = requestOpenpay('/cards/validate-bin?bin='.$card_bin, $country, $is_sandbox,null);
                     wp_send_json(array(
                         'status' => 'success',
                         'card_type' => $cardInfo->card_type
                     ));
-
                 break;
-
             }
 
         } catch (Exception $e) {
@@ -279,7 +271,7 @@ function get_type_card_openpay(){
     ));
 }
 
-function requestOpenpay($api, $country, $is_sandbox, $method = 'GET', $params = []) {
+function requestOpenpay($api, $country, $is_sandbox, $sk, $method = 'GET', $params = []) {
     
     $logger = wc_get_logger();
     $logger->info($is_sandbox);
@@ -297,6 +289,10 @@ function requestOpenpay($api, $country, $is_sandbox, $method = 'GET', $params = 
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
 
+    if($sk){
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Authorization:Basic '. base64_encode($sk.":")));
+    }
+
     if(!empty($params)){
         $data = json_encode($params);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
@@ -304,12 +300,13 @@ function requestOpenpay($api, $country, $is_sandbox, $method = 'GET', $params = 
     }
 
     $result = curl_exec($ch);
+    $logger->info($result);
 
     if (curl_exec($ch) === false) {
         $logger->error('Curl error '.curl_errno($ch).': '.curl_error($ch));
     } else {
         $info = curl_getinfo($ch);
-        $logger->error('HTTP code '.$info['http_code'].' on request to '.$info['url']);
+        $logger->info('HTTP code '.$info['http_code'].' on request to '.$info['url']);
     }
 
     curl_close($ch);
