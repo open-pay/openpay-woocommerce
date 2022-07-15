@@ -227,6 +227,7 @@ function get_type_card_openpay(){
             $country        = $openpay_cards->settings['country'];
             $is_sandbox     = strcmp($openpay_cards->settings['sandbox'], 'yes');
             $merchant_id    = $is_sandbox === 0 ? $openpay_cards->settings['test_merchant_id'] : $openpay_cards->settings['live_merchant_id'];
+            $auth           = $is_sandbox === 0 ? $openpay_cards->settings['test_private_key'] : $openpay_cards->settings['live_private_key'];
             $amount         = $woocommerce->cart->total;
             $currency       = get_woocommerce_currency();
 
@@ -248,11 +249,13 @@ function get_type_card_openpay(){
 
                     $path       = sprintf('/%s/bines/%s/promotions', $merchant_id, $card_bin);
                     $params     = array('amount' => $amount, 'currency' => $currency);
-                    $msiInfo    = requestOpenpay($path, $country, $is_sandbox, 'POST', $params);
+                    $cardInfo    = requestOpenpay($path, $country, $is_sandbox, 'GET', $params,$auth);
 
                     wp_send_json(array(
                         'status'        => 'success',
-                        'installments'  => $msiInfo->installments
+                        'card_type' => $cardInfo->cardType,
+                        'installments'  => $cardInfo->installments,
+                        'withInterest' => $cardInfo->withInterest
                     ));
 
                 break;
@@ -279,7 +282,7 @@ function get_type_card_openpay(){
     ));
 }
 
-function requestOpenpay($api, $country, $is_sandbox, $method = 'GET', $params = []) {
+function requestOpenpay($api, $country, $is_sandbox, $method = 'GET', $params = [], $auth = null) {
     
     $logger = wc_get_logger();
     $logger->info($is_sandbox);
@@ -289,6 +292,7 @@ function requestOpenpay($api, $country, $is_sandbox, $method = 'GET', $params = 
     $url            = 'https://api.openpay.'.$country_tld.'/v1';
     $absUrl         = $is_sandbox === 0 ? $sandbox_url : $url;
     $absUrl        .= $api;
+    $headers        = Array();
 
     $logger->info('Current Route => '.$absUrl);
 
@@ -300,8 +304,15 @@ function requestOpenpay($api, $country, $is_sandbox, $method = 'GET', $params = 
     if(!empty($params)){
         $data = json_encode($params);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
+        $headers[] = 'Content-Type:application/json';
     }
+
+    if(!empty($auth)){
+        $auth = base64_encode($auth.":");
+        $headers[] = 'Authorization: Basic '.$auth;
+    }
+
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
     $result = curl_exec($ch);
 
@@ -309,9 +320,8 @@ function requestOpenpay($api, $country, $is_sandbox, $method = 'GET', $params = 
         $logger->error('Curl error '.curl_errno($ch).': '.curl_error($ch));
     } else {
         $info = curl_getinfo($ch);
-        $logger->error('HTTP code '.$info['http_code'].' on request to '.$info['url']);
+        $logger->info('HTTP code '.$info['http_code'].' on request to '.$info['url']);
     }
-
     curl_close($ch);
 
     return json_decode($result);
