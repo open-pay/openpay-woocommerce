@@ -1,7 +1,33 @@
 jQuery(function ($) {
-    var auth_remaining_amount = parseFloat($( 'td#openpay-auth-remaining span.amount').text().substr(1).replace(/\,/g,''));
-    var auth_total_amount = parseFloat($( 'td#openpay-auth-total span.amount').text().substr(1).replace(/\,/g,''));
-    var already_captured_amount = parseFloat($( 'td#openpay-already-captured span.amount').text().substr(1).replace(/\,/g,''));
+    var country = $( 'td#openpay-auth-total span.amount').text().slice(0,1);
+
+    switch (country){
+        case "S":
+            country = "Peru";
+            break;
+        case "$":
+            country = "Mexico";
+            break;
+    }
+
+    if(country === "Peru"){
+        var auth_remaining_amount = parseFloat($( 'td#openpay-auth-remaining span.amount').text().substr(2).replace(/\,/g,''));
+        var auth_total_amount = parseFloat($( 'td#openpay-auth-total span.amount').text().substr(2).replace(/\,/g,''));
+        var already_captured_amount = parseFloat($( 'td#openpay-already-captured span.amount').text().substr(2).replace(/\,/g,''));
+    }else{
+        var auth_remaining_amount = parseFloat($( 'td#openpay-auth-remaining span.amount').text().substr(1).replace(/\,/g,''));
+        var auth_total_amount = parseFloat($( 'td#openpay-auth-total span.amount').text().substr(1).replace(/\,/g,''));
+        var already_captured_amount = parseFloat($( 'td#openpay-already-captured span.amount').text().substr(1).replace(/\,/g,''));
+    }
+
+
+
+    console.log(country);
+    console.log(auth_remaining_amount);
+    console.log(auth_total_amount);
+    console.log(already_captured_amount);
+
+
 
     $( '#woocommerce-order-items' )
         // Handle capture button click
@@ -45,6 +71,8 @@ jQuery(function ($) {
         function updateCaptureAmount( val ) {
             var total = accounting.unformat( val, woocommerce_admin.mon_decimal_point );
             console.log(already_captured_amount);
+            console.log(total);
+            console.log(auth_total_amount);
 
             if ( typeof total !== 'number' || ( total  <= 0 ) || ( already_captured_amount !== 0 )  || (total > auth_total_amount) ) {
                 total = 0;

@@ -34,7 +34,8 @@ class Openpay_Cards extends WC_Payment_Gateway
     protected $merchant_classification = 'general';
     protected $affiliation_bbva = null;
     protected $iva = 0;
-    protected $msi_options_pe = false;
+    protected $installments_options_pe = null; // (String)
+    protected $show_installments_pe = false; // (Bool)
 
     public function __construct() {        
         $this->id = 'openpay_cards';
@@ -54,7 +55,7 @@ class Openpay_Cards extends WC_Payment_Gateway
         $use_card_points = isset($this->settings['use_card_points']) ? (strcmp($this->settings['use_card_points'], 'yes') == 0) : false;
         $capture = isset($this->settings['capture']) ? (strcmp($this->settings['capture'], 'true') == 0) : true;
         $save_cc = isset($this->settings['save_cc']) ? (strcmp($this->settings['save_cc'], 'yes') == 0) : false;
-        $msi_options_pe = isset($this->settings['msi_options_pe']) ? (strcmp($this->settings['msi_options_pe'], 'yes') == 0) : false;
+        $installments_options_pe = isset($this->settings['installments_options_pe']) ? $this->settings['installments_options_pe'] : false;
 
         $this->charge_type = $this->country == 'MX' ? $this->settings['charge_type'] : 'direct';
         $this->use_card_points = $this->country == 'MX' ? $use_card_points : false;
@@ -75,7 +76,7 @@ class Openpay_Cards extends WC_Payment_Gateway
         $this->publishable_key = $this->is_sandbox ? $this->test_publishable_key : $this->live_publishable_key;
         $this->private_key = $this->is_sandbox ? $this->test_private_key : $this->live_private_key;
         $this->save_cc = $save_cc;
-        $this->msi_options_pe = $msi_options_pe;
+        $this->installments_options_pe = $installments_options_pe;
         
         if ($this->is_sandbox) {
             $this->description .= __('SANDBOX MODE ENABLED. In test mode, you can use the card number 4111111111111111 with any CVC and a valid expiration date.', 'openpay-woosubscriptions');
@@ -262,13 +263,18 @@ class Openpay_Cards extends WC_Payment_Gateway
                 'desc_tip' => true,
                 'default' => 'no'
             ),
-            'msi_options_pe' => array(
-                'type' => 'checkbox',
+            'installments_options_pe' => array(
                 'title' => __('Cuotas', 'woothemes'),
-                'label' => __('Habilitar', 'woothemes'),
-                'description' => __('Habilitar pagos a meses sin intereses.', 'woothemes'),
+                'type' => 'select',
+                'class' => 'wc-enhanced-select',
+                'description' => __('Habilitar pagos en cuotas', 'woocommerce'),
+                'default' => 'without_installments',
                 'desc_tip' => true,
-                'default' => 'no'
+                'options' => array(
+                    'without_installments' => __('Sin Cuotas', 'woocommerce'),
+                    'with_interest' => __('Cuotas con interés', 'woocommerce'),
+                    'without_interest' => __('Cuotas sin interés', 'woocommerce'),
+                ),
             ),
             'iva' => array(
                 'type' => 'number',
@@ -342,9 +348,16 @@ class Openpay_Cards extends WC_Payment_Gateway
             $this->installments = $this->getInstallments();
             $this->show_installments = true;
         }                
-        
-        $this->show_installments_pe = false;
-        if($this->country == 'PE' && $this->msi_options_pe) $this->show_installments_pe = true;
+
+        // (444d) Decide if show installments for merchants with Peru seetings
+        if( $this->country == 'PE'){
+            switch ($this->installments_options_pe){
+                case "without_interest":
+                case "with_interest":
+                    $this->show_installments_pe = true;
+                break;
+            }
+        }
         
         $this->months = $months;
         $this->cc_options = $this->getCreditCardList();
@@ -442,7 +455,7 @@ class Openpay_Cards extends WC_Payment_Gateway
             'bootstrap_js' => plugins_url('assets/js/bootstrap.js', __FILE__),
             'use_card_points' => $this->use_card_points,
             'ajaxurl' => admin_url('admin-ajax.php'),
-            'msi_options_pe' => $this->msi_options_pe,
+            'installments_options_pe' => !($this->installments_options_pe == 'without_installments'),
             'show_installments_pe' => false,
         );
 
@@ -579,7 +592,14 @@ class Openpay_Cards extends WC_Payment_Gateway
         }     
         
         if ($payment_plan > 1) {
-            $charge_request['payment_plan'] = array('payments' => (int)$payment_plan);
+            switch ($this->installments_options_pe){
+                case "without_interest":
+                    $charge_request['payment_plan'] = array('payments' => (int)$payment_plan,'payments_type' => 'WITHOUT_INTEREST');
+                    break;
+                case "with_interest":
+                    $charge_request['payment_plan'] = array('payments' => (int)$payment_plan,'payments_type' => 'WITH_INTEREST');
+                    break;
+            }
         }   
         
         if ($this->charge_type == '3d') {
