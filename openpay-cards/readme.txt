@@ -4,7 +4,7 @@ Tags: payment gateway, openpay
 Requires at least: 4.8
 Tested up to: 5.9
 Requires PHP: 5.9
-Stable tag: 2.7.3
+Stable tag: 2.7.4
 License: GNU General Public License v3.0
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -16,6 +16,8 @@ For more information about this module go to:
 http://www.openpay.mx/docs/plugins/woocommerce.html
 
 == Changelog ==
+= 2.7.4 =
+* Enhancement. Consulta de bines a 8 dígitos.
 = 2.7.3 =
 * Enhancement. Consulta de cuotas con y sin intereses para Perú
 = 2.7.2 =

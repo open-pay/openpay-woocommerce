@@ -4,7 +4,7 @@
  * Plugin Name: Openpay Cards Plugin
  * Plugin URI: http://www.openpay.mx/docs/plugins/woocommerce.html
  * Description: Provides a credit card payment method with Openpay for WooCommerce.
- * Version: 2.7.3
+ * Version: 2.7.4
  * Author: Openpay
  * Author URI: http://www.openpay.mx
  * Developer: Openpay
@@ -234,9 +234,8 @@ function get_type_card_openpay(){
             switch ($country) {
 
                 case 'MX':
-
-                    $openpay    = $openpay_cards->getOpenpayInstance();
-                    $cardInfo   = $openpay->bines->get($card_bin);
+                    $path       = sprintf('/%s/bines/man/%s', $merchant_id, $card_bin);
+                    $cardInfo = requestOpenpay($path, $country, $is_sandbox,null,null,$auth);
                     
                     wp_send_json(array(
                         'status'    => 'success',
@@ -261,8 +260,8 @@ function get_type_card_openpay(){
                 break;
 
                 default:
-
-                    $cardInfo = requestOpenpay('/cards/validate-bin?bin='.$card_bin, $country, $is_sandbox);
+                    $path       = sprintf('/cards/validate-bin?bin=%s', $card_bin);
+                    $cardInfo = requestOpenpay($path, $country, $is_sandbox);
                     wp_send_json(array(
                         'status' => 'success',
                         'card_type' => $cardInfo->card_type
@@ -315,6 +314,7 @@ function requestOpenpay($api, $country, $is_sandbox, $method = 'GET', $params = 
     curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
     $result = curl_exec($ch);
+    $logger->info($result);
 
     if (curl_exec($ch) === false) {
         $logger->error('Curl error '.curl_errno($ch).': '.curl_error($ch));

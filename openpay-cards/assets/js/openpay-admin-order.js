@@ -21,14 +21,6 @@ jQuery(function ($) {
     }
 
 
-
-    console.log(country);
-    console.log(auth_remaining_amount);
-    console.log(auth_total_amount);
-    console.log(already_captured_amount);
-
-
-
     $( '#woocommerce-order-items' )
         // Handle capture button click
         .on( 'click', 'button.capture-action', function() {
@@ -70,9 +62,6 @@ jQuery(function ($) {
         // Helper to re-render update capture amount
         function updateCaptureAmount( val ) {
             var total = accounting.unformat( val, woocommerce_admin.mon_decimal_point );
-            console.log(already_captured_amount);
-            console.log(total);
-            console.log(auth_total_amount);
 
             if ( typeof total !== 'number' || ( total  <= 0 ) || ( already_captured_amount !== 0 )  || (total > auth_total_amount) ) {
                 total = 0;
