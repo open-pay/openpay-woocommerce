@@ -56,7 +56,7 @@ jQuery(document).ready(function () {
             let country         = wc_openpay_params.country;
             let selected_card   = jQuery('#openpay_cc option:selected').text();
             let splited_card    = selected_card.split(" ");
-            let card_bin        = splited_card[1].substring(0, 6);
+            let card_bin        = splited_card[1].substring(0, 8);
 
             if(country === 'PE'){
                 wc_openpay_params.show_installments_pe ? getTypeCard(card_bin, country) : '';
@@ -249,12 +249,12 @@ jQuery(document).ready(function () {
         let card = jQuery(this).val();
         let country = wc_openpay_params.country;
         let card_without_space = card.replace(/\s+/g, '')
-        if(card_without_space.length == 6) {
+        if(card_without_space.length == 8) {
             if ((country == 'MX' && !wc_openpay_params.show_months_interest_free) || (country == 'PE' && !wc_openpay_params.show_installments_pe)) {
                 return;
             }
 
-            var card_bin = card_without_space.substring(0, 6);
+            var card_bin = card_without_space.substring(0, 8);
             if(card_bin != card_old) {
                 getTypeCard(card_bin, country);
                 card_old = card_bin;
