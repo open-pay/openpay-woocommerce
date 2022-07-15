@@ -59,7 +59,7 @@ jQuery(document).ready(function () {
             let card_bin        = splited_card[1].substring(0, 6);
 
             if(country === 'PE'){
-                wc_openpay_params.installments_options_pe ? getTypeCard(card_bin, country) : '';
+                wc_openpay_params.show_installments_pe ? getTypeCard(card_bin, country) : '';
             } else {
                 getTypeCard(card_bin, country);
             }
@@ -250,8 +250,7 @@ jQuery(document).ready(function () {
         let country = wc_openpay_params.country;
         let card_without_space = card.replace(/\s+/g, '')
         if(card_without_space.length == 6) {
-            
-            if ((country == 'MX' && !wc_openpay_params.show_months_interest_free) || (country == 'PE' && !wc_openpay_params.installments_options_pe)) {
+            if ((country == 'MX' && !wc_openpay_params.show_months_interest_free) || (country == 'PE' && !wc_openpay_params.show_installments_pe)) {
                 return;
             }
 
@@ -279,6 +278,7 @@ jQuery(document).ready(function () {
                 console.log(response);
             },
             success: function(response) {
+                console.log(response);
                 if(response.status == 'success') {
                     if(response.card_type === 'CREDIT'){
                         if (country == 'MX') jQuery("#openpay_month_interest_free").closest(".form-row").show(); else jQuery('#openpay_installments').closest(".form-row").show();
@@ -290,7 +290,13 @@ jQuery(document).ready(function () {
                             text : 'Solo una cuota'
                         }));
 
+                        if (response.withInterest){
+                            jQuery("#installments_title").text("Cuotas con Interés");
+                        }else{
+                            jQuery("#installments_title").text("Cuotas sin Interés");
+                        }
                         jQuery('#openpay_installments_pe').closest(".form-row").show();
+                        jQuery('#withInterest').val(response.withInterest);
 
                         jQuery.each( response.installments, function( i, val ) {
                             jQuery('#openpay_installments_pe').append(jQuery('<option>', { 

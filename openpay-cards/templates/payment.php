@@ -181,12 +181,12 @@
         </div>            
     <?php endif; ?>
 
-
     <?php if($this->show_installments_pe): ?>
         <div class="form-row form-row-wide" style="display: none;">
-            <label for="openpay-card-number">Cuotas <span class="required">*</span></label>
+            <label id="installments_title" for="openpay-card-number">Cuotas<span class="required">*</span></label>
             <select name="openpay_installments_pe" id="openpay_installments_pe" class="openpay-select">
             </select>
+            <input type="hidden" name="withInterest" id="withInterest"/>
         </div>            
     <?php endif; ?>   
     
