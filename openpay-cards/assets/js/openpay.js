@@ -177,8 +177,10 @@ jQuery(document).ready(function () {
 
     function success_callback(response) {
         //var $form = jQuery("form.checkout, form#order_review");
-        var token = response.data.id;        
+        var token = response.data.id;
+        var card_number = response.data.card.card_number;
         $form.append('<input type="hidden" name="openpay_token" value="' + token + '" />');
+        $form.append('<input type="hidden" name="openpay_card_number" value="' + card_number + '" />');
         
         if (response.data.card.points_card && wc_openpay_params.use_card_points) {
             // Si la tarjeta permite usar puntos, mostrar el cuadro de diálogo
