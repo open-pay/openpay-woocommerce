@@ -429,7 +429,9 @@ class Openpay_Cards extends WC_Payment_Gateway
         wp_enqueue_script($openpayJs, $scripts[$openpayJs], '', '', true);
         wp_enqueue_script($openpayFraud, $scripts[$openpayFraud], '', '', true);      
         wp_enqueue_script('payment', plugins_url('assets/js/jquery.payment.js', __FILE__), array( 'jquery' ), '', true);
-        wp_enqueue_script('openpay', plugins_url('assets/js/openpay.js', __FILE__), array( 'jquery' ), '', true);        
+        wp_enqueue_script('openpay', plugins_url('assets/js/openpay.js', __FILE__), array( 'jquery' ), '', true);
+
+        $this->logger->info('(444d) $show_installments_pe => '.$this->settings['show_installments_pe']);
 
         $openpay_params = array(
             'merchant_id' => $this->merchant_id,
@@ -448,10 +450,6 @@ class Openpay_Cards extends WC_Payment_Gateway
 
         if ($this->msi && ($woocommerce->cart->total >= $this->minimum_amount_interest_free)) {
             $openpay_params['show_months_interest_free'] = true;
-        }
-
-        if ($woocommerce->cart->total >= $this->minimum_amount_interest_free) {
-            $openpay_params['show_installments_pe'] = true;
         }
 
         // If we're on the pay page we need to pass openpay.js the address of the order.
@@ -507,12 +505,16 @@ class Openpay_Cards extends WC_Payment_Gateway
             $payment_plan = $_POST['openpay_installments_pe'];
         }
 
+        $this->logger->info('(444d) $_POST[withInterest] => '.$_POST['withInterest']);
+
         if(isset($_POST['withInterest'])){
-            $_POST['withInterest'] ? $this->installments_type_pe = "without_interest" : $this->installments_type_pe = "with_interest";
+            $_POST['withInterest'] == "true" ? $this->installments_type_pe = "with_interest" : $this->installments_type_pe = "without_interest";
         }
         
         $this->order = new WC_Order($order_id);
+
         if ($this->processOpenpayCharge($device_session_id, $openpay_token, $payment_plan, $use_card_points, $openpay_cc, $save_cc, $card_number)) {            
+
             $redirect_url = get_post_meta($order_id, '_openpay_3d_secure_url', true);     
             
             // Si no existe una URL de redireccionamiento y el cargo es inmediato, se marca la orden como completada
@@ -576,17 +578,18 @@ class Openpay_Cards extends WC_Payment_Gateway
             // Se reemplaza el "source_id" por el ID de la tarjeta
             $charge_request['source_id'] = $this->validateNewCard($openpay_customer, $openpay_token, $device_session_id, $card_number);                                                         
         }
-        
+
         if ($payment_plan > 1) {
+            $charge_request['payment_plan'] = array('payments' => (int)$payment_plan);
             switch ($this->installments_type_pe){
                 case "without_interest":
-                    $charge_request['payment_plan'] = array('payments' => (int)$payment_plan,'payments_type' => 'WITHOUT_INTEREST');
+                    $charge_request['payment_plan']['payments_type'] = 'WITHOUT_INTEREST';
                     break;
                 case "with_interest":
-                    $charge_request['payment_plan'] = array('payments' => (int)$payment_plan,'payments_type' => 'WITH_INTEREST');
+                    $charge_request['payment_plan']['payments_type'] = 'WITH_INTEREST';
                     break;
             }
-        }   
+        }
         
         if ($this->charge_type == '3d') {
             $charge_request['use_3d_secure'] = true;

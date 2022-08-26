@@ -8,38 +8,45 @@ jQuery(document).ready(function () {
     function showOrHideElements(country, merchantOrigin) {
         if (country === 'CO' || country === 'PE') {            
             if(country === 'CO') {
+                /*Shown Elements*/
                 jQuery("#woocommerce_openpay_cards_iva").closest("tr").show();
+                /*Hidden Elements*/
                 jQuery("#woocommerce_openpay_cards_capture").closest("tr").hide();
-                jQuery("#woocommerce_openpay_cards_installments_options_pe").closest("tr").hide();
+                jQuery("#woocommerce_openpay_cards_show_installments_pe").closest("tr").hide();
             }
             if (country === 'PE') {
-                jQuery("#woocommerce_openpay_cards_iva").closest("tr").hide();
+                /*Shown Elements*/
                 jQuery("#woocommerce_openpay_cards_capture").closest("tr").show();
-                jQuery("#woocommerce_openpay_cards_installments_options_pe").closest("tr").show();
+                jQuery("#woocommerce_openpay_cards_show_installments_pe").closest("tr").show();
+                /*Hidden Elements*/
+                jQuery("#woocommerce_openpay_cards_iva").closest("tr").hide();
             }
+            /*Hidden Elements*/
             jQuery("#woocommerce_openpay_cards_affiliation_bbva").closest("tr").hide();
             jQuery("#woocommerce_openpay_cards_charge_type").closest("tr").hide();
             jQuery("#woocommerce_openpay_cards_use_card_points").closest("tr").hide();
             jQuery("#woocommerce_openpay_cards_msi").closest("tr").hide();      
             jQuery("#woocommerce_openpay_cards_minimum_amount_interest_free").closest("tr").hide();    
-        } else if (country === 'MX') {            
+        } else if (country === 'MX') {
+            /*Hidden Elements*/
             jQuery("#woocommerce_openpay_cards_iva").closest("tr").hide();
-            jQuery("#woocommerce_openpay_cards_installments_options_pe").closest("tr").hide();
-
-
+            jQuery("#woocommerce_openpay_cards_show_installments_pe").closest("tr").hide();
+            /*Shown Elements*/
             jQuery("#woocommerce_openpay_cards_use_card_points").closest("tr").show();
             jQuery("#woocommerce_openpay_cards_msi").closest("tr").show();         
             jQuery("#woocommerce_openpay_cards_minimum_amount_interest_free").closest("tr").show();
 
             if(merchantOrigin === 'eglobal'){
+                /*Shown Elements*/
                 jQuery("#woocommerce_openpay_cards_affiliation_bbva").closest("tr").show();
-                
+                /*Hidden Elements*/
                 jQuery("#woocommerce_openpay_cards_charge_type").closest("tr").hide();
                 jQuery("#woocommerce_openpay_cards_capture").closest("tr").hide();
                 jQuery("#woocommerce_openpay_cards_country").closest("tr").hide();
             }else{
+                /*Hidden Elements*/
                 jQuery("#woocommerce_openpay_cards_affiliation_bbva").closest("tr").hide();
-
+                /*Shown Elements*/
                 jQuery("#woocommerce_openpay_cards_charge_type").closest("tr").show();
                 jQuery("#woocommerce_openpay_cards_capture").closest("tr").show();
                 jQuery("#woocommerce_openpay_cards_country").closest("tr").show();
