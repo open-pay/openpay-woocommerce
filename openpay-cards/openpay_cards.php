@@ -4,7 +4,7 @@
  * Plugin Name: Openpay Cards Plugin
  * Plugin URI: http://www.openpay.mx/docs/plugins/woocommerce.html
  * Description: Provides a credit card payment method with Openpay for WooCommerce.
- * Version: 2.7.4
+ * Version: 2.7.5
  * Author: Openpay
  * Author URI: http://www.openpay.mx
  * Developer: Openpay
@@ -41,6 +41,28 @@ add_action('wp_ajax_get_type_card_openpay', 'get_type_card_openpay');
 
 add_action('admin_enqueue_scripts','admin_enqueue_scripts_order' );
 add_action('wp_ajax_wc_openpay_admin_order_capture','ajax_capture_handler');
+
+add_action('woocommerce_before_thankyou', 'confirm_card_saved_notice',11,1);
+add_action('woocommerce_before_thankyou', 'order_confirmation_notice',10,1);
+add_filter( 'woocommerce_thankyou_order_received_text', 'order_confirmation_text_remove', 10, 2 );
+
+function confirm_card_saved_notice($order_id){
+    $cardSavedFlag = get_post_meta($order_id, '_openpay_card_saved_flag', true);
+    if ($cardSavedFlag){
+        wc_print_notice('Tu tarjeta ha sido registrada exitosamente', 'success', $data = []);
+    }
+}
+
+function order_confirmation_notice($order_id){
+    $order = new WC_Order($order_id);
+    if ($order->get_status() === "processing"){
+        wc_print_notice('Tu pedido fue procesado con éxito', 'success', $data = []);
+    }
+}
+
+function order_confirmation_text_remove( $text, $order ){
+    return null;
+}
 
 function openpay_woocommerce_confirm() {   
         global $woocommerce;
