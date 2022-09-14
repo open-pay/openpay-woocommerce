@@ -245,7 +245,7 @@ jQuery(document).ready(function () {
     }
 
     var card_old;
-    jQuery('body').on("keypress focusout", "#openpay-card-number", function() {
+    jQuery('body').on("keyup", "#openpay-card-number", function() {
         let card = jQuery(this).val();
         let country = wc_openpay_params.country;
         let card_without_space = card.replace(/\s+/g, '')
@@ -278,7 +278,6 @@ jQuery(document).ready(function () {
                 console.log(response);
             },
             success: function(response) {
-                console.log(response);
                 if(response.status == 'success') {
                     if(response.card_type === 'CREDIT'){
                         if (country == 'MX') jQuery("#openpay_month_interest_free").closest(".form-row").show(); else jQuery('#openpay_installments').closest(".form-row").show();
@@ -290,13 +289,15 @@ jQuery(document).ready(function () {
                             text : 'Solo una cuota'
                         }));
 
-                        if (response.withInterest){
+                        if (response.withInterest || response.withInterest === null ){
                             jQuery("#installments_title").text("Cuotas con Interés");
+                            jQuery('#withInterest').val(true);
                         }else{
                             jQuery("#installments_title").text("Cuotas sin Interés");
+                            jQuery('#withInterest').val(false);
                         }
                         jQuery('#openpay_installments_pe').closest(".form-row").show();
-                        jQuery('#withInterest').val(response.withInterest);
+
 
                         jQuery.each( response.installments, function( i, val ) {
                             jQuery('#openpay_installments_pe').append(jQuery('<option>', { 
