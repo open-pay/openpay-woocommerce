@@ -59,7 +59,7 @@ function openpay_woocommerce_confirm() {
             $logger->info('openpay_woocommerce_confirm => '.json_encode(array('id' => $charge->id, 'status' => $charge->status)));   
 
             if ($order && $charge->status != 'completed') {
-                $order->add_order_note(sprintf("%s Credit Card Payment Failed with message: '%s'", 'Openpay_Cards', 'Status '+$charge->status));
+                $order->add_order_note(sprintf("%s Credit Card Payment Failed with message: '%s'", 'Openpay_Cards', 'Status '.$charge->status));
                 $order->set_status('failed');
                 $order->save();
 

@@ -4,7 +4,7 @@
  * Plugin Name: Openpay PSE
  * Plugin URI: http://www.openpay.mx/docs/plugins/woocommerce.html
  * Description: Provides a PSE payment method with Openpay for WooCommerce. Compatible with WooCommerce 4.5.2 and Wordpress 5.5.
- * Version: 1.5.0
+ * Version: 1.5.1
  * Author: Openpay
  * Author URI: http://www.openpay.mx
  * Developer: Openpay
