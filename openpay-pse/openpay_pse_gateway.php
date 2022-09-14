@@ -178,7 +178,7 @@ class Openpay_Pse extends WC_Payment_Gateway {
             'method' => 'bank_account',
             'currency' => strtolower(get_woocommerce_currency()),
             'amount' => $amount,
-            'description' => sprintf("Cargo para %s", $this->order->get_billing_email()),
+            "description" => sprintf("Items: %s", $this->getProductsDetail()),
             'order_id' => $this->order->get_id(),
             'iva' => $this->iva,
             'redirect_url' => $redirect_url
@@ -201,6 +201,16 @@ class Openpay_Pse extends WC_Payment_Gateway {
         } else {
             return false;
         }
+    }
+
+    private function getProductsDetail() {
+        $order = $this->order;
+        $products = [];
+        foreach( $order->get_items() as $item_product ){                        
+            $product = $item_product->get_product();                        
+            $products[] = $product->get_name();
+        }
+        return substr(implode(', ', $products), 0, 249);
     }
 
     public function process_payment($order_id) {
