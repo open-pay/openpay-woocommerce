@@ -36,6 +36,7 @@ class Openpay_Cards extends WC_Payment_Gateway
     protected $iva = 0;
     protected $show_installments_pe = false; // (Bool)
     protected $installments_type_pe; // (Bool)
+    protected $cardSavedFlag;
 
     public function __construct() {        
         $this->id = 'openpay_cards';
@@ -349,7 +350,9 @@ class Openpay_Cards extends WC_Payment_Gateway
 
         $this->months = $months;
         $this->cc_options = $this->getCreditCardList();
-        $this->can_save_cc = $this->save_cc && is_user_logged_in();          
+        $this->can_save_cc = $this->save_cc && is_user_logged_in();
+
+        wp_enqueue_script( 'wc-credit-card-form' );
         
         include_once('templates/payment.php');
     }
@@ -429,9 +432,7 @@ class Openpay_Cards extends WC_Payment_Gateway
         wp_enqueue_script($openpayJs, $scripts[$openpayJs], '', '', true);
         wp_enqueue_script($openpayFraud, $scripts[$openpayFraud], '', '', true);      
         wp_enqueue_script('payment', plugins_url('assets/js/jquery.payment.js', __FILE__), array( 'jquery' ), '', true);
-        wp_enqueue_script('openpay', plugins_url('assets/js/openpay.js', __FILE__), array( 'jquery' ), '', true);
-
-        $this->logger->info('(444d) $show_installments_pe => '.$this->settings['show_installments_pe']);
+        wp_enqueue_script('openpay', plugins_url('assets/js/openpay.js', __FILE__), array( 'jquery' ), '', true);        
 
         $openpay_params = array(
             'merchant_id' => $this->merchant_id,
@@ -491,6 +492,10 @@ class Openpay_Cards extends WC_Payment_Gateway
         $use_card_points = $_POST['use_card_points'];
         $openpay_cc = $_POST['openpay_cc'];
         $save_cc = isset($_POST['save_cc']) ? true : false;
+        $card_number = $save_cc ? $_POST['openpay_card_number'] : null;
+        $cvv = $_POST['openpay-card-cvc'];
+
+        $this->logger->info("SAVE_CC = " . $save_cc);
         
         if(isset($_POST['openpay_month_interest_free'])){
             $payment_plan = $_POST['openpay_month_interest_free'];
@@ -504,15 +509,12 @@ class Openpay_Cards extends WC_Payment_Gateway
             $payment_plan = $_POST['openpay_installments_pe'];
         }
 
-        $this->logger->info('(444d) $_POST[withInterest] => '.$_POST['withInterest']);
-
         if(isset($_POST['withInterest'])){
             $_POST['withInterest'] == "true" ? $this->installments_type_pe = "with_interest" : $this->installments_type_pe = "without_interest";
         }
         
         $this->order = new WC_Order($order_id);
-        $this->logger->info('(444d) $payment_plan => '.$payment_plan);
-        if ($this->processOpenpayCharge($device_session_id, $openpay_token, $payment_plan, $use_card_points, $openpay_cc, $save_cc)) {            
+        if ($this->processOpenpayCharge($device_session_id, $openpay_token, $cvv, $payment_plan, $use_card_points, $openpay_cc, $save_cc, $card_number)) {
             $redirect_url = get_post_meta($order_id, '_openpay_3d_secure_url', true);     
             
             // Si no existe una URL de redireccionamiento y el cargo es inmediato, se marca la orden como completada
@@ -523,7 +525,7 @@ class Openpay_Cards extends WC_Payment_Gateway
                 $this->order->update_status('on-hold');
                 $this->order->add_order_note(sprintf("%s payment pre-authorized with Transaction Id of '%s'", $this->GATEWAY_NAME, $this->transaction_id));                
             }
-                   
+            $this->logger->info("RETURN URL = " . $this->get_return_url($this->order));
             return array(
                 'result' => 'success',
                 'redirect' => $this->get_return_url($this->order)
@@ -541,8 +543,8 @@ class Openpay_Cards extends WC_Payment_Gateway
         }
     }
     
-    protected function processOpenpayCharge($device_session_id, $openpay_token, $payment_plan, $use_card_points, $openpay_cc, $save_cc) {
-        WC()->session->__unset('pdf_url');   
+    protected function processOpenpayCharge($device_session_id, $openpay_token, $cvv, $payment_plan, $use_card_points, $openpay_cc, $save_cc, $card_number) {
+        WC()->session->__unset('pdf_url');
         $protocol = (get_option('woocommerce_force_ssl_checkout') == 'no') ? 'http' : 'https';                             
         $redirect_url_3d = site_url('/', $protocol).'?wc-api=openpay_confirm';
         $amount = number_format((float)$this->order->get_total(), 2, '.', '');
@@ -559,6 +561,10 @@ class Openpay_Cards extends WC_Payment_Gateway
             'capture' => $this->capture,
         );
 
+        if ($openpay_cc !== 'new' /*&& $this->country != 'PE' (444d - CoF)*/){
+            $charge_request['cvv2'] = $cvv;
+        }
+
         if($this->country === 'MX' && $this->merchant_classification == 'eglobal'){
             $charge_request['affiliation_bbva'] = $this->affiliation_bbva;
         }
@@ -573,14 +579,12 @@ class Openpay_Cards extends WC_Payment_Gateway
         $openpay_customer = $this->getOpenpayCustomer();
         
         if ($save_cc === true && $openpay_cc == 'new') {
-            $card_data = array(            
-                'token_id' => $openpay_token,            
-                'device_session_id' => $device_session_id
-            );
-            $card = $this->createCreditCard($openpay_customer, $card_data);
-
             // Se reemplaza el "source_id" por el ID de la tarjeta
-            $charge_request['source_id'] = $card->id;                                                            
+            $charge_request['source_id'] = $this->validateNewCard($openpay_customer, $openpay_token, $device_session_id, $card_number);
+
+            if ($charge_request['source_id']){
+                update_post_meta($this->order->get_id(), '_openpay_card_saved_flag', true);
+            }
         }
 
         if ($payment_plan > 1) {
@@ -593,13 +597,15 @@ class Openpay_Cards extends WC_Payment_Gateway
                     $charge_request['payment_plan']['payments_type'] = 'WITH_INTEREST';
                     break;
             }
-        }
+        }   
         
         if ($this->charge_type == '3d') {
             $charge_request['use_3d_secure'] = true;
             $charge_request['redirect_url'] = $redirect_url_3d;
         }
 
+        if($charge_request['source_id'] == false) return false; 
+        
         $charge = $this->createOpenpayCharge($openpay_customer, $charge_request, $redirect_url_3d);
 
         if ($charge != false) {
@@ -633,7 +639,6 @@ class Openpay_Cards extends WC_Payment_Gateway
     public function createOpenpayCharge($customer, $charge_request, $redirect_url_3d) {
         try {
             $charge = $customer->charges->create($charge_request);
-
             return $charge;
         } catch (Exception $e) {           
             // Si cuenta con autenticación selectiva y hay detección de fraude se envía por 3D Secure
@@ -713,6 +718,39 @@ class Openpay_Cards extends WC_Payment_Gateway
             $this->error($e);
             return false;
         }
+    }
+
+    private function validateNewCard($openpay_customer, $token, $device_session_id, $card_number) {
+        $this->logger->error('validateNewCard', array('#INFO validateNewCard() => ' => $card_number));
+        $cards = $this->getCreditCards($openpay_customer);
+        $card_number_bin = substr($card_number, 0, 8);
+        $card_number_complement = substr($card_number, -4);
+        foreach ($cards as $card) {
+            if($card_number_bin == substr($card->card_number, 0, 8) && $card_number_complement == substr($card->card_number, -4)) {
+                $errorMsg = "La tarjeta ya se encuentra registrada, seleccionala de la lista de tarjetas.";
+                $this->logger->error('validateNewCard', array('#ERROR validateNewCard() => ' => $errorMsg));
+                if (function_exists('wc_add_notice')) {
+                    wc_add_notice($errorMsg, $notice_type = 'error');
+                } else {
+                    $woocommerce->add_error(__('Payment error:', 'woothemes').$errorMsg);
+                }
+                return false;
+            }
+        }
+
+        $card_data = array(            
+            'token_id' => $token,            
+            'device_session_id' => $device_session_id
+        );
+
+        /* (444d - CoF)
+         * if ($this->country === 'PE'){
+            $card_data['register_frequent'] = true;
+        }*/
+    
+        $card = $this->createCreditCard($openpay_customer, $card_data);
+
+        return $card->id;
     }
     
     private function formatAddress($customer_data, $order) {
@@ -883,7 +921,6 @@ class Openpay_Cards extends WC_Payment_Gateway
         $order_id = $order->get_id();
         return get_post_meta( $order_id, '_openpay_capture',true) == 'false';
     }
-
 }
 
 function openpay_cards_add_creditcard_gateway($methods) {

@@ -42,8 +42,15 @@ jQuery(document).ready(function () {
         jQuery("#monthly-payment").text('$'+monthly_payment+' '+wc_openpay_params.currency);
     });
     
-    jQuery(document).on("change", "#openpay_cc", function() {        
-        if (jQuery('#openpay_cc').val() !== "new") {                                 
+    jQuery(document).on("change", "#openpay_cc", function() {
+
+        let country         = wc_openpay_params.country;
+        let selected_card   = jQuery('#openpay_cc option:selected').text();
+        let splited_card    = selected_card.split(" ");
+        let card_bin        = splited_card[1].substring(0, 6);
+
+
+        if (jQuery('#openpay_cc').val() !== "new") {
             jQuery('#save_cc').prop('checked', false);                
             jQuery('#save_cc').prop('disabled', true);                 
 
@@ -51,12 +58,21 @@ jQuery(document).ready(function () {
             jQuery('#openpay-card-number').val("");
             jQuery('#openpay-card-expiry').val("");
             jQuery('#openpay-card-cvc').val("");
-            jQuery('#payment_form_openpay_cards').hide();
 
-            let country         = wc_openpay_params.country;
-            let selected_card   = jQuery('#openpay_cc option:selected').text();
-            let splited_card    = selected_card.split(" ");
-            let card_bin        = splited_card[1].substring(0, 8);
+            jQuery('.openpay-holder-name').hide();
+            jQuery('.openpay-card-number').hide();
+            jQuery('.openpay-card-expiry').hide();
+            jQuery('.save_cc').hide();
+
+            /* (444d - CoF)
+            if(country === 'PE') {
+                jQuery('.openpay-card-cvc').hide();
+            }*/
+
+            jQuery('.openpay-card-cvc').css({ float:"inherit" });
+            jQuery('#card_cvc_img').css({ right: "57%" });
+
+            jQuery('#payment_form_openpay_cards').show();
 
             if(country === 'PE'){
                 wc_openpay_params.show_installments_pe ? getTypeCard(card_bin, country) : '';
@@ -65,7 +81,14 @@ jQuery(document).ready(function () {
             }
 
         } else {                    
-            jQuery('#payment_form_openpay_cards').show();            
+            jQuery('#payment_form_openpay_cards').show();
+            jQuery('.openpay-holder-name').show();
+            jQuery('.openpay-card-number').show();
+            jQuery('.openpay-card-expiry').show();
+            jQuery('.openpay-card-cvc').show();
+            jQuery('.save_cc').show();
+            jQuery('#card_cvc_img').css({ right: "5%" });
+            jQuery('.openpay-card-cvc').css({ float:"right" });
             jQuery('#save_cc').prop('disabled', false);
         }
     });  
@@ -84,10 +107,16 @@ jQuery(document).ready(function () {
 
     jQuery('body').on('click', 'form.checkout button:submit', function () {
         console.log("woocommerce_error");
+        let country = wc_openpay_params.country;
         jQuery('.woocommerce_error, .woocommerce-error, .woocommerce-message, .woocommerce_message').remove();
         // Make sure there's not an old token on the form
         jQuery('form.checkout').find('[name=openpay_token]').remove();
-    });
+        // Check if cvv is not empty
+        if (jQuery('#openpay_cc').val() !== "new" &&  jQuery('#openpay-card-cvc').val().length < 3 /* (444d - CoF) && country !== 'PE'*/) {
+            error_callback({data:{error_code:2006}});
+            return false;
+        }
+        });
 
     jQuery('form#order_review').submit(function () {
         console.log("form#order_review");
@@ -177,8 +206,10 @@ jQuery(document).ready(function () {
 
     function success_callback(response) {
         //var $form = jQuery("form.checkout, form#order_review");
-        var token = response.data.id;        
+        var token = response.data.id;
+        var card_number = response.data.card.card_number;
         $form.append('<input type="hidden" name="openpay_token" value="' + token + '" />');
+        $form.append('<input type="hidden" name="openpay_card_number" value="' + card_number + '" />');
         
         if (response.data.card.points_card && wc_openpay_params.use_card_points) {
             // Si la tarjeta permite usar puntos, mostrar el cuadro de diálogo
