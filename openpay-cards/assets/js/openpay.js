@@ -64,9 +64,10 @@ jQuery(document).ready(function () {
             jQuery('.openpay-card-expiry').hide();
             jQuery('.save_cc').hide();
 
+            /* (444d - CoF)
             if(country === 'PE') {
                 jQuery('.openpay-card-cvc').hide();
-            }
+            }*/
 
             jQuery('.openpay-card-cvc').css({ float:"inherit" });
             jQuery('#card_cvc_img').css({ right: "57%" });
@@ -111,7 +112,7 @@ jQuery(document).ready(function () {
         // Make sure there's not an old token on the form
         jQuery('form.checkout').find('[name=openpay_token]').remove();
         // Check if cvv is not empty
-        if (jQuery('#openpay_cc').val() !== "new" &&  jQuery('#openpay-card-cvc').val().length < 3 && country !== 'PE') {
+        if (jQuery('#openpay_cc').val() !== "new" &&  jQuery('#openpay-card-cvc').val().length < 3 /* (444d - CoF) && country !== 'PE'*/) {
             error_callback({data:{error_code:2006}});
             return false;
         }
