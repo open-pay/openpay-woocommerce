@@ -58,22 +58,22 @@
 <div class="row">
     <div class="col-md-12">
         <?php if($this->country == 'MX'): ?>
-            <img src="<?php echo $this->images_dir ?>stores_mx.png" style="width: 100%; max-height: inherit;">
-            <small><a style="color: #11BFF8;" href="http://www.openpay.mx/tiendas-de-conveniencia.html" target="_blank">Consulta las tiendas afiliadas</a></small>
+            <img src="https://img.openpay.mx/plugins/wc_logos_paynet.png" style="width: 100%; max-height: inherit;">
+            <small><a style="color: #11BFF8;" href="https://www.openpay.mx/efectivo" target="_blank">Consulta las tiendas afiliadas</a></small>
         <?php elseif($this->country == 'CO'): ?>   
             <div class="store-logos">
                 <div class="store-logos__puntored">
                     <img src="<?php echo $this->images_dir ?>puntored_via_baloto_logo.png">
                 </div>
             </div>
-            <small class="store-link"><a href="https://www.openpay.co/tiendas/" target="_blank">Consulta los puntos de recaudo</a></small>
+            <small class="store-link"><a href="https://www.openpay.co/efectivo" target="_blank">Consulta los puntos de recaudo</a></small>
         <?php elseif($this->country == 'PE'): ?>
             <div class="store-logos">
                 <div class="store-logos__puntored">
                     <img src="<?php echo $this->images_dir ?>stores-pe.png">
                 </div>
             </div>
-            <small><a href="http://www.openpay.mx/tiendas-de-conveniencia.html" target="_blank">Consulta las agencias afiliadas</a></small>
+            <small><a href="https://www.openpay.pe/efectivo" target="_blank">Consulta las agencias afiliadas</a></small>
         <?php endif; ?>
     </div>
 </div>
