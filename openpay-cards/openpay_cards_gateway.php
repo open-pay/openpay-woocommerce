@@ -561,7 +561,7 @@ class Openpay_Cards extends WC_Payment_Gateway
             'capture' => $this->capture,
         );
 
-        if ($openpay_cc !== 'new' && $this->country != 'PE'){
+        if ($openpay_cc !== 'new' /*&& $this->country != 'PE' (444d - CoF)*/){
             $charge_request['cvv2'] = $cvv;
         }
 
@@ -743,9 +743,10 @@ class Openpay_Cards extends WC_Payment_Gateway
             'device_session_id' => $device_session_id
         );
 
-        if ($this->country === 'PE'){
+        /* (444d - CoF)
+         * if ($this->country === 'PE'){
             $card_data['register_frequent'] = true;
-        }
+        }*/
     
         $card = $this->createCreditCard($openpay_customer, $card_data);
 
