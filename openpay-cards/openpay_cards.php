@@ -4,7 +4,7 @@
  * Plugin Name: Openpay Cards Plugin
  * Plugin URI: http://www.openpay.mx/docs/plugins/woocommerce.html
  * Description: Provides a credit card payment method with Openpay for WooCommerce.
- * Version: 2.7.5
+ * Version: 2.7.6
  * Author: Openpay
  * Author URI: http://www.openpay.mx
  * Developer: Openpay
@@ -22,6 +22,9 @@
 function openpay_cards_init_your_gateway() {
     if (class_exists('WC_Payment_Gateway')) {
         include_once('openpay_cards_gateway.php');
+    }
+    if(!class_exists('Utils')) {
+        require_once("utils/utils.php");
     }
 }
 
@@ -247,9 +250,9 @@ function get_type_card_openpay(){
 
             $openpay_cards  = new Openpay_Cards();
             $country        = $openpay_cards->settings['country'];
-            $is_sandbox     = strcmp($openpay_cards->settings['sandbox'], 'yes');
-            $merchant_id    = $is_sandbox === 0 ? $openpay_cards->settings['test_merchant_id'] : $openpay_cards->settings['live_merchant_id'];
-            $auth           = $is_sandbox === 0 ? $openpay_cards->settings['test_private_key'] : $openpay_cards->settings['live_private_key'];
+            $is_sandbox     = strcmp($openpay_cards->settings['sandbox'], 'yes') == 0;
+            $merchant_id    = $is_sandbox === true ? $openpay_cards->settings['test_merchant_id'] : $openpay_cards->settings['live_merchant_id'];
+            $auth           = $is_sandbox === true ? $openpay_cards->settings['test_private_key'] : $openpay_cards->settings['live_private_key'];
             $amount         = $woocommerce->cart->total;
             $currency       = get_woocommerce_currency();
 
@@ -257,7 +260,7 @@ function get_type_card_openpay(){
 
                 case 'MX':
                     $path       = sprintf('/%s/bines/man/%s', $merchant_id, $card_bin);
-                    $cardInfo = requestOpenpay($path, $country, $is_sandbox,null,null,$auth);
+                    $cardInfo = Utils::requestOpenpay($path, $country, $is_sandbox,null,null,$auth);
                     
                     wp_send_json(array(
                         'status'    => 'success',
@@ -270,7 +273,7 @@ function get_type_card_openpay(){
 
                     $path       = sprintf('/%s/bines/%s/promotions', $merchant_id, $card_bin);
                     $params     = array('amount' => $amount, 'currency' => $currency);
-                    $cardInfo    = requestOpenpay($path, $country, $is_sandbox);
+                    $cardInfo    = Utils::requestOpenpay($path, $country, $is_sandbox);
 
                     wp_send_json(array(
                         'status'        => 'success',
@@ -283,7 +286,7 @@ function get_type_card_openpay(){
 
                 default:
                     $path       = sprintf('/cards/validate-bin?bin=%s', $card_bin);
-                    $cardInfo = requestOpenpay($path, $country, $is_sandbox);
+                    $cardInfo = Utils::requestOpenpay($path, $country, $is_sandbox);
                     wp_send_json(array(
                         'status' => 'success',
                         'card_type' => $cardInfo->card_type
@@ -301,52 +304,6 @@ function get_type_card_openpay(){
         'status' => 'error',
         'card_type' => "credit card not found"
     ));
-}
-
-function requestOpenpay($api, $country, $is_sandbox, $method = 'GET', $params = [], $auth = null) {
-    
-    $logger = wc_get_logger();
-    $logger->info($is_sandbox);
-
-    $country_tld    = strtolower($country);
-    $sandbox_url    = 'https://sandbox-api.openpay.'.$country_tld.'/v1';
-    $url            = 'https://api.openpay.'.$country_tld.'/v1';
-    $absUrl         = $is_sandbox === 0 ? $sandbox_url : $url;
-    $absUrl        .= $api;
-    $headers        = Array();
-
-    $logger->info('Current Route => '.$absUrl);
-
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $absUrl);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
-
-    if(!empty($params)){
-        $data = json_encode($params);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
-        $headers[] = 'Content-Type:application/json';
-    }
-
-    if(!empty($auth)){
-        $auth = base64_encode($auth.":");
-        $headers[] = 'Authorization: Basic '.$auth;
-    }
-
-    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-
-    $result = curl_exec($ch);
-    $logger->info($result);
-
-    if (curl_exec($ch) === false) {
-        $logger->error('Curl error '.curl_errno($ch).': '.curl_error($ch));
-    } else {
-        $info = curl_getinfo($ch);
-        $logger->info('HTTP code '.$info['http_code'].' on request to '.$info['url']);
-    }
-    curl_close($ch);
-
-    return json_decode($result);
 }
 
 function add_partial_capture_toggle( $order ) {

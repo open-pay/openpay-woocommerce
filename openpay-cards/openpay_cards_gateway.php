@@ -25,6 +25,7 @@ class Openpay_Cards extends WC_Payment_Gateway
     protected $is_sandbox = true;
     protected $use_card_points = false;
     protected $save_cc = false;
+    protected $save_cc_option = '';
     protected $order = null;
     protected $transaction_id = null;
     protected $transactionErrorMessage = null;
@@ -55,7 +56,7 @@ class Openpay_Cards extends WC_Payment_Gateway
 
         $use_card_points = isset($this->settings['use_card_points']) ? (strcmp($this->settings['use_card_points'], 'yes') == 0) : false;
         $capture = isset($this->settings['capture']) ? (strcmp($this->settings['capture'], 'true') == 0) : true;
-        $save_cc = isset($this->settings['save_cc']) ? (strcmp($this->settings['save_cc'], 'yes') == 0) : false;
+        $save_cc = isset($this->settings['save_cc']) ? (strcmp($this->settings['save_cc'], '0') != 0) : false;
 
         $this->charge_type = $this->country == 'MX' ? $this->settings['charge_type'] : 'direct';
         $this->use_card_points = $this->country == 'MX' ? $use_card_points : false;
@@ -76,6 +77,7 @@ class Openpay_Cards extends WC_Payment_Gateway
         $this->publishable_key = $this->is_sandbox ? $this->test_publishable_key : $this->live_publishable_key;
         $this->private_key = $this->is_sandbox ? $this->test_private_key : $this->live_private_key;
         $this->save_cc = $save_cc;
+        $this->save_cc_option = $this->settings['save_cc'];
         $this->show_installments_pe = strcmp($this->settings['show_installments_pe'], 'yes') == 0;
 
         if ($this->is_sandbox) {
@@ -256,12 +258,16 @@ class Openpay_Cards extends WC_Payment_Gateway
                 'default' => 'no'
             ),
             'save_cc' => array(
-                'type' => 'checkbox',
                 'title' => __('Guardar tarjetas', 'woothemes'),
-                'label' => __('Habilitar', 'woothemes'),
-                'description' => __('Permite a los usuarios registrados guardar sus tarjetas de crédito para agilizar sus futuras compras.', 'woothemes'),
+                'type' => 'select',
+                'description' => __('Permite a los usuarios registrar tarjetas para agilizar futuras compras.<br><br>La opción "Guardar y no Solicitar CVV" requiere una configuración adicional de Openpay, contacte a nuestro equipo de soporte para activarlo.', 'woothemes'),
+                'default' => '0',
                 'desc_tip' => true,
-                'default' => 'no'
+                'options' => array(
+                    '0' => __('No guardar', 'woocommerce'),
+                    '1' => __('Guardar y solicitar CVV para futuras compras', 'woocommerce'),
+                    '2' => __('Guardar y no solicitar CVV para futuras compras', 'woocommerce')
+                ),
             ),
             'show_installments_pe' => array(
                 'type' => 'checkbox',
@@ -439,6 +445,7 @@ class Openpay_Cards extends WC_Payment_Gateway
             'public_key' => $this->publishable_key,
             'sandbox_mode' => $this->is_sandbox,
             'country' => $this->country,
+            'save_cc_option' =>$this->save_cc_option,
             'total' => $woocommerce->cart->total,
             'show_months_interest_free' => false,
             'currency' => get_woocommerce_currency(),
@@ -512,9 +519,15 @@ class Openpay_Cards extends WC_Payment_Gateway
         if(isset($_POST['withInterest'])){
             $_POST['withInterest'] == "true" ? $this->installments_type_pe = "with_interest" : $this->installments_type_pe = "without_interest";
         }
+
+
+        if ($openpay_cc !== 'new' && $this->save_cc_option === '1'){
+            $openpay_customer = $this->getOpenpayCustomer();
+            $this->cvvValidation($openpay_cc,$openpay_customer,$cvv);
+        }
         
         $this->order = new WC_Order($order_id);
-        if ($this->processOpenpayCharge($device_session_id, $openpay_token, $cvv, $payment_plan, $use_card_points, $openpay_cc, $save_cc, $card_number)) {
+        if ($this->processOpenpayCharge($device_session_id, $openpay_token, $payment_plan, $use_card_points, $openpay_cc, $save_cc, $card_number)) {
             $redirect_url = get_post_meta($order_id, '_openpay_3d_secure_url', true);     
             
             // Si no existe una URL de redireccionamiento y el cargo es inmediato, se marca la orden como completada
@@ -543,11 +556,12 @@ class Openpay_Cards extends WC_Payment_Gateway
         }
     }
     
-    protected function processOpenpayCharge($device_session_id, $openpay_token, $cvv, $payment_plan, $use_card_points, $openpay_cc, $save_cc, $card_number) {
+    protected function processOpenpayCharge($device_session_id, $openpay_token, $payment_plan, $use_card_points, $openpay_cc, $save_cc, $card_number) {
         WC()->session->__unset('pdf_url');
         $protocol = (get_option('woocommerce_force_ssl_checkout') == 'no') ? 'http' : 'https';                             
         $redirect_url_3d = site_url('/', $protocol).'?wc-api=openpay_confirm';
         $amount = number_format((float)$this->order->get_total(), 2, '.', '');
+        $openpay_customer = $this->getOpenpayCustomer();
                 
         $charge_request = array(
             "method" => "card",
@@ -561,10 +575,6 @@ class Openpay_Cards extends WC_Payment_Gateway
             'capture' => $this->capture,
         );
 
-        if ($openpay_cc !== 'new' /*&& $this->country != 'PE' (444d - CoF)*/){
-            $charge_request['cvv2'] = $cvv;
-        }
-
         if($this->country === 'MX' && $this->merchant_classification == 'eglobal'){
             $charge_request['affiliation_bbva'] = $this->affiliation_bbva;
         }
@@ -572,11 +582,11 @@ class Openpay_Cards extends WC_Payment_Gateway
             $charge_request['iva'] = $this->iva;
         }
         
-        $this->logger->debug('extra_data => '.json_encode(array('$openpay_cc' => $openpay_cc, '$save_cc' => $save_cc, '$capture' => $this->capture, '$charge_type' => $this->charge_type)));   
+        $this->logger->debug('extra_data => '.json_encode(array('$openpay_cc' => $openpay_cc, '$save_cc' => $save_cc, '$capture' => $this->capture, '$charge_type' => $this->charge_type)));
         
         $this->logger->info('processOpenpayCharge Order => '.$this->order->get_id());   
         
-        $openpay_customer = $this->getOpenpayCustomer();
+
         
         if ($save_cc === true && $openpay_cc == 'new') {
             // Se reemplaza el "source_id" por el ID de la tarjeta
@@ -743,14 +753,29 @@ class Openpay_Cards extends WC_Payment_Gateway
             'device_session_id' => $device_session_id
         );
 
-        /* (444d - CoF)
-         * if ($this->country === 'PE'){
+        if ($this->save_cc_option === '2' && $this->country === 'PE'){
             $card_data['register_frequent'] = true;
-        }*/
+        }
     
         $card = $this->createCreditCard($openpay_customer, $card_data);
 
         return $card->id;
+    }
+
+    private function cvvValidation($openpay_cc,$openpay_customer,$cvv){
+        if (is_numeric($cvv) && (strlen($cvv) == 3 || strlen($cvv) == 4) ){
+            $path       = sprintf('/%s/customers/%s/cards/%s', $this->merchant_id, $openpay_customer->id, $openpay_cc);
+            $params     = array('cvv2' => $cvv);
+            $auth       = $this->private_key;
+            $cardInfo = Utils::requestOpenpay($path, $this->country, $this->is_sandbox,'PUT',$params,$auth);
+            if (isset($cardInfo->error_code)){
+                $this->logger->error('CVV update has failed.');
+                throw new Exception("Error en la transacción: No se pudo completar tu pago.");
+            }
+        }else{
+            $this->logger->error('CVV is not a valid');
+            throw new Exception("Error en la transacción: No se pudo completar tu pago.");
+        }
     }
     
     private function formatAddress($customer_data, $order) {
