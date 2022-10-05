@@ -10,18 +10,22 @@ jQuery(document).ready(function () {
             if(country === 'CO') {
                 /*Shown Elements*/
                 jQuery("#woocommerce_openpay_cards_iva").closest("tr").show();
-                /*Hidden Elements*/
+                /*Peru Hidden Elements*/
                 jQuery("#woocommerce_openpay_cards_capture").closest("tr").hide();
                 jQuery("#woocommerce_openpay_cards_show_installments_pe").closest("tr").hide();
+                jQuery("#woocommerce_openpay_cards_save_cc option[value='2']").hide();
+                jQuery("#woocommerce_openpay_cards_save_cc_description").hide();
             }
             if (country === 'PE') {
                 /*Shown Elements*/
                 jQuery("#woocommerce_openpay_cards_capture").closest("tr").show();
                 jQuery("#woocommerce_openpay_cards_show_installments_pe").closest("tr").show();
-                /*Hidden Elements*/
+                jQuery("#woocommerce_openpay_cards_save_cc option[value='2']").show();
+                jQuery("#woocommerce_openpay_cards_save_cc_description").show();
+                /*Colombia Hidden Elements*/
                 jQuery("#woocommerce_openpay_cards_iva").closest("tr").hide();
             }
-            /*Hidden Elements*/
+            /*Mexico Hidden Elements*/
             jQuery("#woocommerce_openpay_cards_affiliation_bbva").closest("tr").hide();
             jQuery("#woocommerce_openpay_cards_charge_type").closest("tr").hide();
             jQuery("#woocommerce_openpay_cards_use_card_points").closest("tr").hide();
@@ -31,6 +35,8 @@ jQuery(document).ready(function () {
             /*Hidden Elements*/
             jQuery("#woocommerce_openpay_cards_iva").closest("tr").hide();
             jQuery("#woocommerce_openpay_cards_show_installments_pe").closest("tr").hide();
+            jQuery("#woocommerce_openpay_cards_save_cc option[value='2']").hide();
+            jQuery("#woocommerce_openpay_cards_save_cc_description").hide();
             /*Shown Elements*/
             jQuery("#woocommerce_openpay_cards_use_card_points").closest("tr").show();
             jQuery("#woocommerce_openpay_cards_msi").closest("tr").show();         
