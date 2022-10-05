@@ -45,6 +45,7 @@ jQuery(document).ready(function () {
     jQuery(document).on("change", "#openpay_cc", function() {
 
         let country         = wc_openpay_params.country;
+        let save_cc_option  = wc_openpay_params.save_cc_option;
         let selected_card   = jQuery('#openpay_cc option:selected').text();
         let splited_card    = selected_card.split(" ");
         let card_bin        = splited_card[1].substring(0, 6);
@@ -64,10 +65,9 @@ jQuery(document).ready(function () {
             jQuery('.openpay-card-expiry').hide();
             jQuery('.save_cc').hide();
 
-            /* (444d - CoF)
-            if(country === 'PE') {
+            if(country === 'PE' && save_cc_option === '2') {
                 jQuery('.openpay-card-cvc').hide();
-            }*/
+            }
 
             jQuery('.openpay-card-cvc').css({ float:"inherit" });
             jQuery('#card_cvc_img').css({ right: "57%" });
@@ -112,7 +112,7 @@ jQuery(document).ready(function () {
         // Make sure there's not an old token on the form
         jQuery('form.checkout').find('[name=openpay_token]').remove();
         // Check if cvv is not empty
-        if (jQuery('#openpay_cc').val() !== "new" &&  jQuery('#openpay-card-cvc').val().length < 3 /* (444d - CoF) && country !== 'PE'*/) {
+        if (jQuery('#openpay_cc').val() !== "new" &&  jQuery('#openpay-card-cvc').val().length < 3 && country !== 'PE') {
             error_callback({data:{error_code:2006}});
             return false;
         }
@@ -331,6 +331,7 @@ jQuery(document).ready(function () {
 
 
                         jQuery.each( response.installments, function( i, val ) {
+                            if (val == 1) {return}
                             jQuery('#openpay_installments_pe').append(jQuery('<option>', { 
                                 value: val,
                                 text : val + ' coutas'
@@ -362,5 +363,4 @@ jQuery(document).ready(function () {
             } 
         })
     }
-
 });
