@@ -106,6 +106,7 @@ jQuery(document).ready(function () {
     });
 
     jQuery('body').on('click', 'form.checkout button:submit', function () {
+        let save_cc_option  = wc_openpay_params.save_cc_option;
         console.log("woocommerce_error");
         let country = wc_openpay_params.country;
         jQuery('.woocommerce_error, .woocommerce-error, .woocommerce-message, .woocommerce_message').remove();
@@ -113,12 +114,12 @@ jQuery(document).ready(function () {
         jQuery('form.checkout').find('[name=openpay_token]').remove();
         // Check if holder name is not empty or has invalid format
         const pattern = new RegExp('^[A-ZÁÉÍÓÚÑ ]+$','i');
-        if (jQuery('#openpay-holder-name').val().length < 1 || !pattern.test(jQuery('#openpay-holder-name').val())) {
+        if (jQuery('#openpay_cc').val() == "new" && (jQuery('#openpay-holder-name').val().length < 1 || !pattern.test(jQuery('#openpay-holder-name').val()))) {
             error_callback({data:{error_code:2007}});
             return false;
         }
         // Check if cvv is not empty
-        if (jQuery('#openpay_cc').val() !== "new" &&  jQuery('#openpay-card-cvc').val().length < 3 && country !== 'PE') {
+        if (jQuery('#openpay_cc').val() !== "new" &&  jQuery('#openpay-card-cvc').val().length < 3 && save_cc_option === '1') {
             error_callback({data:{error_code:2006}});
             return false;
         }
