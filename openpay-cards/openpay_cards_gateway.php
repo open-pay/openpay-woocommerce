@@ -773,7 +773,7 @@ class Openpay_Cards extends WC_Payment_Gateway
                 throw new Exception("Error en la transacción: No se pudo completar tu pago.");
             }
         }else{
-            $this->logger->error('CVV is not a valid');
+            $this->logger->error('CVV is not valid');
             throw new Exception("Error en la transacción: No se pudo completar tu pago.");
         }
     }
