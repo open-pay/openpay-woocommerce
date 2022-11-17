@@ -84,7 +84,7 @@ function openpay_woocommerce_confirm() {
             $logger->info('openpay_woocommerce_confirm => '.json_encode(array('id' => $charge->id, 'status' => $charge->status)));   
 
             if ($order && $charge->status != 'completed') {
-                if ($charge->status == 'in_progress') {
+                if (property_exists($charge, 'authorization') && ($charge->status == 'in_progress' && ($charge->id != $charge->authorization))) {
                     $order->set_status('on-hold');
                     $order->save();
                 } else {
