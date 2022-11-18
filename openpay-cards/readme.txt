@@ -16,6 +16,8 @@ For more information about this module go to:
 http://www.openpay.mx/docs/plugins/woocommerce.html
 
 == Changelog ==
+= 2.7.9 =
+* Fix. Acepta cargos con la configuracion 3DS y Pre autorización activadas simultaneamente.
 = 2.7.8 =
 * Fix. Corrección en el flujo de errores durante ejecución de checkout.
 = 2.7.7 =
