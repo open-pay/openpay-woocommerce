@@ -112,10 +112,20 @@ jQuery(document).ready(function () {
         jQuery('.woocommerce_error, .woocommerce-error, .woocommerce-message, .woocommerce_message').remove();
         // Make sure there's not an old token on the form
         jQuery('form.checkout').find('[name=openpay_token]').remove();
+
+        // Verify Card Data if openpay cards payment method is selected.
+        if (jQuery('input[name=payment_method]:checked').val() == 'openpay_cards') {
+            console.log("Verifying card data");
+            return CardsErrorHandler(save_cc_option);
+        }
+        });
+
+    function CardsErrorHandler (save_cc_option){
         // Check if holder name is not empty or has invalid format
         const pattern = new RegExp('^[A-ZÁÉÍÓÚÑ ]+$','i');
         if (jQuery('#openpay_cc').val() == "new" && (jQuery('#openpay-holder-name').val().length < 1 || !pattern.test(jQuery('#openpay-holder-name').val()))) {
-            error_callback({data:{error_code:2007}});
+            error_callback({data:{error_code:1}});
+            console.log('Holder name is missing');
             return false;
         }
         // Check if cvv is not empty
@@ -124,8 +134,7 @@ jQuery(document).ready(function () {
             return false;
         }
 
-
-        });
+    }
 
     jQuery('form#order_review').submit(function () {
         console.log("form#order_review");
@@ -273,7 +282,7 @@ jQuery(document).ready(function () {
                 msg = "El código de seguridad de la tarjeta (CVV2) no fue proporcionado.";
                 break;
 
-            case 2007:
+            case 1:
                 msg = "El nombre del titular de la tarjeta no fue proporcionado o tiene un formato inválido.";
                 break;
 

@@ -4,7 +4,7 @@ Tags: payment gateway, openpay
 Requires at least: 4.8
 Tested up to: 6.0.1
 Requires PHP: 5.9
-Stable tag: 2.7.7
+Stable tag: 2.7.8
 License: GNU General Public License v3.0
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -16,8 +16,10 @@ For more information about this module go to:
 http://www.openpay.mx/docs/plugins/woocommerce.html
 
 == Changelog ==
+= 2.7.8 =
+* Fix. Corrección en el flujo de errores durante ejecución de checkout.
 = 2.7.7 =
-* Fix. Validación del campo de tarjetahabiente
+* Fix. Validación del campo de tarjetahabiente.
 = 2.7.6 =
 * Enhancement. Guardado de tarjetas para clientes frecuentes con y sin solicitud de CVV.
 = 2.7.5 =
