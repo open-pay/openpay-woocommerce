@@ -84,14 +84,19 @@ function openpay_woocommerce_confirm() {
             $logger->info('openpay_woocommerce_confirm => '.json_encode(array('id' => $charge->id, 'status' => $charge->status)));   
 
             if ($order && $charge->status != 'completed') {
-                $order->add_order_note(sprintf("%s Credit Card Payment Failed with message: '%s'", 'Openpay_Cards', 'Status '.$charge->status));
-                $order->set_status('failed');
-                $order->save();
-
-                if (function_exists('wc_add_notice')) {
-                    wc_add_notice(__('Error en la transacción: No se pudo completar tu pago.'), 'error');
+                if (property_exists($charge, 'authorization') && ($charge->status == 'in_progress' && ($charge->id != $charge->authorization))) {
+                    $order->set_status('on-hold');
+                    $order->save();
                 } else {
-                    $woocommerce->add_error(__('Error en la transacción: No se pudo completar tu pago.'), 'woothemes');
+                    $order->add_order_note(sprintf("%s Credit Card Payment Failed with message: '%s'", 'Openpay_Cards', 'Status '.$charge->status));
+                    $order->set_status('failed');
+                    $order->save();
+
+                    if (function_exists('wc_add_notice')) {
+                        wc_add_notice(__('Error en la transacción: No se pudo completar tu pago.'), 'error');
+                    } else {
+                        $woocommerce->add_error(__('Error en la transacción: No se pudo completar tu pago.'), 'woothemes');
+                    }
                 }
             } else if ($order && $charge->status == 'completed') {
                 $order->payment_complete();
