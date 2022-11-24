@@ -118,7 +118,7 @@ jQuery(document).ready(function () {
             console.log("Verifying card data");
             return CardsErrorHandler(save_cc_option);
         }
-        });
+    });
 
     function CardsErrorHandler (save_cc_option){
         // Check if holder name is not empty or has invalid format

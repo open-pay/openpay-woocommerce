@@ -139,6 +139,9 @@ class Openpay
         }elseif($country == 'PE'){
             self::$apiEndpoint = 'https://api.openpay.pe/v1';
             self::$apiSandboxEndpoint = 'https://sandbox-api.openpay.pe/v1';
+        } elseif ($country == 'AR') {
+            self::$apiEndpoint = 'https://production-api.openpayargentina.com.ar/v1';
+            self::$apiSandboxEndpoint = 'https://sandbox-api.openpayargentina.com.ar/v1';
         }
     }
     public static function getEndpointUrl() {

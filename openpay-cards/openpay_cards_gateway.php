@@ -180,7 +180,8 @@ class Openpay_Cards extends WC_Payment_Gateway
                 'options' => array(
                     'MX' => 'México',
                     'CO' => 'Colombia',
-                    'PE' => 'Perú'
+                    'PE' => 'Perú',
+                    'AR' => 'Argentina'
                 )
             ),
             'affiliation_bbva' => array(
@@ -352,6 +353,10 @@ class Openpay_Cards extends WC_Payment_Gateway
 
         if($this->country != 'PE'){
             $this->show_installments_pe = false;
+        }
+
+        if ($this->country == 'AR') {
+            $this->show_installments;
         }
 
         $this->months = $months;
@@ -917,6 +922,7 @@ class Openpay_Cards extends WC_Payment_Gateway
                 break;
             case 'CO':
             case 'PE':
+            case 'AR':
                 $instance = $this->getOpenpayInstance();
                 $instance->webhooks->getList(['limit'=>1]);
                 break;

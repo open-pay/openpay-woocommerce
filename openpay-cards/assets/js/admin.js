@@ -58,6 +58,22 @@ jQuery(document).ready(function () {
                 jQuery("#woocommerce_openpay_cards_country").closest("tr").show();
             }
         }
+
+        if (country === 'AR') {
+            jQuery("#woocommerce_openpay_cards_charge_type").closest("tr").hide();
+            jQuery("#woocommerce_openpay_cards_save_cc").closest("tr").hide();
+            jQuery("#woocommerce_openpay_cards_iva").closest("tr").hide();
+            
+            /*Peru Hidden Elements*/
+            jQuery("#woocommerce_openpay_cards_capture").closest("tr").hide();
+            jQuery("#woocommerce_openpay_cards_show_installments_pe").closest("tr").hide();
+
+            /*Mexico Hidden Elements*/
+            jQuery("#woocommerce_openpay_cards_affiliation_bbva").closest("tr").hide();
+            jQuery("#woocommerce_openpay_cards_use_card_points").closest("tr").hide();
+            jQuery("#woocommerce_openpay_cards_msi").closest("tr").hide();      
+            jQuery("#woocommerce_openpay_cards_minimum_amount_interest_free").closest("tr").hide();
+        }
     }
 
     jQuery('#woocommerce_openpay_cards_country').change(function () {

@@ -14,6 +14,9 @@ class Utils {
             case 'PE':
                 $currencies[] = 'PEN';
                 return $currencies;
+            case 'AR':
+                $currencies[] = 'ARS';
+                return $currencies;
             default:
                 break;
         }
@@ -43,6 +46,10 @@ class Utils {
                 $scripts['openpay_js'] = sprintf($routeBaseOpenpayJs, $baseUrl);
                 $scripts['openpay_fraud_js'] = sprintf($routeBaseOpenpayFraud, $baseUrl);
                 return $scripts;
+            case 'AR':
+                $baseUrl = '';
+                $scripts['openpay_js'] = sprintf($routeBaseOpenpayJs, $baseUrl);
+                $scripts['openpay_fraud_js'] = sprintf($routeBaseOpenpayFraud, $baseUrl);
             default:
                 break;
         }
@@ -56,6 +63,8 @@ class Utils {
                 return 'Colombia';
             case 'PE':
                 return 'Peru';
+            case 'AR':
+                return 'Argentina';
             default:
                 break;
         }
