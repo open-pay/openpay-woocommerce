@@ -58,7 +58,12 @@ class Openpay_Cards extends WC_Payment_Gateway
         $capture = isset($this->settings['capture']) ? (strcmp($this->settings['capture'], 'true') == 0) : true;
         $save_cc = isset($this->settings['save_cc']) ? (strcmp($this->settings['save_cc'], '0') != 0) : false;
 
-        $this->charge_type = $this->country == 'MX' ? $this->settings['charge_type'] : 'direct';
+        if ($this->country == 'MX' || $this->country == 'CO') {
+            $this->charge_type = $this->settings['charge_type'];
+        } else {
+            $this->charge_type = 'direct';
+        }
+
         $this->use_card_points = $this->country == 'MX' ? $use_card_points : false;
         $this->capture = ($this->country == 'MX' || $this->country == 'PE' ) ? $capture : true;
 
