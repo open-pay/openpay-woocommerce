@@ -33,8 +33,12 @@ add_action('template_redirect', 'wc_custom_redirect_after_purchase', 0);
 add_action('woocommerce_order_refunded', 'openpay_woocommerce_order_refunded', 10, 2);        
 add_action('woocommerce_order_status_changed','openpay_woocommerce_order_status_change_custom', 10, 3);
 add_action('woocommerce_api_openpay_confirm', 'openpay_woocommerce_confirm', 10, 0);
+
+//Cancel orders
+add_action('woocommerce_order_item_add_action_buttons','add_cancel_order', 10, 2);
+
 // Partial capture.
-add_action('woocommerce_order_item_add_action_buttons','add_partial_capture_toggle', 10, 1 );
+add_action('woocommerce_order_item_add_action_buttons','add_partial_capture_toggle', 10, 1);
 
 // Hook para usuarios no logueados
 add_action('wp_ajax_nopriv_get_type_card_openpay', 'get_type_card_openpay');
@@ -44,6 +48,9 @@ add_action('wp_ajax_get_type_card_openpay', 'get_type_card_openpay');
 
 add_action('admin_enqueue_scripts','admin_enqueue_scripts_order' );
 add_action('wp_ajax_wc_openpay_admin_order_capture','ajax_capture_handler');
+
+//Cancel orders
+add_action('wp_ajax_wc_openpay_admin_order_cancel', 'ajax_cancel_handler');
 
 add_action('woocommerce_before_thankyou', 'confirm_card_saved_notice',11,1);
 add_action('woocommerce_before_thankyou', 'order_confirmation_notice',10,1);
@@ -75,7 +82,7 @@ function openpay_woocommerce_confirm() {
         
         $logger->info('openpay_woocommerce_confirm => '.$id);   
         
-        try {            
+        try {
             $openpay_cards = new Openpay_Cards();    
             $openpay = $openpay_cards->getOpenpayInstance();
             $charge = $openpay->charges->get($id);
@@ -141,8 +148,8 @@ function wc_custom_redirect_after_purchase() {
  */
 function openpay_woocommerce_order_refunded($order_id, $refund_id) { 
     $logger = wc_get_logger();                
-    $logger->info('ORDER: '.$order_id);             
-    $logger->info('REFUND: '.$refund_id); 
+    $logger->info('ORDER REFUNDED: '.$order_id);             
+    $logger->info('REFUND REFUNDED: '.$refund_id); 
     
     $order  = wc_get_order($order_id);
     $refund = wc_get_order($refund_id);
@@ -152,9 +159,15 @@ function openpay_woocommerce_order_refunded($order_id, $refund_id) {
         return;
     }
 
-    $customer_id = get_post_meta($order_id, '_openpay_customer_id', true);
+    $openpay_cards = new Openpay_Cards();
+    if(!strcmp($openpay_cards->settings['sandbox'], 'yes')){
+        $customer_id = get_post_meta($order_id, '_openpay_customer_sandbox_id', true);
+    }else{
+        $customer_id = get_post_meta($order_id, '_openpay_customer_id', true);
+    }
+
     $transaction_id = get_post_meta($order_id, '_transaction_id', true);
-        
+
     if (!strlen($customer_id)) {
         return;
     }
@@ -167,10 +180,7 @@ function openpay_woocommerce_order_refunded($order_id, $refund_id) {
     $logger->info('_transaction_id: '.$transaction_id);             
 
     try {
-        $openpay_cards = new Openpay_Cards();
-        
-        $settings = $openpay_cards->init_settings();
-        if($settings['country'] != 'MX'){
+        if($openpay_cards->settings['country'] == 'CO'){
             $order->add_order_note('Openpay plugin does not support refunds');             
             return;
         }
@@ -327,6 +337,13 @@ function add_partial_capture_toggle( $order ) {
     }
 }
 
+// add for cancelation
+function add_cancel_order($order){
+    if($order->get_status() != 'refunded' && $order->get_status() != 'cancelled') {
+        include(plugin_dir_path(__FILE__).'templates/cancel-order.php');
+    }
+}
+
 function admin_enqueue_scripts_order( $hook ) {
 
     global $post, $post_type;
@@ -334,6 +351,10 @@ function admin_enqueue_scripts_order( $hook ) {
 
     if ( $order_id && 'shop_order' === $post_type && 'post.php' === $hook ) {
         $order = wc_get_order( $order_id );
+
+        // add for cancelation
+        $openpay_cards = new Openpay_Cards();
+        $auth_total       = $openpay_cards->get_order_auth_amount( $order );
 
         wp_enqueue_script(
             'woo-openpay-admin-order',
@@ -351,6 +372,19 @@ function admin_enqueue_scripts_order( $hook ) {
                 'ajax_url'      => admin_url( 'admin-ajax.php' ),
                 'capture_nonce' => wp_create_nonce( 'wc_openpay_admin_order_capture-' . $order_id ),
                 'action'        => 'wc_openpay_admin_order_capture',
+                'order_id'      => $order_id,
+            )
+        );
+
+        //Se agrega el script para la cancelación
+        wp_localize_script(
+            'woo-openpay-admin-order',
+            'wc_openpay_cancel_admin_order',
+            array(
+                'ajax_url'      => admin_url( 'admin-ajax.php' ),
+                'auth_total' => $auth_total,
+                //'capture_nonce' => wp_create_nonce( 'wc_openpay_admin_order_capture-' . $order_id ),
+                'action'        => 'wc_openpay_admin_order_cancel',
                 'order_id'      => $order_id,
             )
         );
@@ -401,5 +435,69 @@ function ajax_capture_handler() {
     } catch ( Exception $e ) {
         wp_send_json_error( array( 'error' => $e->getMessage() ) );
     }
+    wp_die();
+}
+
+//Cancel Handler add for cancelation
+function ajax_cancel_handler(){
+    $logger = wc_get_logger();
+    $order_id = $_POST['order_id'];
+    $auth_total = $_POST['auth_total'];
+    $order = $_POST['order'];
+
+    $logger->info('ORDER: '.$order_id); 
+    $logger->info('TOTAL: '. $auth_total);        
+
+    $order = wc_get_order( $order_id );
+    
+    if ($order->get_payment_method() != 'openpay_cards') {
+        $logger->info('get_payment_method: '.$order->get_payment_method());             
+        return;
+    }
+
+    $openpay_cards = new Openpay_Cards();
+    $openpay = $openpay_cards->getOpenpayInstance();
+
+    if(!strcmp($openpay_cards->settings['sandbox'], 'yes')){
+        $customer_id = get_post_meta($order_id, '_openpay_customer_sandbox_id', true);
+    }else{
+        $customer_id = get_post_meta($order_id, '_openpay_customer_id', true);
+    }
+
+    $transaction_id = get_post_meta($order_id, '_transaction_id', true);
+    $logger->info('_openpay_customer_id: '.$customer_id);      
+    if (!strlen($customer_id)) {
+        return;
+    }
+
+    $reason =  'Cancelation';
+    $amount = floatval($auth_total);
+
+    try {
+        $logger->info('sandbox'.$openpay_cards->settings['sandbox']);
+        $logger->info('pais'.$openpay_cards->settings['country']);
+
+        if($openpay_cards->settings['country'] == 'CO'){
+            $order->add_order_note('Openpay plugin does not support cancelations');      
+            return;
+        }
+
+        //$openpay = $openpay_cards->getOpenpayInstance();
+        $customer = $openpay->customers->get($customer_id);
+        $charge = $customer->charges->get($transaction_id);
+        $charge->refund(array(
+            'description' => $reason,
+            'amount' => $amount                
+        ));
+        $order->update_status('cancelled');
+        $order->add_order_note('Payment was also cancelled in Openpay');
+        $order->add_order_note('Order status change to Cancelled');
+        wp_send_json_success();
+    } catch (Exception $e) {
+        $logger->error($e->getMessage());             
+        $order->add_order_note('There was an error cancelling charge in Openpay: '.$e->getMessage());
+        wp_send_json_error( array( 'error' => $e->getMessage() ) );
+    }        
+
     wp_die();
 }

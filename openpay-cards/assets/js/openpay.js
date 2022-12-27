@@ -301,18 +301,24 @@ jQuery(document).ready(function () {
     jQuery('body').on("keyup", "#openpay-card-number", function() {
         let card = jQuery(this).val();
         let country = wc_openpay_params.country;
-        let card_without_space = card.replace(/\s+/g, '')
-        if(card_without_space.length == 8) {
-            if ((country == 'MX' && !wc_openpay_params.show_months_interest_free) || (country == 'PE' && !wc_openpay_params.show_installments_pe)) {
-                return;
-            }
 
-            var card_bin = card_without_space.substring(0, 8);
-            if(card_bin != card_old) {
-                getTypeCard(card_bin, country);
-                card_old = card_bin;
+        // Se valida para que en argentina no se haga la consulta de bines
+        if (country != "AR") {
+            console.info("Country consulta bines: ", country)
+            let card_without_space = card.replace(/\s+/g, '')
+            if(card_without_space.length == 8) {
+                if ((country == 'MX' && !wc_openpay_params.show_months_interest_free) || (country == 'PE' && !wc_openpay_params.show_installments_pe)) {
+                    return;
+                }
+
+                var card_bin = card_without_space.substring(0, 8);
+                if(card_bin != card_old) {
+                    getTypeCard(card_bin, country);
+                    card_old = card_bin;
+                }
             }
         }
+
     });
 
     function getTypeCard(cardBin, country) {

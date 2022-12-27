@@ -46,6 +46,23 @@ jQuery(function ($) {
             }
         })
 
+        // add cancel order
+        .on('click', 'button.cancel-action', function() {
+            if ( window.confirm( '¿Desea cancelar la orden?' ) ) {
+                $.post(wc_openpay_cancel_admin_order.ajax_url, {
+                    action: wc_openpay_cancel_admin_order.action,
+                    auth_total: wc_openpay_cancel_admin_order.auth_total,
+                    order_id: wc_openpay_cancel_admin_order.order_id,
+                }, function(response) {
+                    if (true === response.success ) {
+                        window.location.reload();
+                    } else {
+                        window.alert( JSON.stringify(response.data.error) );
+                    }
+                });
+            }
+        })
+
         // Toggle partial capture UI
         .on('click', 'button.capture-openpay', function() {
             $( 'div.wc-openpay-partial-capture').slideToggle();

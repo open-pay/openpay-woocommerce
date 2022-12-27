@@ -619,7 +619,7 @@ class Openpay_Cards extends WC_Payment_Gateway
             $charge_request['redirect_url'] = $redirect_url_3d;
         }
 
-        if($charge_request['source_id'] == false) return false; 
+        if ($charge_request['source_id'] == false) return false;
         
         $charge = $this->createOpenpayCharge($openpay_customer, $charge_request, $redirect_url_3d);
 

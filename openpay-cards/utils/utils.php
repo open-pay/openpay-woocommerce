@@ -47,9 +47,10 @@ class Utils {
                 $scripts['openpay_fraud_js'] = sprintf($routeBaseOpenpayFraud, $baseUrl);
                 return $scripts;
             case 'AR':
-                $baseUrl = '';
+                $baseUrl = 'https://js.openpayargentina.com.ar';
                 $scripts['openpay_js'] = sprintf($routeBaseOpenpayJs, $baseUrl);
                 $scripts['openpay_fraud_js'] = sprintf($routeBaseOpenpayFraud, $baseUrl);
+                return $scripts;
             default:
                 break;
         }
@@ -92,13 +93,16 @@ class Utils {
         $logger->info("MODO SANDBOX ACTIVO: " . $is_sandbox);
 
         $country_tld    = strtolower($country);
-        $sandbox_url    = 'https://sandbox-api.openpay.'.$country_tld.'/v1';
+        // la url de argentina cambia en nomenclatura con respecto a los demas paises
+        if ($country != "AR") {
+            $sandbox_url    = 'https://sandbox-api.openpay.'.$country_tld.'/v1';
+        } else {
+            $sandbox_url    = 'https://sandbox-api.openpayargentina.com.'.$country_tld.'/v1';
+        }
         $url            = 'https://api.openpay.'.$country_tld.'/v1';
         $absUrl         = $is_sandbox === true ? $sandbox_url : $url;
         $absUrl        .= $api;
         $headers        = Array();
-
-        $logger->info('Current Route => '.$absUrl);
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $absUrl);
