@@ -78,7 +78,7 @@ class Openpay_Cards extends WC_Payment_Gateway
         $this->private_key = $this->is_sandbox ? $this->test_private_key : $this->live_private_key;
         $this->save_cc = $save_cc;
         $this->save_cc_option = $this->settings['save_cc'];
-        $this->show_installments_pe = strcmp($this->settings['show_installments_pe'], 'yes') == 0;
+        $this->show_installments_pe = isset($this->settings['show_installments_pe']) ? strcmp($this->settings['show_installments_pe'], 'yes') == 0 : $this->show_installments_pe;
 
         if ($this->is_sandbox) {
             $this->description .= __('SANDBOX MODE ENABLED. In test mode, you can use the card number 4111111111111111 with any CVC and a valid expiration date.', 'openpay-woosubscriptions');
