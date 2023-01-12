@@ -181,7 +181,8 @@ function openpay_woocommerce_order_refunded($order_id, $refund_id) {
 
     try {
         if($openpay_cards->settings['country'] == 'CO'){
-            $order->add_order_note('Openpay plugin does not support refunds');             
+            $order->add_order_note("Openpay plugin does not support refunds for this country");
+            throw new Exception( "Openpay plugin does not support refunds for this country");           
             return;
         }
 
@@ -196,6 +197,7 @@ function openpay_woocommerce_order_refunded($order_id, $refund_id) {
     } catch (Exception $e) {
         $logger->error($e->getMessage());             
         $order->add_order_note('There was an error refunding charge in Openpay: '.$e->getMessage());
+        throw new Exception( __(  $e->getMessage() ) );
     }        
 
     return;
@@ -339,7 +341,8 @@ function add_partial_capture_toggle( $order ) {
 
 // add for cancelation
 function add_cancel_order($order){
-    if($order->get_status() != 'refunded' && $order->get_status() != 'cancelled') {
+    $openpay_cards = new Openpay_Cards();
+    if($order->get_status() != 'refunded' && $order->get_status() != 'cancelled' && $openpay_cards->settings['country'] != 'CO') {
         include(plugin_dir_path(__FILE__).'templates/cancel-order.php');
     }
 }
