@@ -31,3 +31,5 @@ if(!class_exists('OpenQR_ChargeHandlerCo')) {
 if(!class_exists('OpenQR_ChargeHandlerPe')) {
     require_once(dirname(__FILE__) . "/../src/charge/OpenQR_ChargeHandlerPe.php");
 }
+
+require_once(dirname(__FILE__) . "/../src/hooks/OpenQr_thankyou.php");
