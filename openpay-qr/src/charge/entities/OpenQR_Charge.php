@@ -15,9 +15,17 @@ class OpenQR_Charge
     public $customer;
     public $validityDate;
 
-    public function __construct(){
+    public function __construct(){}
+    /*public function __construct($amount, $currency, $description, $order_id, $customer, $validityDate){
+        $this->amount = $amount;
+        $this->currency = $currency;
+        $this->description = $description;
+        $this->order_id = $order_id;
+        $this->customer = $customer;
+        $this->validityDate = $validityDate;
+    }*/
 
-    }
+
 
     /**
      * @return string

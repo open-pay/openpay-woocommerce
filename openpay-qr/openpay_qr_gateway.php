@@ -1,5 +1,5 @@
 <?php
-require_once("includes/OpenQR_loader.php");
+require_once("includes/OpenQR_Loader.php");
 class Openpay_QR extends WC_Payment_Gateway
 {
     private $logger;
@@ -7,6 +7,10 @@ class Openpay_QR extends WC_Payment_Gateway
     private $country;
     private $sandbox;
     private $currencies;
+    private $is_sandbox;
+    private $merchant_id;
+    private $SK;
+
 
     /**
      * Constructor for the gateway.
@@ -25,10 +29,13 @@ class Openpay_QR extends WC_Payment_Gateway
         $this->logger = wc_get_logger();
 
         // Define user set variables
-        //$this->enabled      = $this->get_option('enable');
         $this->country      = $this->get_option( 'country');
         $this->sandbox     = $this->get_option( 'sandbox','yes');
         $this->currencies = OpenQR_Currencies::getCurrencies($this->country);
+
+        /*$this->is_sandbox = strcmp($this->settings['sandbox'], 'yes') == 0;
+        $this->merchant_id = $this->is_sandbox ? $this->get_option( 'sandbox_merchant_id') : $this->get_option( 'production_merchant_id');
+        $this->SK = $this->is_sandbox ? $this->get_option( 'sandbox_SK') : $this->get_option( 'production_SK');*/
 
 
         $this->title        = "Openpay QR";
@@ -68,6 +75,18 @@ class Openpay_QR extends WC_Payment_Gateway
     }
 
     /**
+     * EN - Automatic validatión function -> validate_{seeting_name}_field.
+     * ES - Función automatica de validación -> validate_{seeting_name}_field.
+     */
+    public function validate_expiration_time_field($key,$value){
+        if (!preg_match( '/^[1-9]{1}[0-9]{0,2}$/', $value )) {
+            WC_Admin_Settings::add_error( 'Tiempo de vencimiento inválido, ingresa un valor numérico en un rango [1,999].' );
+            $value = '1';
+        }
+        return $value;
+    }
+
+    /**
      * EN - Load a template overwriting default template for Gateway settings form.
      * ES - Carga un template que sobreescribe el template por defecto para el formulario de configuraciones del método de pago.
      */
@@ -84,14 +103,15 @@ class Openpay_QR extends WC_Payment_Gateway
     }
 
     /**
-     * EN - Process the payment and return the result
-     * ES -
+     * EN - Process the payment and return the result. Redirect to confirmation page if process end successfully.
+     * ES - Procesa el pago y devuelve un resultado.  Redirecciona a la página de confirmación si el proceso resulta con éxito.
      * @param int $order_id
      * @return array
      */
     public function process_payment( $order_id ) {
         global $woocommerce;
         //$this->logger->info( json_encode( $order->get_total() ));
+        // Create Openpay Instance y enviarla al handler
         switch ($this->country){
             case "CO":
                 $chargeResult = new OpenQR_ChargeHAndlerCO($order_id);
@@ -114,7 +134,5 @@ class Openpay_QR extends WC_Payment_Gateway
             'redirect'	=> $this->get_return_url( $order )
         );*/
     }
-
-
 
 }
