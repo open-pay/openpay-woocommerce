@@ -8,5 +8,4 @@ class OpenQR_OpenpayInstance
         Openpay::setUserAgent($userAgent);
         return $openpay;
     }
-
 }

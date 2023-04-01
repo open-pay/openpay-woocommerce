@@ -9,15 +9,24 @@ class OpenQR_Charge
     public $method = "qr";
     public $amount;
     public $currency;
+    public $confirm = false;
     public $description;
     public $order_id;
-    public $qr_options = Array("mode" => "DYNAMIC");
+    //public $qr_options = Array("mode" => "DYNAMIC");
     public $customer;
-    public $validityDate;
+    public $due_date;
 
-    public function __construct(){
+    public function __construct(){}
+    /*public function __construct($amount, $currency, $description, $order_id, $customer, $due_date){
+        $this->amount = $amount;
+        $this->currency = $currency;
+        $this->description = $description;
+        $this->order_id = $order_id;
+        $this->customer = $customer;
+        $this->$due_date = $due_date;
+    }*/
 
-    }
+
 
     /**
      * @return string
@@ -134,17 +143,17 @@ class OpenQR_Charge
     /**
      * @return mixed
      */
-    public function getValidityDate()
+    public function getDueDate()
     {
-        return $this->validityDate;
+        return $this->due_date;
     }
 
     /**
-     * @param mixed $validityDate
+     * @param mixed $due_date
      */
-    public function setValidityDate($validityDate): void
+    public function setDueDate($due_date): void
     {
-        $this->validityDate = $validityDate;
+        $this->due_date = $due_date;
     }
 
 }

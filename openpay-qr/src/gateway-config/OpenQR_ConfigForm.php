@@ -71,7 +71,8 @@ class OpenQR_ConfigForm
             'default' => __('', 'openpay-qr')
         );
 
-        $this->expiration_time = array(
+        /*
+        $this->due_date = array(
         'type' => 'text',
         'title' => __('Tiempo de vencimiento', 'openpay-qr'),
         'description' => __('tiempo de vencimiento a partir de la creación del QR (Días).<br> 
@@ -79,5 +80,6 @@ class OpenQR_ConfigForm
                             <strong>Ejemplo:</strong> 2 días = Creado 20/03/2023 - Vence 22/03/2023 00:00 hrs.', 'openpay-qr'),
         'default' => __('1', 'openpay-qr')
         );
+         */
     }
 }

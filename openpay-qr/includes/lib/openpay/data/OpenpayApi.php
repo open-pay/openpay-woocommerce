@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Openpay API v1 Client for PHP (version 2.0.0)
  * 
@@ -115,13 +114,13 @@ class Openpay
     public static function setEndpointUrl($country){
         if($country == 'MX'){
             self::$apiEndpoint = 'https://api.openpay.mx/v1';
-            self::$apiSandboxEndpoint = 'https://sandbox-api.openpay.mx/v1';
+            self::$apiSandboxEndpoint = 'https://dev-api.openpay.mx/v1';
         }elseif($country == 'CO'){
             self::$apiEndpoint = 'https://api.openpay.co/v1';
-            self::$apiSandboxEndpoint = 'https://sandbox-api.openpay.co/v1';
+            self::$apiSandboxEndpoint = 'https://dev-api.openpay.co/v1';
         }elseif($country == 'PE') {
             self::$apiEndpoint = 'https://api.openpay.pe/v1';
-            self::$apiSandboxEndpoint = 'https://sandbox-api.openpay.pe/v1';
+            self::$apiSandboxEndpoint = 'https://dev-api.openpay.pe/v1';
         }
     }
     public static function getEndpointUrl() {

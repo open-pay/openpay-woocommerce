@@ -24,6 +24,10 @@ if(!class_exists('OpenQR_OpenpayInstance')) {
     require_once(dirname(__FILE__) . "/OpenQR_OpenpayInstance.php");
 }
 
+if(!class_exists('OpenQR_Error')) {
+    require_once(dirname(__FILE__) . "/OpenQR_Error.php");
+}
+
 if(!class_exists('OpenQR_ChargeHandlerCo')) {
     require_once(dirname(__FILE__) . "/../src/charge/OpenQR_ChargeHandlerCo.php");
 }
