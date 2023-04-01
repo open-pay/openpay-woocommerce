@@ -78,13 +78,15 @@ class Openpay_QR extends WC_Payment_Gateway
      * EN - Automatic validatión function -> validate_{seeting_name}_field.
      * ES - Función automatica de validación -> validate_{seeting_name}_field.
      */
-    public function validate_expiration_time_field($key,$value){
+    /*
+     * public function validate_due_date_field($key,$value){
         if (!preg_match( '/^[1-9]{1}[0-9]{0,2}$/', $value )) {
             WC_Admin_Settings::add_error( 'Tiempo de vencimiento inválido, ingresa un valor numérico en un rango [1,999].' );
             $value = '1';
         }
         return $value;
     }
+    */
 
     /**
      * EN - Load a template overwriting default template for Gateway settings form.
