@@ -38,7 +38,7 @@ class Openpay_QR extends WC_Payment_Gateway
         $this->SK = $this->is_sandbox ? $this->get_option( 'sandbox_SK') : $this->get_option( 'production_SK');*/
 
 
-        $this->title        = "Openpay QR";
+        $this->title        = "Pago con QR";
         $this->description  = "Genera tu código de pago QR";
 
 
@@ -53,6 +53,7 @@ class Openpay_QR extends WC_Payment_Gateway
 
         // Actions
         add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array( $this, 'process_admin_options' ) );
+        add_action('woocommerce_api_'.strtolower(get_class($this)), array($this, 'webhook_handler'));
         add_action('admin_enqueue_scripts', array($this, 'openpay_qr_admin_enqueue'), 10, 2);
     }
 
@@ -135,6 +136,10 @@ class Openpay_QR extends WC_Payment_Gateway
             'result' 	=> 'success',
             'redirect'	=> $this->get_return_url( $order )
         );*/
+    }
+
+    public function webhook_handler() {
+        new OpenQR_WebhookHandler();
     }
 
 }
