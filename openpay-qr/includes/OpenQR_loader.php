@@ -16,6 +16,10 @@ if(!class_exists('OpenQR_ConfigForm')) {
     require_once(dirname(__FILE__) . "/../src/gateway-config/OpenQR_ConfigForm.php");
 }
 
+if(!class_exists('OpenQR_WebhookHandler')) {
+    require_once(dirname(__FILE__) . "/../src/webhook/OpenQR_WebhookHandler.php");
+}
+
 if(!class_exists('OpenQR_Currencies')) {
     require_once(dirname(__FILE__) . "/../src/gateway-config/OpenQR_Currencies.php");
 }
