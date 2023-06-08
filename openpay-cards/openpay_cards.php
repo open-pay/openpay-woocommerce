@@ -4,7 +4,7 @@
  * Plugin Name: Openpay Cards Plugin
  * Plugin URI: http://www.openpay.mx/docs/plugins/woocommerce.html
  * Description: Provides a credit card payment method with Openpay for WooCommerce.
- * Version: 2.7.9
+ * Version: 2.7.10
  * Author: Openpay
  * Author URI: http://www.openpay.mx
  * Developer: Openpay
@@ -152,7 +152,14 @@ function openpay_woocommerce_order_refunded($order_id, $refund_id) {
         return;
     }
 
-    $customer_id = get_post_meta($order_id, '_openpay_customer_id', true);
+    $openpay_cards = new Openpay_Cards();
+    $logger->info('IS_SANDBOX: ' . $openpay_cards->get_option('sandbox') );
+    if ($openpay_cards->get_option('sandbox') == 'yes') {
+        $customer_id = get_post_meta($order_id, '_openpay_customer_sandbox_id', true);
+    } else {
+        $customer_id = get_post_meta($order_id, '_openpay_customer_id', true);
+    }
+
     $transaction_id = get_post_meta($order_id, '_transaction_id', true);
         
     if (!strlen($customer_id)) {
@@ -168,13 +175,11 @@ function openpay_woocommerce_order_refunded($order_id, $refund_id) {
 
     try {
         $openpay_cards = new Openpay_Cards();
-        
-        $settings = $openpay_cards->init_settings();
-        if($settings['country'] != 'MX'){
-            $order->add_order_note('Openpay plugin does not support refunds');             
+
+        if($openpay_cards->get_option('country') != 'MX' && $openpay_cards->get_option('country') != 'PE'){
+            $order->add_order_note('Openpay plugin does not support refunds');
             return;
         }
-
         $openpay = $openpay_cards->getOpenpayInstance();
         $customer = $openpay->customers->get($customer_id);
         $charge = $customer->charges->get($transaction_id);
