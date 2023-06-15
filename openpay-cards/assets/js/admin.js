@@ -6,19 +6,11 @@ jQuery(document).ready(function () {
     showOrHideElements(country, merchantOrigin);
 
     function showOrHideElements(country, merchantOrigin) {
-        if (country === 'CO' || country === 'PE') {            
+        if (country === 'CO' || country === 'PE') {
             if(country === 'CO') {
                 /*Shown Elements*/
                 jQuery("#woocommerce_openpay_cards_iva").closest("tr").show();
-                jQuery("#woocommerce_openpay_cards_charge_type").closest("tr").show();
-                
-                const select = document.querySelector('#woocommerce_openpay_cards_charge_type');
-                select.querySelectorAll('option').forEach(option => {
-                    if(option.value === 'auth') {
-                        option.remove();
-                    }
-                });
-
+                jQuery("#woocommerce_openpay_cards_charge_type_co_pe").closest("tr").show();
                 /*Peru Hidden Elements*/
                 jQuery("#woocommerce_openpay_cards_capture").closest("tr").hide();
                 jQuery("#woocommerce_openpay_cards_show_installments_pe").closest("tr").hide();
@@ -31,12 +23,12 @@ jQuery(document).ready(function () {
                 jQuery("#woocommerce_openpay_cards_show_installments_pe").closest("tr").show();
                 jQuery("#woocommerce_openpay_cards_save_cc option[value='2']").show();
                 jQuery("#woocommerce_openpay_cards_save_cc_description").show();
+                jQuery("#woocommerce_openpay_cards_charge_type_co_pe").closest("tr").show();
                 /*Colombia Hidden Elements*/
                 jQuery("#woocommerce_openpay_cards_iva").closest("tr").hide();
-                /*Mexico Hidden Elements*/
-                jQuery("#woocommerce_openpay_cards_charge_type").closest("tr").hide();
             }
             /*Mexico Hidden Elements*/
+            jQuery("#woocommerce_openpay_cards_charge_type").closest("tr").hide();
             jQuery("#woocommerce_openpay_cards_affiliation_bbva").closest("tr").hide();
             jQuery("#woocommerce_openpay_cards_use_card_points").closest("tr").hide();
             jQuery("#woocommerce_openpay_cards_msi").closest("tr").hide();      
@@ -47,7 +39,9 @@ jQuery(document).ready(function () {
             jQuery("#woocommerce_openpay_cards_show_installments_pe").closest("tr").hide();
             jQuery("#woocommerce_openpay_cards_save_cc option[value='2']").hide();
             jQuery("#woocommerce_openpay_cards_save_cc_description").hide();
+            jQuery("#woocommerce_openpay_cards_charge_type_co_pe").closest("tr").hide();
             /*Shown Elements*/
+            jQuery("#woocommerce_openpay_cards_charge_type").closest("tr").show();
             jQuery("#woocommerce_openpay_cards_use_card_points").closest("tr").show();
             jQuery("#woocommerce_openpay_cards_msi").closest("tr").show();         
             jQuery("#woocommerce_openpay_cards_minimum_amount_interest_free").closest("tr").show();

@@ -58,12 +58,7 @@ class Openpay_Cards extends WC_Payment_Gateway
         $capture = isset($this->settings['capture']) ? (strcmp($this->settings['capture'], 'true') == 0) : true;
         $save_cc = isset($this->settings['save_cc']) ? (strcmp($this->settings['save_cc'], '0') != 0) : false;
 
-        if ($this->country == 'MX' || $this->country == 'CO') {
-            $this->charge_type = $this->settings['charge_type'];
-        } else {
-            $this->charge_type = 'direct';
-        }
-
+        $this->charge_type = $this->country == 'MX' ? $this->settings['charge_type'] : $this->settings['charge_type_co_pe'] ;
         $this->use_card_points = $this->country == 'MX' ? $use_card_points : false;
         $this->capture = ($this->country == 'MX' || $this->country == 'PE' ) ? $capture : true;
 
@@ -230,7 +225,7 @@ class Openpay_Cards extends WC_Payment_Gateway
                 'default' => __('', 'woothemes')
             ),         
             'charge_type' => array(
-		'title' => __('¿Cómo procesar el cargo?', 'woocommerce'),
+		        'title' => __('¿Cómo procesar el cargo?', 'woocommerce'),
                 'type' => 'select',
                 'class' => 'wc-enhanced-select',
                 'description' => __('¿Qué es la autenticación selectiva? Es cuando Openpay detecta cierto riesgo de fraude y envía el cargo a través de 3D Secure.', 'woocommerce'),
@@ -242,8 +237,20 @@ class Openpay_Cards extends WC_Payment_Gateway
                     '3d' => __('3D Secure', 'woocommerce'),
                 ),
             ),
+            'charge_type_co_pe' => array(
+                'title' => __('¿Cómo procesar el cargo?', 'woocommerce'),
+                'type' => 'select',
+                'class' => 'wc-enhanced-select',
+                'description' => __('¿Qué es la autenticación selectiva? Es cuando Openpay detecta cierto riesgo de fraude y envía el cargo a través de 3D Secure.', 'woocommerce'),
+                'default' => 'direct',
+                'desc_tip' => true,
+                'options' => array(
+                    'direct' => __('Directo', 'woocommerce'),
+                    '3d' => __('3D Secure', 'woocommerce'),
+                ),
+            ),
             'capture' => array(
-		'title' => __('Configuración del cargo', 'woocommerce'),
+		        'title' => __('Configuración del cargo', 'woocommerce'),
                 'type' => 'select',
                 'class' => 'wc-enhanced-select',             
                 'description' => __('Indica si el cargo se hace o no inmediatamente, con la pre-autorización solo se reserva el monto para ser confirmado o cancelado posteriormente. Las pre-autorizaciones no pueden ser utilizadas en combinación con pago con puntos Bancomer.', 'woocommerce'),                
