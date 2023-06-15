@@ -4,20 +4,22 @@ Tags: payment gateway, openpay
 Requires at least: 4.8
 Tested up to: 6.0.1
 Requires PHP: 5.9
-Stable tag: 2.7.10
+Stable tag: 2.7.11
 License: GNU General Public License v3.0
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
-
-Provides a credit card payment method with Openpay for WooCommerce.
-
-== Installation ==
-For more information about this module go to:
-
-http://www.openpay.mx/docs/plugins/woocommerce.html
-
-== Changelog ==
-= 2.7.10 =
+ 
+ Provides a credit card payment method with Openpay for WooCommerce.
+ 
+ == Installation ==
+For more information about this module go to: 
+ 
+ http://www.openpay.mx/docs/plugins/woocommerce.html
+ 
+ == Changelog ==
+= 2.7.11 =
 * Enhancement. Implementación de 3DS para Colombia y Perú.
+= 2.7.10 =
+* Enhancement. Implementación de reembolsos para Perú.
 = 2.7.9 =
 * Fix. Acepta cargos con la configuración 3DS y Pre autorización activadas simultaneamente.
 = 2.7.8 =
