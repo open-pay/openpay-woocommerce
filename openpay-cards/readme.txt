@@ -7,15 +7,15 @@ Requires PHP: 5.9
 Stable tag: 2.7.11
 License: GNU General Public License v3.0
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
- 
- Provides a credit card payment method with Openpay for WooCommerce.
- 
- == Installation ==
-For more information about this module go to: 
- 
- http://www.openpay.mx/docs/plugins/woocommerce.html
- 
- == Changelog ==
+
+Provides a credit card payment method with Openpay for WooCommerce.
+
+== Installation ==
+For more information about this module go to:
+
+http://www.openpay.mx/docs/plugins/woocommerce.html
+
+== Changelog ==
 = 2.7.11 =
 * Enhancement. Implementación de 3DS para Colombia y Perú.
 = 2.7.10 =
