@@ -10,7 +10,7 @@
  * Text Domain: openpay-checkout-lending
  *
  * WC requires at least: 3.0
- * WC tested up to: 6.9.4
+ * WC tested up to: 8.0.1
  *
  * License: GNU General Public License v3.0
  * License URI: http://www.gnu.org/licenses/gpl-3.0.html

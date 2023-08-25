@@ -2,7 +2,7 @@
 Contributors: openpay
 Tags: payments, payment gateway, openpay, woocommerce
 Requires at least: 4.8
-Tested up to: 5.7
+Tested up to: 8.1.16
 Requires PHP: 5.6
 Stable tag: 1.5.1
 License: GNU General Public License v3.0
@@ -16,7 +16,7 @@ For more information about this module go to:
 http://www.openpay.mx/docs/plugins/woocommerce.html
 
 == Changelog ==
-= 1.5.1 =
+= 1.6.0 =
 * Ajuste a la descripción de cargo
 = 1.5.0 =
 * Cambio de imagen Openpay (Rebranding)
