@@ -77,7 +77,8 @@ function openpay_checkout_lending_failed(){
             $charge = $openpay->charges->get($transaction_id); 
 
             if ($order && $charge->status != 'completed') {
-                $order->add_order_note(sprintf("%s Credit Card Payment Failed with message: '%s'", 'Openpay_Cards', 'Status '+$charge->status));
+                $set_status = "Status ".$charge->status;
+                $order->add_order_note(sprintf("%s Credit Card Payment Failed with message: '%s'", 'Openpay_Checkout_Lending', $set_status));
                 $order->set_status('failed');
                 $order->save();
 
@@ -88,12 +89,12 @@ function openpay_checkout_lending_failed(){
                 }
             }
                         
-            wp_redirect($openpay_checkout_lending->get_return_url($order));            
-        } catch (Exception $e) {           
+            wp_redirect($openpay_checkout_lending->get_return_url($order));
+        } catch (Exception $e) {
             status_header( 404 );
             nocache_headers();
             include(get_query_template('404'));
             die();
-        }                
+        }
 }
 
