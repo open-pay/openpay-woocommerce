@@ -41,10 +41,10 @@ class Openpay_Pse extends WC_Payment_Gateway {
         $this->private_key = $this->is_sandbox ? $this->test_private_key : $this->live_private_key;
 
         // tell WooCommerce to save options
-        add_action('woocommerce_api_'.strtolower(get_class($this)), array($this, 'webhook_handler'));
         add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
-
         add_action('admin_enqueue_scripts', array($this, 'openpay_pse_admin_enqueue'), 10, 2);
+        add_action('woocommerce_api_'.strtolower(get_class($this)), array($this, 'webhook_handler'));
+
 
         if (!$this->validateCurrency()) {
             $this->enabled = false;
@@ -56,6 +56,9 @@ class Openpay_Pse extends WC_Payment_Gateway {
     }
 
     public function process_admin_options() {
+        $logger = wc_get_logger();
+        $logger->info('process_admin_options');
+
         $post_data = $this->get_post_data();
         $mode = 'live';
 
@@ -66,39 +69,47 @@ class Openpay_Pse extends WC_Payment_Gateway {
         $this->merchant_id = $post_data['woocommerce_' . $this->id . '_' . $mode . '_merchant_id'];
         $this->private_key = $post_data['woocommerce_' . $this->id . '_' . $mode . '_private_key'];
 
-        $env = ($mode == 'live') ? 'Producton' : 'Sandbox';
+        $env = ($mode == 'live') ? 'Production' : 'Sandbox';
 
         if ($this->merchant_id == '' || $this->private_key == '') {
             $settings = new WC_Admin_Settings();
             $settings->add_error('You need to enter "' . $env . '" credentials if you want to use this plugin in this mode.');
         } else {
-            $this->createWebhook();
+            $this->createWebhook(false, $this->merchant_id, $this->private_key);
         }
 
         return parent::process_admin_options();
     }
 
     public function webhook_handler() {
+        $logger = wc_get_logger();
+        $logger->info('webhook_handler START');
         header('HTTP/1.1 200 OK');        
         $obj = file_get_contents('php://input');
         $json = json_decode($obj);
 
+        $logger->info('webhook_handler idTransaction=> '.$json->transaction->id);
+
         if($json->transaction->method == 'bank_account'){
+            $logger->info('webhook_handler paymentMethod=> bank_account');
 
             $openpay = Openpay::getInstance($this->merchant_id, $this->private_key, 'CO');
             Openpay::setProductionMode($this->is_sandbox ? false : true);
                 
             if(isset($json->transaction->customer_id)){
+                $logger->info('webhook_handler idCustomer=> '.$json->transaction->customer_id);
                 $customer = $openpay->customers->get($json->transaction->customer_id);
                 $charge = $customer->charges->get($json->transaction->id);
             }else{
                 $charge = $openpay->charges->get($json->transaction->id);
+                $logger->info('webhook_handler Customer=> Guest');
             }
 
             $order_id = $json->transaction->order_id;
             $order = new WC_Order($order_id);
 
             if ($json->type == 'charge.succeeded' && $charge->status == 'completed') {
+                $logger->info('webhook_handler Status=> completed');
                 $payment_date = date("Y-m-d", $json->event_date);
                 update_post_meta($order->get_id(), 'openpay_payment_date', $payment_date);
                 $order->payment_complete();
@@ -106,10 +117,16 @@ class Openpay_Pse extends WC_Payment_Gateway {
                 
                 update_post_meta($order->get_id(), '_transaction_id', $charge->id);
                    
-            }else if($json->type == 'transaction.expired' && $charge->status == 'cancelled'){
+            } else if($json->type == 'charge.failed' && $charge->status == 'failed') {
+                $logger->info('webhook_handler Status=> failed');
+                $order->add_order_note(sprintf("%s PSE Payment Failed with message: '%s'", $this->GATEWAY_NAME, $json->transaction->error_message));
+                $order->update_status('failed', "Failed payment");
+            } else if($json->type == 'transaction.expired' && $charge->status == 'cancelled'){
+                $logger->info('webhook_handler Status=> expired');
                 $order->update_status('cancelled', 'Payment is due.');
             }
         }
+        $logger->info('webhook_handler END');
     }
 
     public function init_form_fields() {
@@ -323,7 +340,7 @@ class Openpay_Pse extends WC_Payment_Gateway {
         return $customer_data;
     }
 
-    public function createWebhook($force_host_ssl = false) {
+    public function createWebhook($force_host_ssl, $merchant_id, $secret_key) {
 
         $protocol = (get_option('woocommerce_force_ssl_checkout') == 'no') ? 'http' : 'https';
         $url = site_url('/', $protocol).'wc-api/Openpay_PSE';

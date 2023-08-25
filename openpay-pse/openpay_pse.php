@@ -29,7 +29,7 @@ add_action('plugins_loaded', 'openpay_pse_init_your_gateway', 0);
 add_action('template_redirect', 'openpay_pse_redirect_after_purchase', 0);
 add_action('woocommerce_api_pse_confirm', 'openpay_pse_confirm', 10, 0);         
 
-function openpay_pse_confirm() {   
+function openpay_pse_confirm() {
         global $woocommerce;
         $logger = wc_get_logger();
         
@@ -37,13 +37,13 @@ function openpay_pse_confirm() {
         
         $logger->info('openpay_woocommerce_confirm => '.$id);   
         
-        try {            
-            $openpay_pse = new Openpay_Pse();    
+        try {
+            $openpay_pse = new Openpay_Pse();
             $openpay = $openpay_pse->getOpenpayInstance();
             $charge = $openpay->charges->get($id);
             $order = new WC_Order($charge->order_id);
             
-            $logger->info('openpay_woocommerce_confirm => '.json_encode(array('id' => $charge->id, 'status' => $charge->status)));   
+            $logger->info('openpay_woocommerce_confirm => '.json_encode(array('id' => $charge->id, 'status' => $charge->status)));
 
             if ($order && $charge->status == 'completed') {
                 $order->payment_complete();
@@ -77,7 +77,7 @@ function openpay_pse_confirm() {
 function openpay_pse_redirect_after_purchase() {
     global $wp;
     $logger = wc_get_logger();
-    $logger->info('openpay_pse_redirect_after_purchase');             
+    $logger->info('openpay_pse_redirect_after_purchase');
 
     if (is_checkout() && !empty($wp->query_vars['order-received'])) {
         $order = new WC_Order($wp->query_vars['order-received']);
