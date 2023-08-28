@@ -17,7 +17,7 @@ http://www.openpay.mx/docs/plugins/woocommerce.html
 
 == Changelog ==
 = 1.6.0 =
-* Actualización a Wordpress 6.3 y WooCommerce 8.0.1 
+* Actualización a Wordpress 6.3 y WooCommerce 8.0.1
 = 1.5.1 =
 * Ajuste a la descripción de cargo
 = 1.5.0 =

@@ -153,7 +153,9 @@ if (!class_exists('Openpay')) {
             $order = new WC_Order($order_id);
 
             if ($json->type == 'charge.succeeded' && $charge->status == 'completed') {
-                $payment_date = date("Y-m-d", $json->event_date);
+                $date_to_int = strtotime($json->event_date);
+                $payment_date = date("Y-m-d", $date_to_int);
+                
                 update_post_meta($order->get_id(), 'openpay_payment_date', $payment_date);
                 $order->payment_complete();
                 $order->add_order_note(sprintf("Payment completed."));
