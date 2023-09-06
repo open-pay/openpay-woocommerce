@@ -11,7 +11,7 @@
  * Text Domain: openpay-cards
  *
  * WC requires at least: 3.0
- * WC tested up to: 6.7.0
+ * WC tested up to: 8.0.1
  *
  * License: GNU General Public License v3.0
  * License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -153,8 +153,7 @@ function openpay_woocommerce_order_refunded($order_id, $refund_id) {
     }
 
     $openpay_cards = new Openpay_Cards();
-    $logger->info('IS_SANDBOX: ' . $openpay_cards->get_option('sandbox') );
-    if ($openpay_cards->get_option('sandbox') == 'yes') {
+    if(!strcmp($openpay_cards->settings['sandbox'], 'yes')){
         $customer_id = get_post_meta($order_id, '_openpay_customer_sandbox_id', true);
     } else {
         $customer_id = get_post_meta($order_id, '_openpay_customer_id', true);
@@ -174,10 +173,8 @@ function openpay_woocommerce_order_refunded($order_id, $refund_id) {
     $logger->info('_transaction_id: '.$transaction_id);             
 
     try {
-        $openpay_cards = new Openpay_Cards();
-
-        if($openpay_cards->get_option('country') != 'MX' && $openpay_cards->get_option('country') != 'PE'){
-            $order->add_order_note('Openpay plugin does not support refunds');
+        if($openpay_cards->settings['country'] == 'CO'){
+            $order->add_order_note('Openpay plugin does not support refunds');             
             return;
         }
         $openpay = $openpay_cards->getOpenpayInstance();
