@@ -14,6 +14,8 @@ if (!class_exists('UtilsStores')) {
   URL:		http://www.openpay.mx
   License: GNU General Public License v3.0
   License URI: http://www.gnu.org/licenses/gpl-3.0.html
+    WC requires at least: 3.0
+    WC tested up to: 8.0.*
  */
 
 class Openpay_Stores extends WC_Payment_Gateway
@@ -195,14 +197,6 @@ class Openpay_Stores extends WC_Payment_Gateway
                 'description' => __('Define how many hours have the customer to make the payment.', 'woothemes'),
                 'default' => '48'
             ),
-            'show_map' => array(
-                'type' => 'checkbox',
-                'title' => __('Mostrar mapa', 'woothemes'),
-                'label' => __('Habilitar', 'woothemes'),
-                'description' => __('Al selccionar esta opción, un mapa se desplegará mostrando las tiendas más cercanas al momento mostrar el recipo de pago (https://www.openpay.mx/docs/stores-map.html).', 'woothemes'),
-                'default' => 'no',
-                'id' => 'openpay_show_map',                
-            ),
             'iva' => array(
                 'type' => 'number',
                 'required' => true,
@@ -256,7 +250,7 @@ class Openpay_Stores extends WC_Payment_Gateway
                 $customer_id = get_user_meta(get_current_user_id(), '_openpay_customer_id', true);
             }
             update_post_meta($this->order->get_id(), '_transaction_id', $result_json->id);
-            update_post_meta($this->order->get_id(), '_show_map', $this->show_map);               
+            update_post_meta($this->order->get_id(), '_country', $this->country);
             update_post_meta($this->order->get_id(), '_pdf_url', $pdf_url);            
             
             return true;
