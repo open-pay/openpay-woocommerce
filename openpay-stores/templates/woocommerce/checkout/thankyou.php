@@ -75,10 +75,11 @@ if (!defined('ABSPATH')) {
                 
             <div class="clear"></div>
             
-            <?php if(get_post_meta($order->get_id(), '_show_map', true) == 'yes'): ?>      
-                <div style="margin: 20px 0px;">
-                    <h2 class="woocommerce-order-details__title">Mapa de tiendas</h2>
-                    <iframe src="https://www.paynet.com.mx/mapa-tiendas/index.html?locationNotAllowed=true&postalCode=<?php echo $order->get_shipping_postcode() ?>" style="border: 1px solid #000; width:100%; height:300px; visibility: visible !important; opacity: 1 !important;" frameborder="0"></iframe>                
+            <?php if(get_post_meta($order->get_id(), '_country', true) == 'MX'): ?>
+                <div style="margin: 20px 0px; text-align: center;">
+                    <h2 class="woocommerce-order-details__title" style="font-weight:600;">Localiza tu tienda más cercana dando click
+                        <a target="_blank" href="https://www.paynet.com.mx/mapa-tiendas/index.html" style="font-weight:600;">aqui</a>
+                    </h2>
                 </div>    
             <?php endif; ?>    
 
