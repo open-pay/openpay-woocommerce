@@ -198,7 +198,7 @@
         </div>
         <div class="form-row form-row-last openpay-card-cvc">
             <label for="openpay-card-cvc">CVV <span class="required">*</span></label>
-            <input id="openpay-card-cvc" name="openpay-card-cvc" class="input-text wc-credit-card-form-card-cvc openpay-card-input-cvc" type="text" autocomplete="off" placeholder="CVC" data-openpay-card="cvv2" />
+            <input id="openpay-card-cvc" name="openpay-card-cvc" class="input-text wc-credit-card-form-card-cvc openpay-card-input-cvc" type="password" autocomplete="off" placeholder="CVC" data-openpay-card="cvv2" />
         </div>        
         <div class="form-row form-row-wide save_cc <?php echo !$this->can_save_cc ? 'hidden' : '' ?>" style="margin-bottom: 20px;">
             <label for="save_cc" class="label">
