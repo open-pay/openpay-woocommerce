@@ -4,7 +4,7 @@
  * Plugin Name: Openpay Stores Plugin
  * Plugin URI: http://www.openpay.mx/docs/plugins/woocommerce.html
  * Description: Provides a cash payment method with Openpay for WooCommerce.
- * Version: 1.11.3
+ * Version: 1.11.4
  * Author: Openpay
  * Author URI: http://www.openpay.mx
  * Developer: Openpay
