@@ -4,7 +4,7 @@
  * Plugin Name: Openpay CoDi® Plugin
  * Plugin URI: http://www.openpay.mx/docs/plugins/woocommerce.html
  * Description: Plugin TEST
- * Version: 1.1.0
+ * Version: 1.1.1
  * Author: Openpay
  * Author URI: http://www.openpay.mx
  * Developer: Openpay

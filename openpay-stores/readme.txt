@@ -4,7 +4,7 @@ Tags: payments, payment gateway, openpay, woocommerce
 Requires at least: 4.8
 Tested up to: 6.3
 Requires PHP: 5.6
-Stable tag: 1.11.3
+Stable tag: 1.11.4
 License: GNU General Public License v3.0
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -16,6 +16,8 @@ For more information about this module go to:
 http://www.openpay.mx/docs/plugins/woocommerce.html
 
 == Changelog ==
+= 1.11.4 =
+* Actualización de certificado.
 = 1.11.3 =
 * Se sustituye función de mostrar mapa para México.
 = 1.11.2 =
