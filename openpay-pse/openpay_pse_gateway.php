@@ -110,7 +110,7 @@ class Openpay_Pse extends WC_Payment_Gateway {
 
             if ($json->type == 'charge.succeeded' && $charge->status == 'completed') {
                 $logger->info('webhook_handler Status=> completed');
-                $payment_date = date("Y-m-d", $json->event_date);
+                $payment_date = date("Y-m-d", strtotime($json->event_date));
                 update_post_meta($order->get_id(), 'openpay_payment_date', $payment_date);
                 $order->payment_complete();
                 $order->add_order_note(sprintf("Payment completed."));
