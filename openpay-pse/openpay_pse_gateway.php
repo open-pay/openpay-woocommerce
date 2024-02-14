@@ -19,6 +19,14 @@ class Openpay_Pse extends WC_Payment_Gateway {
     protected $transaction_id = null;
     protected $transactionErrorMessage = null;
     protected $currencies = array('COP');
+    protected $test_merchant_id;
+    protected $test_private_key;
+    protected $live_merchant_id;
+    protected $live_private_key;
+    protected $iva;
+    protected $merchant_id;
+    protected $private_key;
+    protected $images_dir;
 
     public function __construct() {
         $this->id = 'openpay_pse';
@@ -118,6 +126,7 @@ class Openpay_Pse extends WC_Payment_Gateway {
 
             $order_id = $json->transaction->order_id;
             $order = new WC_Order($order_id);
+
             $order_status = $order->get_status();
             $logger->info('webhook_handler order_status => ' . $order_status);
             if ($order_status == 'processing'){
@@ -126,10 +135,10 @@ class Openpay_Pse extends WC_Payment_Gateway {
             if ($json->type == 'charge.succeeded'){
                 if ($order_status != 'processing'){
                     $payment_date = date("Y-m-d", strtotime($json->event_date));
-                    update_post_meta($order->get_id(), 'openpay_payment_date', $payment_date);
+                    $order->update_meta_data( 'openpay_payment_date', $payment_date );
                     $order->payment_complete();
                     $order->add_order_note(sprintf("Payment completed. Confirmed by Webhook"));
-                    update_post_meta($order->get_id(), '_transaction_id', $json->transaction->id);
+                    $order->update_meta_data('_transaction_id',$charge->id);
                     $logger->info('webhook_handler Status => completed');
                 }
             } else if($json->type == 'charge.failed') {
@@ -227,12 +236,11 @@ class Openpay_Pse extends WC_Payment_Gateway {
 
         if ($result_json != false) {
             if ($this->is_sandbox) {
-                update_post_meta($this->order->get_id(), '_openpay_customer_sandbox_id', $openpay_customer->id);
+                $this->order->update_meta_data( '_openpay_customer_sandbox_id', $openpay_customer->id);
             }else{
-                update_post_meta($this->order->get_id(), '_openpay_customer_id', $openpay_customer->id);
+                $this->order->update_meta_data('_openpay_customer_id', $openpay_customer->id);
             }
-                
-            update_post_meta($this->order->get_id(), '_openpay_pse_redirect_url', $result_json->payment_method->url);
+            $this->order->update_meta_data('_openpay_pse_redirect_url', $result_json->payment_method->url);
 
             return true;
         } else {
