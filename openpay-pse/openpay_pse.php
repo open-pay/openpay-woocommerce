@@ -4,7 +4,7 @@
  * Plugin Name: Openpay PSE
  * Plugin URI: http://www.openpay.mx/docs/plugins/woocommerce.html
  * Description: Provides a PSE payment method with Openpay for WooCommerce. Compatible with WooCommerce 4.5.2 and Wordpress 5.5.
- * Version: 1.6.2
+ * Version: 1.6.3
  * Author: Openpay
  * Author URI: http://www.openpay.mx
  * Developer: Openpay
@@ -53,7 +53,7 @@ function openpay_pse_confirm() {
                 update_post_meta($order->get_id(), '_transaction_id', $charge->id);
 
             }else if($order && ($charge->status == 'cancelled' || $charge->status == 'failed')) {
-                $order->add_order_note(sprintf("%s PSE Payment Failed with message: '%s'", 'Openpay_Pse', 'Status '+$charge->status));
+                $order->add_order_note(sprintf("%s PSE Payment Failed with message: '%s'", 'Openpay_Pse', 'Status ' . $charge->status));
                 $order->set_status('failed');
                 $order->save();
 
