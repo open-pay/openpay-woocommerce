@@ -4,7 +4,7 @@
  * Plugin Name: Openpay PSE
  * Plugin URI: http://www.openpay.mx/docs/plugins/woocommerce.html
  * Description: Provides a PSE payment method with Openpay for WooCommerce. Compatible with WooCommerce 4.5.2 and Wordpress 5.5.
- * Version: 1.6.3
+ * Version: 1.7.1
  * Author: Openpay
  * Author URI: http://www.openpay.mx
  * Developer: Openpay
@@ -35,28 +35,34 @@ function openpay_pse_confirm() {
         
         $id = preg_replace('/[^a-z0-9]/', '', $_GET['id']);        
         
-        $logger->info('openpay_woocommerce_confirm => '.$id);   
+        $logger->info('openpay_woocommerce_confirm => '.$id); 
         
         try {
             $openpay_pse = new Openpay_Pse();
             $openpay = $openpay_pse->getOpenpayInstance();
             $charge = $openpay->charges->get($id);
             $order = new WC_Order($charge->order_id);
-            
+            $order_status = $order->get_status();
+
             $logger->info('openpay_woocommerce_confirm => '.json_encode(array('id' => $charge->id, 'status' => $charge->status)));
 
+            if ($order_status == "processing"){
+                exit();
+            }
+
             if ($order && $charge->status == 'completed') {
-                $order->payment_complete();
-                $woocommerce->cart->empty_cart();
-                $order->add_order_note(sprintf("%s payment completed with Transaction Id of '%s'", 'Openpay_Pse', $charge->id));
-                
-                update_post_meta($order->get_id(), '_transaction_id', $charge->id);
-
+                if ($order_status != 'processing'){
+                    $order->payment_complete();
+                    $woocommerce->cart->empty_cart();
+                    $order->add_order_note(sprintf("%s payment completed with Transaction Id of '%s'", 'Openpay_Pse', $charge->id));
+                    update_post_meta($order->get_id(), '_transaction_id', $charge->id);
+                }
             }else if($order && ($charge->status == 'cancelled' || $charge->status == 'failed')) {
-                $order->add_order_note(sprintf("%s PSE Payment Failed with message: '%s'", 'Openpay_Pse', 'Status ' . $charge->status));
-                $order->set_status('failed');
-                $order->save();
-
+                if ($order_status != 'failed'){
+                    $order->add_order_note(sprintf("%s PSE Payment Failed with message: '%s'", 'Openpay_Pse', 'Status '+$charge->status));
+                    $order->set_status('failed');
+                    $order->save();
+                }
                 if (function_exists('wc_add_notice')) {
                     wc_add_notice(__('Error en la transacción: No se pudo completar tu pago.'), 'error');
                 } else {

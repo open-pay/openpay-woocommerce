@@ -34,7 +34,7 @@ class Openpay_Pse extends WC_Payment_Gateway {
         $this->test_merchant_id = $this->settings['test_merchant_id'];
         $this->test_private_key = $this->settings['test_private_key'];        
         $this->live_merchant_id = $this->settings['live_merchant_id'];
-        $this->live_private_key = $this->settings['live_private_key'];        
+        $this->live_private_key = $this->settings['live_private_key'];
         $this->iva = $this->settings['iva'];
 
         $this->merchant_id = $this->is_sandbox ? $this->test_merchant_id : $this->live_merchant_id;        
@@ -88,42 +88,62 @@ class Openpay_Pse extends WC_Payment_Gateway {
         $obj = file_get_contents('php://input');
         $json = json_decode($obj);
 
+        $logger->info('webhook_handler notification object => '. $obj);
         $logger->info('webhook_handler idTransaction=> '.$json->transaction->id);
 
-        if($json->transaction->method == 'bank_account'){
-            $logger->info('webhook_handler paymentMethod=> bank_account');
+        $auth = $_SERVER["HTTP_AUTHORIZATION"];
+        $auth_array = explode(" ", $auth);
+        $un_pw = explode(":", base64_decode($auth_array[1]));
+        $un = $un_pw[0];
+        $pw = $un_pw[1];
+        $openpay_user = $this->encrypt('decode',$un,get_option('openpay_wkey'),get_option('openpay_wiv'));
+        $openpay_pwd = $this->encrypt('decode',$pw,get_option('openpay_wkey'),get_option('openpay_wiv'));
 
-            $openpay = Openpay::getInstance($this->merchant_id, $this->private_key, 'CO');
-            Openpay::setProductionMode($this->is_sandbox ? false : true);
-                
-            if(isset($json->transaction->customer_id)){
-                $logger->info('webhook_handler idCustomer=> '.$json->transaction->customer_id);
-                $customer = $openpay->customers->get($json->transaction->customer_id);
-                $charge = $customer->charges->get($json->transaction->id);
-            }else{
-                $charge = $openpay->charges->get($json->transaction->id);
-                $logger->info('webhook_handler Customer=> Guest');
-            }
+        $logger->info('USER DECRIPT => '.$openpay_user);
+        $logger->info('PSWD DECRIPT => '.$openpay_pwd);
+
+        if(($openpay_user != $this->merchant_id || $openpay_pwd != $this->private_key) && $json->transaction->method == 'bank_account'){
+            $logger->error('Webhook Autentication failed');
+            header('HTTP/1.1 401 Unauthorized'); 
+            return;
+        }
+
+        if($json->transaction->method != 'bank_account'){
+            $logger->info('Skipping Transaction: ' . $json->transaction->id . ' - method:' . $json->transaction->method );
+            return;
+        }
+
+        if($json->transaction->method == 'bank_account'){
+            $logger->info('webhook_handler paymentMethod => bank_account');
 
             $order_id = $json->transaction->order_id;
             $order = new WC_Order($order_id);
-
-            if ($json->type == 'charge.succeeded' && $charge->status == 'completed') {
-                $logger->info('webhook_handler Status=> completed');
-                $payment_date = date("Y-m-d", strtotime($json->event_date));
-                update_post_meta($order->get_id(), 'openpay_payment_date', $payment_date);
-                $order->payment_complete();
-                $order->add_order_note(sprintf("Payment completed."));
-                
-                update_post_meta($order->get_id(), '_transaction_id', $charge->id);
-                   
-            } else if($json->type == 'charge.failed' && $charge->status == 'failed') {
-                $logger->info('webhook_handler Status=> failed');
-                $order->add_order_note(sprintf("%s PSE Payment Failed with message: '%s'", $this->GATEWAY_NAME, $json->transaction->error_message));
-                $order->update_status('failed', "Failed payment");
-            } else if($json->type == 'transaction.expired' && $charge->status == 'cancelled'){
-                $logger->info('webhook_handler Status=> expired');
-                $order->update_status('cancelled', 'Payment is due.');
+            $order_status = $order->get_status();
+            $logger->info('webhook_handler order_status => ' . $order_status);
+            if ($order_status == 'processing'){
+                exit();
+            }
+            if ($json->type == 'charge.succeeded'){
+                if ($order_status != 'processing'){
+                    $payment_date = date("Y-m-d", strtotime($json->event_date));
+                    update_post_meta($order->get_id(), 'openpay_payment_date', $payment_date);
+                    $order->payment_complete();
+                    $order->add_order_note(sprintf("Payment completed. Confirmed by Webhook"));
+                    update_post_meta($order->get_id(), '_transaction_id', $json->transaction->id);
+                    $logger->info('webhook_handler Status => completed');
+                }
+            } else if($json->type == 'charge.failed') {
+                if ($order_status != 'failed'){
+                    $order->add_order_note(sprintf("%s PSE Payment Failed with message: '%s'. Confirmed by Webhook", $this->GATEWAY_NAME, $json->transaction->error_message));
+                    $order->update_status('failed', "Failed payment");
+                    $logger->info('webhook_handler Status => failed');
+                }
+            } else if($json->type == 'transaction.expired'){
+                if ($order_status != 'cancelled'){
+                    $order->update_status('cancelled', 'Payment is due.');
+                    $order->add_order_note(sprintf("Payment expired. Confirmed by Webhook"));
+                    $logger->info('webhook_handler Status => expired');
+                }
             }
         }
         $logger->info('webhook_handler END');
@@ -341,13 +361,29 @@ class Openpay_Pse extends WC_Payment_Gateway {
     }
 
     public function createWebhook($force_host_ssl, $merchant_id, $secret_key) {
-
+        $logger = wc_get_logger();
         $protocol = (get_option('woocommerce_force_ssl_checkout') == 'no') ? 'http' : 'https';
         $url = site_url('/', $protocol).'wc-api/Openpay_PSE';
+
+        $openpay = Openpay::getInstance($this->merchant_id, $this->private_key, 'CO');
+        Openpay::setProductionMode($this->is_sandbox ? false : true);
+
+        
+        $webhooks = $openpay->webhooks->getList([]);
+        $webhookCreated = $this->isWebhookCreated($webhooks, $url);
+            if ($webhookCreated) {
+                $logger->info('Webhook was already created with url => '. $webhookCreated->url);
+                return $webhookCreated;
+            }
+
+            update_option( 'openpay_wkey', $this->generate_password(), '', 'yes' );
+            update_option( 'openpay_wiv', $this->generate_password(), '', 'yes' );           
 
         $webhook_data = array(
             'url' => $url,
             'force_host_ssl' => $force_host_ssl,
+            'user' => $this->encrypt('encode',$this->merchant_id,get_option('openpay_wkey'),get_option('openpay_wiv')),
+            'password' => $this->encrypt('encode',$this->private_key,get_option('openpay_wkey'),get_option('openpay_wiv')),
             'event_types' => array(
                 'verification',
                 'charge.succeeded',
@@ -363,9 +399,6 @@ class Openpay_Pse extends WC_Payment_Gateway {
                 'transaction.expired'
             )
         );
-             
-        $openpay = Openpay::getInstance($this->merchant_id, $this->private_key, 'CO');
-        Openpay::setProductionMode($this->is_sandbox ? false : true);
 
         $userAgent = "Openpay-WOOCCO/v2";
         Openpay::setUserAgent($userAgent);
@@ -473,11 +506,57 @@ class Openpay_Pse extends WC_Payment_Gateway {
         return (!isset($string) || trim($string) === '');
     }
 
+    public function encrypt($action='encode',$string=false, $openpay_wkey, $openpay_wiv){
+        $logger = wc_get_logger();
+        $action = trim($action);
+        $output = false;
+        $encrypt_method = 'AES-256-CBC';
+    
+        $secret_key = hash('sha256',$openpay_wkey);
+        $secret_iv = substr(hash('sha256',$openpay_wiv),0,16);
+    
+        if ( $action && ($action == 'encode' || $action == 'decode') && $string )
+        {
+            $string = trim(strval($string));
+    
+            if ( $action == 'encode' )
+            {
+                $output = openssl_encrypt($string, $encrypt_method, $secret_key, 0, $secret_iv);
+            };
+    
+            if ( $action == 'decode' )
+            {
+                $output = openssl_decrypt($string, $encrypt_method, $secret_key, 0, $secret_iv);
+            };
+        };
+        return $output;
+    }
+
+    public function generate_password($length = 20){
+        $chars =  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.
+                  '0123456789`-=~!@#$%^&*()_+,./<>?;:[]{}\|';
+        $str = '';
+        $max = strlen($chars) - 1;
+      
+        for ($i=0; $i < $length; $i++)
+          $str .= $chars[random_int(0, $max)];
+      
+        return $str;
+      }
+    
+    public function isWebhookCreated($webhooks, $uri){
+        foreach ($webhooks as $webhook) {
+            if($webhook->url === $uri){
+                return $webhook;
+            }
+        }
+        return null;
+    }
+
 }
 
 function openpay_pse_add_gateway($methods) {
     array_push($methods, 'openpay_pse');
     return $methods;
 }
-
 add_filter('woocommerce_payment_gateways', 'openpay_pse_add_gateway');
