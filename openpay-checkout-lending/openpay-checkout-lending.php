@@ -3,14 +3,14 @@
  * Plugin Name: Openpay Checkout Lending
  * Plugin URI: http://www.openpay.mx/docs/plugins/woocommerce.html
  * Description: Provides a lending payment method with Openpay for WooCommerce.
- * Version: 1.2.1
+ * Version: 1.3.0
  * Author: Openpay
  * Author URI: http://www.openpay.mx
  * Developer: Openpay
  * Text Domain: openpay-checkout-lending
  *
  * WC requires at least: 3.0
- * WC tested up to: 8.0.1
+ * WC tested up to: 8.5.2
  *
  * License: GNU General Public License v3.0
  * License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -43,6 +43,12 @@ add_action('plugins_loaded', 'openpay_checkout_lending_init_your_gateway', 0);
  */
 add_filter('woocommerce_payment_gateways', 'openpay_checkout_lending_add_gateway');
 
+
+add_action( 'before_woocommerce_init', function() {
+    if ( class_exists( \Automattic\WooCommerce\Utilities\FeaturesUtil::class ) ) {
+        \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__, true );
+    }
+} );
 
 /**
  * Adds the openpay_checkout_lending payment method to the list of WC payment methods

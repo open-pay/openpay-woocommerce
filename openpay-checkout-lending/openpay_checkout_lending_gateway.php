@@ -21,6 +21,14 @@ if (!class_exists('Openpay')) {
     protected $logger = null;
     protected $country = 'MX';
     protected $is_privacy_terms_accepted = "false";
+    protected $context;
+    protected $test_merchant_id;
+    protected $test_private_key;
+    protected $live_merchant_id;
+    protected $live_private_key;
+    protected $merchant_id;
+    protected $private_key;
+    protected $images_dir;
 
     public function __construct(){
         $this->id = 'openpay_checkout_lending'; 
@@ -51,7 +59,9 @@ if (!class_exists('Openpay')) {
     }
 
     function save_terms_conditions_acceptance( $order_id ) {
-        if ( $_POST['terms'] ) update_post_meta( $order_id, 'terms', esc_attr( $_POST['terms'] ) );
+        $order = wc_get_order( $order_id );
+        if ( $_POST['terms'] ) $order->update_meta_data('terms', esc_attr( $_POST['terms'] ) );
+        $order->save();
         }
 
         public function payment_fields() {
@@ -150,13 +160,14 @@ if (!class_exists('Openpay')) {
             }
 
             $order_id = $json->transaction->order_id;
-            $order = new WC_Order($order_id);
+            $order = wc_get_order( $order_id );
+            //$order = new WC_Order($order_id);
 
             if ($json->type == 'charge.succeeded' && $charge->status == 'completed') {
                 $date_to_int = strtotime($json->event_date);
                 $payment_date = date("Y-m-d", $date_to_int);
                 
-                update_post_meta($order->get_id(), 'openpay_payment_date', $payment_date);
+                $order->update_meta_data('openpay_payment_date', $payment_date);
                 $order->payment_complete();
                 $order->add_order_note(sprintf("Payment completed."));
             }else if($json->type == 'charge.failed' && $charge->status == 'failed'){
@@ -164,6 +175,7 @@ if (!class_exists('Openpay')) {
             }else if($json->type == 'charge.cancelled' && $charge->status == 'cancelled'){
                 $order->update_status('cancelled', 'Payment has been cancelled.');
             }
+            $order->save();
         }
     }
 
@@ -248,9 +260,9 @@ if (!class_exists('Openpay')) {
 
     public function process_payment($order_id) {
         global $woocommerce;
-        $this->order = new WC_Order($order_id);
-
-        if ( get_post_meta( $this->order->get_id(), 'terms', true ) == 'on' ) {
+        $this->order = wc_get_order($order_id);
+        //$this->order = new WC_Order($order_id);
+        if ( $this->order->get_meta('terms') == 'on' ) {
             $this->is_privacy_terms_accepted = "true";
             if ($this->processOpenpayCharge()) {
                 $this->order->reduce_order_stock();
@@ -366,14 +378,13 @@ if (!class_exists('Openpay')) {
             } else {
                 $customer_id = get_user_meta(get_current_user_id(), '_openpay_customer_id', true);
             }
-            update_post_meta($this->order->get_id(), '_transaction_id', $result_json->id);    
-
+            $this->order->update_meta_data('_transaction_id', $result_json->id);
             if($result_json->payment_method && $result_json->payment_method->type == 'lending'){
-                update_post_meta($this->order->get_id(), '_openpay_callback_url', $result_json->payment_method->callbackUrl);
+                $this->order->update_meta_data('_openpay_callback_url', $result_json->payment_method->callbackUrl);
             }else{
-                delete_post_meta($this->order->get_id(),'_openpay_callback_url');
+                $this->order->delete_meta_data('_openpay_callback_url');
             }
-            
+            $this->order->save();
             return true;
             }
         } 
@@ -532,10 +543,12 @@ if (!class_exists('Openpay')) {
 
 function checkout_lending_redirect_after_purchase() {
     global $wp;
+    $logger = wc_get_logger();
     if (is_checkout() && !empty($wp->query_vars['order-received']) ) {
         $order = new WC_Order($wp->query_vars['order-received']);
-        $url = get_post_meta($order->get_id(),'_openpay_callback_url',true);
-        delete_post_meta($order->get_id(),'_openpay_callback_url');
+        $url = $order->get_meta('_openpay_callback_url');
+        $logger->debug('checkout_lending_redirect_after_purchase URL: - ' . $url);
+        $order->delete_meta_data('_openpay_callback_url');
 
         if ($url && $order->get_status() == 'pending') {
             wp_redirect($url);
