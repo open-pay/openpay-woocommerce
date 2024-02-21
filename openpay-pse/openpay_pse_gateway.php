@@ -133,14 +133,12 @@ class Openpay_Pse extends WC_Payment_Gateway {
                 exit();
             }
             if ($json->type == 'charge.succeeded'){
-                if ($order_status != 'processing'){
-                    $payment_date = date("Y-m-d", strtotime($json->event_date));
-                    $order->update_meta_data( 'openpay_payment_date', $payment_date );
-                    $order->payment_complete();
-                    $order->add_order_note(sprintf("Payment completed. Confirmed by Webhook"));
-                    $order->update_meta_data('_transaction_id',$charge->id);
-                    $logger->info('webhook_handler Status => completed');
-                }
+                $payment_date = date("Y-m-d", strtotime($json->event_date));
+                $order->update_meta_data( 'openpay_payment_date', $payment_date );
+                $order->payment_complete();
+                $order->add_order_note(sprintf("Payment completed. Confirmed by Webhook"));
+                $order->update_meta_data('_transaction_id',$charge->id);
+                $logger->info('webhook_handler Status => completed');
             } else if($json->type == 'charge.failed') {
                 if ($order_status != 'failed'){
                     $order->add_order_note(sprintf("%s PSE Payment Failed with message: '%s'. Confirmed by Webhook", $this->GATEWAY_NAME, $json->transaction->error_message));
@@ -220,6 +218,10 @@ class Openpay_Pse extends WC_Payment_Gateway {
         $redirect_url = site_url('/', $protocol) . '?wc-api=pse_confirm';
         $amount = number_format((float) $this->order->get_total(), 2, '.', '');
 
+
+        if (!$openpay_customer = $this->getOpenpayCustomer()) return false;
+        
+        
         $charge_request = array(
             'method' => 'bank_account',
             'currency' => strtolower(get_woocommerce_currency()),
@@ -230,7 +232,9 @@ class Openpay_Pse extends WC_Payment_Gateway {
             'redirect_url' => $redirect_url
         );
 
-        $openpay_customer = $this->getOpenpayCustomer();
+        if (!is_user_logged_in()){
+            $charge_request['customer'] = $openpay_customer;
+        }
 
         $result_json = $this->createOpenpayCharge($openpay_customer, $charge_request);
 
@@ -283,14 +287,18 @@ class Openpay_Pse extends WC_Payment_Gateway {
     }
 
     public function createOpenpayCharge($customer, $charge_request) {
-        Openpay::getInstance($this->merchant_id, $this->private_key, 'CO');
+        $openpay = Openpay::getInstance($this->merchant_id, $this->private_key, 'CO');
         Openpay::setProductionMode($this->is_sandbox ? false : true);
 
         $userAgent = "Openpay-WOOCCO/v2";
         Openpay::setUserAgent($userAgent);
 
         try {
-            $charge = $customer->charges->create($charge_request);
+            if (!is_user_logged_in()) {
+                $charge = $openpay->charges->create($charge_request);
+            } else {
+                $charge = $customer->charges->create($charge_request);
+            }
             return $charge;
         } catch (Exception $e) {
             $this->error($e);
@@ -299,6 +307,7 @@ class Openpay_Pse extends WC_Payment_Gateway {
     }
 
     public function getOpenpayCustomer() {
+        $logger = wc_get_logger();
         $customer_id = null;
         if (is_user_logged_in()) {
             if ($this->is_sandbox) {
@@ -311,6 +320,7 @@ class Openpay_Pse extends WC_Payment_Gateway {
         if ($this->isNullOrEmptyString($customer_id)) {
             return $this->createOpenpayCustomer();
         } else {
+            $logger->info('customer => '. $customer_id);
             $openpay = Openpay::getInstance($this->merchant_id, $this->private_key, 'CO');
             Openpay::setProductionMode($this->is_sandbox ? false : true);
             try {
@@ -323,7 +333,7 @@ class Openpay_Pse extends WC_Payment_Gateway {
     }
 
     public function createOpenpayCustomer() {
-        $customerData = array(
+        $customer_data = array(
             'name' => $this->order->get_billing_first_name(),
             'last_name' => $this->order->get_billing_last_name(),
             'email' => $this->order->get_billing_email(),
@@ -333,7 +343,7 @@ class Openpay_Pse extends WC_Payment_Gateway {
         
         if ($this->hasAddress($this->order)) {
             $customer_data = $this->formatAddress($customer_data, $this->order);
-        }      
+        }
 
         $openpay = Openpay::getInstance($this->merchant_id, $this->private_key, 'CO');
         Openpay::setProductionMode($this->is_sandbox ? false : true);
@@ -342,17 +352,17 @@ class Openpay_Pse extends WC_Payment_Gateway {
         Openpay::setUserAgent($userAgent);
 
         try {
-            $customer = $openpay->customers->add($customerData);
-
             if (is_user_logged_in()) {
+                $customer = $openpay->customers->add($customer_data);
                 if ($this->is_sandbox) {
                     update_user_meta(get_current_user_id(), '_openpay_customer_sandbox_id', $customer->id);
                 } else {
                     update_user_meta(get_current_user_id(), '_openpay_customer_id', $customer->id);
                 }
+                return $customer;
+            } else {
+                return $customer_data;
             }
-
-            return $customer;
         } catch (Exception $e) {
             $this->error($e);
             return false;
@@ -437,8 +447,10 @@ class Openpay_Pse extends WC_Payment_Gateway {
             /* ERRORES GENERALES */
             case '1000':
             case '1004':
-            case '1005':
                 $msg = 'Servicio no disponible.';
+                break;
+            case '1005':
+                $msg = 'Cliente no encontrado, intente con otro usuario';
                 break;
             default: /* Demás errores 400 */
                 $msg = 'La petición no pudo ser procesada.';

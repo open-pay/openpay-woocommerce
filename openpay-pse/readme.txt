@@ -4,7 +4,7 @@ Tags: payments, payment gateway, openpay, woocommerce
 Requires at least: 4.8
 Tested up to: 6.4.3
 Requires PHP: 5.6
-Stable tag: 1.7.0
+Stable tag: 1.7.2
 License: GNU General Public License v3.0
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -16,8 +16,14 @@ For more information about this module go to:
 http://www.openpay.mx/docs/plugins/woocommerce.html
 
 == Changelog ==
+= 1.7.2 =
+* Actualización de servicio /customer/charge
+= 1.7.1 =
+* Fix. undefined variables
 = 1.7.0 =
 * Actualización de compatibilidad con Wordpress 6.4.3 & WooCommerce 8.5.2
+= 1.6.3 =
+* Actualización de autenticación SHA256 para notificaciones webhook..
 = 1.6.2 =
 * Actualización funcion fecha para correcto envio de webhooks en versiones de pho 7.4 en adelante.
 = 1.6.1 =
