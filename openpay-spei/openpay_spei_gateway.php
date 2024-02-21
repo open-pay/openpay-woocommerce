@@ -20,6 +20,16 @@ class Openpay_Spei extends WC_Payment_Gateway
     protected $transaction_id = null;
     protected $transactionErrorMessage = null;
     protected $currencies = array('MXN');
+    protected $test_merchant_id;
+    protected $test_private_key;
+    protected $live_merchant_id;
+    protected $live_private_key;
+    protected $deadline;
+    protected $merchant_id;
+    protected $private_key;
+    protected $pdf_url_base;
+    protected $images_dir;
+
 
     public function __construct() {
         $this->id = 'openpay_spei';
@@ -94,7 +104,7 @@ class Openpay_Spei extends WC_Payment_Gateway
 
             if ($json->type == 'charge.succeeded' && $charge->status == 'completed') {            
                 $payment_date = date("Y-m-d", strtotime($json->event_date));
-                update_post_meta($order->get_id(), 'openpay_payment_date', $payment_date);
+                $order->update_meta_data('openpay_payment_date', $payment_date);
                 $order->payment_complete();
                 $order->add_order_note(sprintf("Payment completed.")); 
             }else if($json->type == 'transaction.expired' && $charge->status == 'cancelled'){
@@ -184,13 +194,12 @@ class Openpay_Spei extends WC_Payment_Gateway
             //WC()->session->set('pdf_url', $pdf_url);
             //Save data for the ORDER
             if($this->is_sandbox){
-                update_post_meta($this->order->get_id(), '_openpay_customer_sandbox_id', $openpay_customer->id);
+                $this->order->update_meta_data('_openpay_customer_sandbox_id', $openpay_customer->id);
             }else{
-                update_post_meta($this->order->get_id(), '_openpay_customer_id', $openpay_customer->id);
+                $this->order->update_meta_data('_openpay_customer_id', $openpay_customer->id);
             }
-            update_post_meta($this->order->get_id(), '_transaction_id', $result_json->id);            
-            update_post_meta($this->order->get_id(), '_pdf_url', $pdf_url);            
-
+            $this->order->update_meta_data('_transaction_id', $result_json->id);
+            $this->order->update_meta_data('_pdf_url', $pdf_url);
             return true;
         } else {
             return false;
