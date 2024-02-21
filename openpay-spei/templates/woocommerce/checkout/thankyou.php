@@ -22,7 +22,9 @@ if (!defined('ABSPATH')) {
 
 <div class="woocommerce-order">
 
-    <?php if ($order) : ?>
+    <?php if ($order) :
+        do_action( 'woocommerce_before_thankyou', $order->get_id() );
+    ?>
 
         <?php if ($order->has_status('failed')) : ?>
 
@@ -67,9 +69,9 @@ if (!defined('ABSPATH')) {
 
             </ul>
             
-            <?php if(strlen(get_post_meta($order->get_id(), '_pdf_url', true)) && ($order->get_payment_method() == 'openpay_stores' || $order->get_payment_method() == 'openpay_spei')): ?> 
+            <?php if(strlen( $order->get_meta('_pdf_url')) && ($order->get_payment_method() == 'openpay_stores' || $order->get_payment_method() == 'openpay_spei')): ?>
                 <h2 class="woocommerce-order-details__title">Recibo de pago</h2>
-                <iframe id="pdf" src="<?php echo get_post_meta($order->get_id(), '_pdf_url', true) ?>" style="width:100%; height:950px; visibility: visible !important; opacity: 1 !important;" frameborder="0"></iframe>
+                <iframe id="pdf" src="<?php echo $order->get_meta('_pdf_url'); ?>" style="width:100%; height:950px; visibility: visible !important; opacity: 1 !important;" frameborder="0"></iframe>
             <?php endif; ?>    
             
         <?php endif; ?>
