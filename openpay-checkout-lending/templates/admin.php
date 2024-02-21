@@ -9,7 +9,7 @@
 ?>
 
 <h3>
-    <?php _e('Openpay Stores', 'woothemes'); ?>
+    <?php _e('Openpay Checkout Lending', 'woothemes'); ?>
 </h3>
 
 <?php if(!$this->validateCurrency()): ?>
