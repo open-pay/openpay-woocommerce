@@ -31,7 +31,16 @@ class Openpay_Stores extends WC_Payment_Gateway
     protected $logger = null;
     protected $country = '';
     protected $iva = 0;
-    protected $show_map = false;
+    protected $test_merchant_id;
+    protected $test_private_key;
+    protected $live_merchant_id;
+    protected $live_private_key;
+    protected $deadline;
+    protected $merchant_id;
+    protected $private_key;
+    protected $pdf_url_base;
+    protected $images_dir;
+
 
     public function __construct() {
         $this->id = 'openpay_stores';
@@ -44,8 +53,7 @@ class Openpay_Stores extends WC_Payment_Gateway
         
         $this->country = $this->settings['country'];
         $this->currencies = UtilsStores::getCurrencies($this->country);        
-        $this->iva = $this->country == 'CO' ? $this->settings['iva'] : 0;     
-        $this->show_map = $this->country == 'MX' ? $this->settings['show_map'] : false;     
+        $this->iva = $this->country == 'CO' ? $this->settings['iva'] : 0;
 
         $this->title = 'Pago en efectivo en tiendas de conveniencia';
         $this->description = '';
@@ -133,7 +141,7 @@ class Openpay_Stores extends WC_Payment_Gateway
 
             if ($json->type == 'charge.succeeded' && $charge->status == 'completed') {
                 $payment_date = date("Y-m-d", strtotime($json->event_date));
-                update_post_meta($order->get_id(), 'openpay_payment_date', $payment_date);
+                $order->update_meta_data('openpay_payment_date', $payment_date);
                 $order->payment_complete();
                 $order->add_order_note(sprintf("Payment completed."));
             }else if($json->type == 'transaction.expired' && $charge->status == 'cancelled'){
@@ -249,9 +257,9 @@ class Openpay_Stores extends WC_Payment_Gateway
             } else {
                 $customer_id = get_user_meta(get_current_user_id(), '_openpay_customer_id', true);
             }
-            update_post_meta($this->order->get_id(), '_transaction_id', $result_json->id);
-            update_post_meta($this->order->get_id(), '_country', $this->country);
-            update_post_meta($this->order->get_id(), '_pdf_url', $pdf_url);            
+            $this->order->update_meta_data('_transaction_id', $result_json->id);
+            $this->order->update_meta_data('_country', $this->country);
+            $this->order->update_meta_data('_pdf_url', $pdf_url);
             
             return true;
         } else {
