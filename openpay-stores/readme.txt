@@ -16,10 +16,10 @@ For more information about this module go to:
 http://www.openpay.mx/docs/plugins/woocommerce.html
 
 == Changelog ==
-= 1.11.4 =
-* Actualización de certificado.
 = 1.12.0 =
 * Actualización de compatibilidad con Wordpress 6.4.3 & WooCommerce 8.5.2
+= 1.11.4 =
+* Actualización de certificado.
 = 1.11.3 =
 * Se sustituye función de mostrar mapa para México.
 = 1.11.2 =
