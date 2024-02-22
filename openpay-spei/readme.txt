@@ -16,10 +16,10 @@ For more information about this module go to:
 http://www.openpay.mx/docs/plugins/woocommerce.html
 
 == Changelog ==
-= 1.9.3 =
-* Actualización de certificado.
 = 1.10.0 =
 * Actualización de compatibilidad con Wordpress 6.4.3 & WooCommerce 8.5.2
+= 1.9.3 =
+* Actualización de certificado.
 = 1.9.2 =
 * Se valida el soporte para la nueva version de wordpress 6.3.1, woocommerce 8.0.1 y php 8.1
 = 1.9.1 =
