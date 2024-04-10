@@ -205,7 +205,8 @@ class Openpay_Pse extends WC_Payment_Gateway {
             "description" => sprintf("Items: %s", $this->getProductsDetail()),
             'order_id' => $this->order->get_id(),
             'iva' => $this->iva,
-            'redirect_url' => $redirect_url
+            'redirect_url' => $redirect_url,
+            "origin_channel" => "PLUGIN_WOOCOMMERCE",
         );
 
         $openpay_customer = $this->getOpenpayCustomer();

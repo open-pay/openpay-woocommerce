@@ -181,7 +181,8 @@ class Openpay_Spei extends WC_Payment_Gateway
             "amount" => $amount,
             "description" => sprintf("Cargo para %s", $this->order->get_billing_email()),
             "order_id" => $this->order->get_id(),
-            'due_date' => $due_date
+            'due_date' => $due_date,
+            "origin_channel" => "PLUGIN_WOOCOMMERCE"
         );
 
         $openpay_customer = $this->getOpenpayCustomer();
