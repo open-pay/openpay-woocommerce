@@ -4,7 +4,7 @@ use Automattic\WooCommerce\Internal\DataStores\Orders\CustomOrdersTableControlle
  * Plugin Name: Openpay Cards Plugin
  * Plugin URI: http://www.openpay.mx/docs/plugins/woocommerce.html
  * Description: Provides a credit card payment method with Openpay for WooCommerce.
- * Version: 2.9.0
+ * Version: 2.9.2
  * Author: Openpay
  * Author URI: http://www.openpay.mx
  * Developer: Openpay
@@ -125,16 +125,17 @@ function openpay_woocommerce_confirm() {
 function wc_custom_redirect_after_purchase() {
     global $wp;
     $logger = wc_get_logger();
-    $logger->debug('wc_custom_redirect_after_purchase ');
     if (is_checkout() && !empty($wp->query_vars['order-received'])) {
         $order = new WC_Order($wp->query_vars['order-received']);
         $redirect_url = $order->get_meta('_openpay_3d_secure_url');
-        $logger->debug('is_checkout() : ' .  $redirect_url);
-        $logger->debug('is_checkout() : ' .  $order->get_status());
+        $logger->debug('wc_custom_redirect_after_purchase ');
+        $logger->debug('3DS_redirect_url : ' .  $redirect_url);
+        $logger->debug('order_status : ' .  $order->get_status());
 
         if ($redirect_url && $order->get_status() != 'processing') {
             $order->delete_meta_data('_openpay_3d_secure_url');
-            $logger->debug('wc_custom_redirect_after_purchase: ' . $redirect_url);
+            $order->save();
+            $logger->debug('order not processed redirect_url : ' . $redirect_url);
             wp_redirect($redirect_url);
             exit();
         }

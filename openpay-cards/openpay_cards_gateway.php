@@ -614,6 +614,7 @@ class Openpay_Cards extends WC_Payment_Gateway
             "order_id" => $this->order->get_id(),
             'use_card_points' => $use_card_points,
             'capture' => $this->capture,
+            'origin_channel' => "PLUGIN_WOOCOMMERCE"
         );
 
         if($this->country === 'MX' && $this->merchant_classification == 'eglobal'){
