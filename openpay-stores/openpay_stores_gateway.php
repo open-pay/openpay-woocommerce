@@ -250,7 +250,7 @@ class Openpay_Stores extends WC_Payment_Gateway
 
         if ($result_json != false) {
             $this->transaction_id = $result_json->id;
-            $pdf_url = $this->pdf_url_base.'/'.$this->merchant_id.'\/transaction\/'.$result_json->id;
+            $pdf_url = $this->pdf_url_base.'/'.$this->merchant_id. "/".'transaction'."/".$result_json->id;
             //WC()->session->set('pdf_url', $pdf_url);
             //Save data for the ORDER
             if ($this->is_sandbox) {
