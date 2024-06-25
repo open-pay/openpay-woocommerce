@@ -356,7 +356,8 @@ if (!class_exists('Openpay')) {
                     "phone_number" => $this->order->get_billing_phone(),
                     "email" => $this->order->get_billing_email()
                 )
-            )
+            ),
+            'origin_channel' => "PLUGIN_WOOCOMMERCE"
         );
 
         $openpay_customer = $this->getOpenpayCustomer();
