@@ -4,7 +4,7 @@ use Automattic\WooCommerce\Internal\DataStores\Orders\CustomOrdersTableControlle
  * Plugin Name: Openpay Cards Plugin
  * Plugin URI: http://www.openpay.mx/docs/plugins/woocommerce.html
  * Description: Provides a credit card payment method with Openpay for WooCommerce.
- * Version: 2.9.2
+ * Version: 2.9.3
  * Author: Openpay
  * Author URI: http://www.openpay.mx
  * Developer: Openpay
@@ -21,7 +21,7 @@ use Automattic\WooCommerce\Internal\DataStores\Orders\CustomOrdersTableControlle
 
 function openpay_cards_init_your_gateway() {
     if (class_exists('WC_Payment_Gateway')) {
-        include_once('openpay_cards_gateway.php');
+        require_once('openpay_cards_gateway.php');
     }
     if(!class_exists('Utils')) {
         require_once("utils/utils.php");
