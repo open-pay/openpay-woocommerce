@@ -1,12 +1,13 @@
 <?php
-
-if (!class_exists('Openpay')) {
-    require_once("lib/openpay/Openpay.php");
+if (file_exists(dirname(__FILE__) . '/lib/openpay/Openpay.php')) {
+    require_once(dirname(__FILE__) . '/lib/openpay/Openpay.php');
 }
 
 if(!class_exists('Utils')) {
     require_once("utils/utils.php");
 }
+
+use Openpay\Data\Openpay as Openpay;
 
 /*
   Title:	Openpay Payment extension for WooCommerce
@@ -916,9 +917,9 @@ class Openpay_Cards extends WC_Payment_Gateway
     }
     
     public function getOpenpayInstance() {
-        Openpay::setOriginMerchant($this->merchant_classification);
-        $openpay = Openpay::getInstance($this->merchant_id, $this->private_key, $this->country);
+        Openpay::setClassificationMerchant($this->merchant_classification);
         Openpay::setProductionMode($this->is_sandbox ? false : true);
+        $openpay = Openpay::getInstance($this->merchant_id, $this->private_key, $this->country, $this->getClientIp());
 
         if($this->merchant_classification === "eglobal")
             $userAgent = "BBVA-WOOC".$this->country."/v1";
@@ -963,6 +964,24 @@ class Openpay_Cards extends WC_Payment_Gateway
         }
     }
 
+    function getClientIp() {
+        // Recogemos la IP de la cabecera de la conexión
+        if (!empty($_SERVER['HTTP_CLIENT_IP']))   
+        {
+          $ipAdress = $_SERVER['HTTP_CLIENT_IP'];
+        }
+        // Caso en que la IP llega a través de un Proxy
+        elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR']))  
+        {
+          $ipAdress = $_SERVER['HTTP_X_FORWARDED_FOR'];
+        }
+        // Caso en que la IP lleva a través de la cabecera de conexión remota
+        else
+        {
+          $ipAdress = $_SERVER['REMOTE_ADDR'];
+        }
+        return $ipAdress;
+      }
 
     public function get_order_auth_amount( $order ) {
         $order_id = $order->get_id();
