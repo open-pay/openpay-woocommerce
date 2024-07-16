@@ -4,7 +4,7 @@ Tags: payment gateway, openpay
 Requires at least: 4.8
 Tested up to: 6.4.3
 Requires PHP: 5.9
-Stable tag: 2.9.2
+Stable tag: 2.9.3
 License: GNU General Public License v3.0
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -16,6 +16,8 @@ For more information about this module go to:
 http://www.openpay.mx/docs/plugins/woocommerce.html
 
 == Changelog ==
+= 2.9.3 =
+* Enhancement. Actualización de SDK y parámetros requeridos.
 = 2.9.1 =
 * Corrección a MANY REDIRECTS error en transacciones con 3DS.
 = 2.9.0 =
