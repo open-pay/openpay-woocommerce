@@ -261,7 +261,7 @@ class Openpay_Cards extends WC_Payment_Gateway
                 'title' => __('¿Cómo procesar el cargo?', 'woocommerce'),
                 'type' => 'select',
                 'class' => 'wc-enhanced-select',
-                'description' => __('¿Qué es la autenticación selectiva? Es cuando Openpay detecta cierto riesgo de fraude y envía el cargo a través de 3D Secure.', 'woocommerce'),
+                'description' => __('¿Qué es 3D Secure? Es una forma de pago que autentifica al comprador como legítimo titular de la tarjeta que está utilizando.', 'woocommerce'),
                 'default' => 'direct',
                 'desc_tip' => true,
                 'options' => array(
