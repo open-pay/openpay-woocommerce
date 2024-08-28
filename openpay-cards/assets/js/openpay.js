@@ -279,7 +279,7 @@ jQuery(document).ready(function () {
                 break;
 
             case 2006:
-                msg = "El código de seguridad de la tarjeta (CVV2) no fue proporcionado.";
+                msg = "El código de seguridad de la tarjeta (CVV2) no fue proporcionado o es incorrecto";
                 break;
 
             case 1:
