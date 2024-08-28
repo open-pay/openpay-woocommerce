@@ -261,7 +261,7 @@ class Openpay_Cards extends WC_Payment_Gateway
                 'title' => __('¿Cómo procesar el cargo?', 'woocommerce'),
                 'type' => 'select',
                 'class' => 'wc-enhanced-select',
-                'description' => __('¿Qué es la autenticación selectiva? Es cuando Openpay detecta cierto riesgo de fraude y envía el cargo a través de 3D Secure.', 'woocommerce'),
+                'description' => __('¿Qué es 3D Secure? Es una forma de pago que autentifica al comprador como legítimo titular de la tarjeta que está utilizando.', 'woocommerce'),
                 'default' => 'direct',
                 'desc_tip' => true,
                 'options' => array(
@@ -813,6 +813,12 @@ class Openpay_Cards extends WC_Payment_Gateway
                 $this->logger->error('CVV update has failed.');
                 throw new Exception("Error en la transacción: No se pudo completar tu pago.");
             }
+        }elseif(!is_numeric($cvv)){
+            $this->logger->error('CVV is not valid: Not numeric value');
+            throw new Exception("Error en la transacción: No se pudo completar tu pago. El cvv es incorrecto");
+        }elseif(!(strlen($cvv) == 3 || strlen($cvv) == 4)){
+            $this->logger->error('CVV is not valid: Incorrect number of digits');
+            throw new Exception("Error en la transacción: No se pudo completar tu pago. El cvv es incorrecto");
         }else{
             $this->logger->error('CVV is not valid');
             throw new Exception("Error en la transacción: No se pudo completar tu pago.");
