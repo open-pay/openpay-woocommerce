@@ -980,6 +980,7 @@ class Openpay_Cards extends WC_Payment_Gateway
         {
           $ipAdress = $_SERVER['REMOTE_ADDR'];
         }
+        $this->logger->debug('IP IN HEADER: ' . $ipAdress);  
         $ipAdress = trim(explode(",", $ipAdress)[0]);
         return $ipAdress;
       }
