@@ -464,13 +464,12 @@ class Openpay_Cards extends WC_Payment_Gateway
         global $woocommerce;
          
         $scripts = Utils::getUrlScripts($this->country);
-        $openpayJs = 'openpay_js';
         $openpayFraud = 'openpay_fraud_js';
 
-        wp_enqueue_script($openpayJs, $scripts[$openpayJs], '', '', true);
+        wp_enqueue_script($scripts['openpay_js']['tag'], plugins_url($scripts['openpay_js']['script'], __FILE__), '', '', true);
         wp_enqueue_script($openpayFraud, $scripts[$openpayFraud], '', '', true);      
         wp_enqueue_script('payment', plugins_url('assets/js/jquery.payment.js', __FILE__), array( 'jquery' ), '', true);
-        wp_enqueue_script('openpay', plugins_url('assets/js/openpay.js', __FILE__), array( 'jquery' ), '', true);        
+        wp_enqueue_script('openpay', plugins_url('assets/js/openpay.js', __FILE__), array( 'jquery' ), '', true);     
 
         $openpay_params = array(
             'merchant_id' => $this->merchant_id,
@@ -1018,4 +1017,21 @@ function openpay_cards_add_creditcard_gateway($methods) {
     return $methods;
 }
 
+function openpay_scripts_modifier($tag, $handle, $src){
+    if ( 'openpay' === $handle ) {
+        return '<script src="' . $src . '" type="text/javascript" integrity="sha256-Ee+nEno1HbGM66Tn1PmOTlQr8cc6dJkebllcH+CeY5g=" crossorigin="anonymous"></script>' . "\n";
+    }
+    if ( 'mx_openpay_js' === $handle ) {
+        return '<script src="' . $src . '" type="text/javascript" integrity="sha256-xqkgh3EIA2Ug01jFRTfeqJeSkIr/wMJ9Ue9ja9MgiRY=" crossorigin="anonymous"></script>' . "\n";
+    }
+    if ( 'co_openpay_js' === $handle ) {
+        return '<script src="' . $src . '" type="text/javascript" integrity="sha256-OK9qfWKqHJYnsxWiqczAt8TTIOYYZbx30krm/wE6EmI=" crossorigin="anonymous"></script>' . "\n";
+    }
+    if ( 'pe_openpay_js' === $handle ) {
+        return '<script src="' . $src . '" type="text/javascript" integrity="sha256-lIslBTmdkKjqAtij4q5AvkaBzU+8ac/kkGVFjt8Frcs=" crossorigin="anonymous"></script>' . "\n";
+    }
+    return $tag;
+}
+
 add_filter('woocommerce_payment_gateways', 'openpay_cards_add_creditcard_gateway');
+add_filter( 'script_loader_tag', 'openpay_scripts_modifier', 10, 3 );
