@@ -21,7 +21,9 @@ class Utils {
 
     public static function getUrlScripts($country){
         $scripts = [
-            'openpay_js' => '',
+            'openpay_js' => [
+                'tag'=>'',
+                'script'=>''],
             'openpay_fraud_js' => ''
         ];
         $routeBaseOpenpayJs = '%s/openpay.v1.min.js';
@@ -30,17 +32,21 @@ class Utils {
         switch ($country) {
             case 'MX':
                 $baseUrl = 'https://openpay.s3.amazonaws.com';
-                $scripts['openpay_js'] = sprintf($routeBaseOpenpayJs, $baseUrl);
+                $scripts['openpay_js']['tag'] = 'mx_openpay_js';
+                $scripts['openpay_js']['script'] = 'assets/js/mx-openpay.v1.min.js';
+
                 $scripts['openpay_fraud_js'] = sprintf($routeBaseOpenpayFraud, $baseUrl);
                 return $scripts;
             case 'CO':
                 $baseUrl = 'https://resources.openpay.co';
-                $scripts['openpay_js'] = sprintf($routeBaseOpenpayJs, $baseUrl);
+                $scripts['openpay_js']['tag'] = 'co_openpay_js';
+                $scripts['openpay_js']['script'] = 'assets/js/co-openpay.v1.min.js';
                 $scripts['openpay_fraud_js'] = sprintf($routeBaseOpenpayFraud, $baseUrl);
                 return $scripts;
             case 'PE':
                 $baseUrl = 'https://js.openpay.pe';
-                $scripts['openpay_js'] = sprintf($routeBaseOpenpayJs, $baseUrl);
+                $scripts['openpay_js']['tag'] = 'pe_openpay_js';
+                $scripts['openpay_js']['script'] = 'assets/js/pe-openpay.v1.min.js';
                 $scripts['openpay_fraud_js'] = sprintf($routeBaseOpenpayFraud, $baseUrl);
                 return $scripts;
             default:
