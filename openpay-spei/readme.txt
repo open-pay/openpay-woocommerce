@@ -16,8 +16,6 @@ For more information about this module go to:
 http://www.openpay.mx/docs/plugins/woocommerce.html
 
 == Changelog ==
-= 1.10.1 =
-* Se remueve la configuracion de tamaño de texto impuesta por bootstrap
 = 1.10.0 =
 * Actualización de compatibilidad con Wordpress 6.4.3 & WooCommerce 8.5.2
 = 1.9.3 =
