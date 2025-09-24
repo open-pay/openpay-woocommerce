@@ -39,7 +39,8 @@ class Openpay_Spei extends WC_Payment_Gateway
         $this->init_form_fields();
         $this->init_settings();
 
-        $this->title = 'Pago con transferencia interbancaria vía SPEI';
+        $this->title = 'Pago seguro con transferencia';
+        $this->icon = 'https://img.openpay.mx/plugins/spei_logo.svg';
         $this->description = '';
         $this->is_sandbox = strcmp($this->settings['sandbox'], 'yes') == 0;
         $this->test_merchant_id = $this->settings['test_merchant_id'];
