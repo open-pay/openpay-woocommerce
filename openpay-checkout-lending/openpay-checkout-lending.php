@@ -3,7 +3,7 @@
  * Plugin Name: Openpay Checkout Lending
  * Plugin URI: http://www.openpay.mx/docs/plugins/woocommerce.html
  * Description: Provides a lending payment method with Openpay for WooCommerce.
- * Version: 1.3.2
+ * Version: 1.3.3
  * Author: Openpay
  * Author URI: http://www.openpay.mx
  * Developer: Openpay
