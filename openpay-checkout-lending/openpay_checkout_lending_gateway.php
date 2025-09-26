@@ -32,11 +32,13 @@ if (!class_exists('Openpay')) {
 
     public function __construct(){
         $this->id = 'openpay_checkout_lending'; 
-        $this->method_title = __('Openpay Checkout Lending', 'openpay_checkout_lending'); 
+        $this->method_title = __('Paga seguro con Kueski Pay', 'openpay_checkout_lending');
+        $this->title = 'Paga seguro con Kueski Pay';
+        $this->icon = 'https://img.openpay.mx/plugins/kueskipay_logo.svg';
         $this->has_fields = true;
         $this->init_form_fields();
         $this->init_settings();
-        $this->title = 'Compra ahora, paga después';
+
         $this->description = '';
         $this->logger = wc_get_logger();
         $this->context = array( 'source' => 'Openpay_Checkout_Lending-log' );

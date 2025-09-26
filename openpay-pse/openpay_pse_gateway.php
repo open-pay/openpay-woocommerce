@@ -30,13 +30,14 @@ class Openpay_Pse extends WC_Payment_Gateway {
 
     public function __construct() {
         $this->id = 'openpay_pse';
+        $this->icon = 'https://img.openpay.mx/plugins/pse_logo.svg';
         $this->method_title = __('Openpay PSE', 'openpay_pse');
         $this->has_fields = true;
 
         $this->init_form_fields();
         $this->init_settings();
 
-        $this->title = 'Pago vía PSE';
+        $this->title = 'Pago con PSE';
         $this->description = '';
         $this->is_sandbox = strcmp($this->settings['sandbox'], 'yes') == 0;
         $this->test_merchant_id = $this->settings['test_merchant_id'];

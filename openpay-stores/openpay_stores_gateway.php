@@ -44,7 +44,7 @@ class Openpay_Stores extends WC_Payment_Gateway
 
     public function __construct() {
         $this->id = 'openpay_stores';
-        $this->method_title = __('Openpay Stores', 'openpay_stores');
+        $this->method_title = __('Pago seguro con efectivo', 'openpay_stores');
         $this->has_fields = true;
 
         $this->init_form_fields();
@@ -55,7 +55,18 @@ class Openpay_Stores extends WC_Payment_Gateway
         $this->currencies = UtilsStores::getCurrencies($this->country);        
         $this->iva = $this->country == 'CO' ? $this->settings['iva'] : 0;
 
-        $this->title = 'Pago en efectivo en tiendas de conveniencia';
+        switch ($this->country){
+            case 'MX':
+                $this->title = 'Pago seguro con efectivo';
+                break;
+            case 'CO':
+                $this->title = 'Pago con efectivo';
+                break;
+            case 'PE':
+                $this->title = 'Pago en agencias';
+                break;
+        }
+
         $this->description = '';
         $this->is_sandbox = strcmp($this->settings['sandbox'], 'yes') == 0;
         $this->test_merchant_id = $this->settings['test_merchant_id'];
@@ -69,6 +80,8 @@ class Openpay_Stores extends WC_Payment_Gateway
         $this->private_key = $this->is_sandbox ? $this->test_private_key : $this->live_private_key;
                 
         $this->pdf_url_base = UtilsStores::getUrlPdfBase($this->is_sandbox, $this->country);
+
+
         
         // tell WooCommerce to save options
         add_action('woocommerce_update_options_payment_gateways_'.$this->id, array($this, 'process_admin_options'));
