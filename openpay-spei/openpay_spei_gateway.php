@@ -172,9 +172,11 @@ class Openpay_Spei extends WC_Payment_Gateway
     }
 
     protected function processOpenpayCharge() {
-                
-        date_default_timezone_set('America/Mexico_City');
-        $due_date = date('Y-m-d\TH:i:s', strtotime('+ '.$this->deadline.' hours'));
+
+        $timezone = new DateTimeZone('America/Mexico_City');
+        $dueDate = new DateTime('now', $timezone);
+        $dueDate->modify('+ '.absint($this->deadline).' hours');
+        $due_date = $dueDate->format('Y-m-d\TH:i:s');
         $amount = number_format((float) $this->order->get_total(), 2, '.', '');
         
         $charge_request = array(
