@@ -312,7 +312,7 @@ class Openpay_Pse extends WC_Payment_Gateway {
         );
         
         if ($this->hasAddress($this->order)) {
-            $customer_data = $this->formatAddress($customer_data, $this->order);
+            $customerData = $this->formatAddress($customerData, $this->order);
         }      
 
         $openpay = Openpay::getInstance($this->merchant_id, $this->private_key, 'CO');
@@ -339,13 +339,13 @@ class Openpay_Pse extends WC_Payment_Gateway {
         }
     }
     
-    private function formatAddress($customer_data, $order) {
-            $customer_data['customer_address'] = array(
+    private function formatAddress($customerData, $order) {
+            $customerData['customer_address'] = array(
                 'department' => $order->get_billing_state(),
                 'city' => $order->get_billing_city(),
                 'additional' => substr($order->get_billing_address_1(), 0, 200).' '.substr($order->get_billing_address_2(), 0, 50)
             );
-        return $customer_data;
+        return $customerData;
     }
 
     public function createWebhook($force_host_ssl, $merchant_id, $secret_key) {

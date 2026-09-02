@@ -738,7 +738,7 @@ class Openpay_Cards extends WC_Payment_Gateway
     }
 
     public function createOpenpayCustomer() {
-        $customer_data = array(            
+        $customerData = array(            
             'name' => $this->order->get_billing_first_name(),
             'last_name' => $this->order->get_billing_last_name(),
             'email' => $this->order->get_billing_email(),
@@ -747,13 +747,13 @@ class Openpay_Cards extends WC_Payment_Gateway
         );
         
         if ($this->hasAddress($this->order)) {
-            $customer_data = $this->formatAddress($customer_data, $this->order);
+            $customerData = $this->formatAddress($customerData, $this->order);
         }                
 
         $openpay = $this->getOpenpayInstance();
 
         try {
-            $customer = $openpay->customers->add($customer_data);
+            $customer = $openpay->customers->add($customerData);
 
             if (is_user_logged_in()) {
                 if ($this->is_sandbox) {
@@ -824,9 +824,9 @@ class Openpay_Cards extends WC_Payment_Gateway
         }
     }
     
-    private function formatAddress($customer_data, $order) {
+    private function formatAddress($customerData, $order) {
         if ($this->country === 'MX' || $this->country === 'PE') {
-            $customer_data['address'] = array(
+            $customerData['address'] = array(
                 'line1' => substr($order->get_billing_address_1(), 0, 200),
                 'line2' => substr($order->get_billing_address_2(), 0, 50),
                 'state' => $order->get_billing_state(),
@@ -835,14 +835,14 @@ class Openpay_Cards extends WC_Payment_Gateway
                 'country_code' => $order->get_billing_country()
             );
         } else if ($this->country === 'CO' ) {
-            $customer_data['customer_address'] = array(
+            $customerData['customer_address'] = array(
                 'department' => $order->get_billing_state(),
                 'city' => $order->get_billing_city(),
                 'additional' => substr($order->get_billing_address_1(), 0, 200).' '.substr($order->get_billing_address_2(), 0, 50)
             );
         }
         
-        return $customer_data;
+        return $customerData;
     }
     
     public function hasAddress($order) {
