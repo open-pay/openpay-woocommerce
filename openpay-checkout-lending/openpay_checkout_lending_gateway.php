@@ -435,7 +435,7 @@ if (!class_exists('Openpay')) {
     }
 
     public function createOpenpayCustomer() {
-        $customer_data = array(
+        $customerData = array(
             'name' => $this->order->get_billing_first_name(),
             'last_name' => $this->order->get_billing_last_name(),
             'email' => $this->order->get_billing_email(),
@@ -444,7 +444,7 @@ if (!class_exists('Openpay')) {
         );
         
         if ($this->hasAddress($this->order)) {
-            $customer_data = $this->formatAddress($customer_data, $this->order);
+            $customerData = $this->formatAddress($customerData, $this->order);
         }
 
         $openpay = Openpay::getInstance($this->merchant_id, $this->private_key, $this->country);
@@ -454,7 +454,7 @@ if (!class_exists('Openpay')) {
         Openpay::setUserAgent($userAgent);
 
         try {
-            $customer = $openpay->customers->add($customer_data);
+            $customer = $openpay->customers->add($customerData);
 
             if (is_user_logged_in()) {
                 if ($this->is_sandbox) {
@@ -471,9 +471,9 @@ if (!class_exists('Openpay')) {
         }
     }
 
-    private function formatAddress($customer_data, $order) {
+    private function formatAddress($customerData, $order) {
         if ($this->country === 'MX') {
-            $customer_data['address'] = array(
+            $customerData['address'] = array(
                 'line1' => substr($order->get_billing_address_1(), 0, 200),
                 'line2' => substr($order->get_billing_address_2(), 0, 50),
                 'state' => $order->get_billing_state(),
@@ -482,7 +482,7 @@ if (!class_exists('Openpay')) {
                 'country_code' => $order->get_billing_country()
             );
         }
-        return $customer_data;
+        return $customerData;
     }
 
     public function hasAddress($order) {
