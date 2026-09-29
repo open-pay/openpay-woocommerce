@@ -16,7 +16,7 @@
  * License: GNU General Public License v3.0
  * License URI: http://www.gnu.org/licenses/gpl-3.0.html
  * 
- * Openpay Docs: http://www.openpay.co/docs/
+ * Openpay Docs: http://www.openpay.mx/docs/
  */
 
 function openpay_pse_init_your_gateway() {
